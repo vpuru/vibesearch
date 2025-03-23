@@ -24,7 +24,7 @@ model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 # Constants
-INPUT_FILE = "output/searchable_apartments_20250323_121136.json"
+INPUT_FILE = "output/latest_output.json"
 INDEX_NAME = "apartments-search"
 EMBEDDING_DIMENSION = 384  # Dimension for all-MiniLM-L6-v2
 
@@ -65,13 +65,38 @@ def prepare_apartment_data(apartments):
         # Create metadata (all fields except semantic_description)
         metadata = {k: v for k, v in apartment.items() if k != "semantic_description"}
 
-        # Convert numeric values to appropriate types for Pinecone
-        for key, value in metadata.items():
-            if isinstance(value, bool):
+        # Handle problematic metadata values
+        for key, value in list(metadata.items()):
+            # Handle None/null values
+            if value is None:
+                if key in [
+                    "min_rent",
+                    "max_rent",
+                    "min_beds",
+                    "max_beds",
+                    "min_baths",
+                    "max_baths",
+                    "min_sqft",
+                    "max_sqft",
+                ]:
+                    metadata[key] = 0  # Replace numeric nulls with 0
+                else:
+                    metadata[key] = ""  # Replace string nulls with empty string
+            # Handle boolean values
+            elif isinstance(value, bool):
                 metadata[key] = str(value).lower()  # Convert boolean to string
+            # Handle non-serializable types (in case there are any)
+            elif not isinstance(value, (str, int, float, bool, list)):
+                metadata[key] = str(value)  # Convert to string
 
         # Create vector object
         vector = {"id": apartment["id"], "values": embedding, "metadata": metadata}
+
+        # Debug information
+        print(f"Vector ID: {vector['id']}")
+        print(f"Vector dimension: {len(vector['values'])}")
+        print(f"First 5 values: {vector['values'][:5]}")
+        print(f"Metadata sample: {list(metadata.keys())[:5]}")
 
         vectors.append(vector)
 
@@ -83,22 +108,39 @@ def init_pinecone_index():
     # Check if index exists
     existing_indexes = pc.list_indexes().names()
 
+    print(f"Available indexes: {existing_indexes}")
+
     if INDEX_NAME in existing_indexes:
         print(f"Index '{INDEX_NAME}' already exists")
+
+        # Delete existing index for fresh start
+        print(f"Deleting existing index '{INDEX_NAME}'")
+        pc.delete_index(INDEX_NAME)
+        print(f"Waiting after deletion...")
+        time.sleep(10)
+
+        print(f"Creating new index: '{INDEX_NAME}'")
+        pc.create_index(
+            name=INDEX_NAME,
+            dimension=EMBEDDING_DIMENSION,
+            metric="cosine",
+            spec=ServerlessSpec(cloud="aws", region="us-east-1"),
+        )
     else:
         print(f"Creating new index: '{INDEX_NAME}'")
         pc.create_index(
             name=INDEX_NAME,
             dimension=EMBEDDING_DIMENSION,
             metric="cosine",
-            spec=ServerlessSpec(cloud="aws", region="us-west-2"),
+            spec=ServerlessSpec(cloud="aws", region="us-east-1"),
         )
-        # Wait for index to be ready
-        print("Waiting for index to initialize...")
-        time.sleep(60)
 
     # Connect to the index
     index = pc.Index(INDEX_NAME)
+
+    # Debug information
+    print(f"Index information: {index}")
+
     return index
 
 
@@ -107,15 +149,34 @@ def upsert_to_pinecone(index, vectors, batch_size=100):
     total_vectors = len(vectors)
     total_batches = (total_vectors + batch_size - 1) // batch_size
 
+    print(f"Total vectors to upsert: {total_vectors}")
+    print(f"Batch size: {batch_size}")
+    print(f"Total batches: {total_batches}")
+
     for i in tqdm(
         range(0, total_vectors, batch_size),
         desc="Upserting to Pinecone",
         total=total_batches,
     ):
         batch = vectors[i : i + batch_size]
-        index.upsert(vectors=batch)
-        # Small delay to avoid rate limiting
-        time.sleep(0.5)
+        batch_size_actual = len(batch)
+        print(
+            f"Processing batch {i//batch_size + 1}/{total_batches} with {batch_size_actual} vectors"
+        )
+
+        try:
+            response = index.upsert(vectors=batch)
+            print(f"Upsert response: {response}")
+            # Small delay to avoid rate limiting
+            time.sleep(0.5)
+        except Exception as e:
+            print(f"Error upserting batch {i//batch_size + 1}/{total_batches}: {e}")
+            # Print the first vector that might be causing issues
+            if batch:
+                print(f"First vector ID in batch: {batch[0]['id']}")
+                print(f"Metadata keys: {list(batch[0]['metadata'].keys())}")
+                for k, v in batch[0]["metadata"].items():
+                    print(f"  {k}: {v} (type: {type(v)})")
 
 
 def main():
@@ -146,8 +207,11 @@ def main():
     upsert_to_pinecone(index, vectors)
 
     # Print stats
-    stats = index.describe_index_stats()
-    print(f"Index stats after import: {stats}")
+    try:
+        stats = index.describe_index_stats()
+        print(f"Index stats after import: {stats}")
+    except Exception as e:
+        print(f"Error getting index stats: {e}")
 
     end_time = datetime.now()
     duration = end_time - start_time

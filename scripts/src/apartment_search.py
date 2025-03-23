@@ -1,4 +1,22 @@
+#!/usr/bin/env python3
+"""
+Apartment Semantic Search CLI
+
+This script allows you to search for apartments using semantic search and optional filters.
+
+Examples:
+    Basic search:
+    python3 apartment_search.py "modern apartment with view"
+
+    Search with filters:
+    python3 apartment_search.py "cozy studio downtown" --city "Los Angeles" --max-rent 2500 --studio
+
+    Search with bedroom requirements:
+    python3 apartment_search.py "luxury apartment" --min-beds 2 --max-beds 3 --min-rent 2000 --results 5
+"""
+
 import os
+import argparse
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 from dotenv import load_dotenv
@@ -96,61 +114,79 @@ def print_results(results):
 
 
 def main():
-    print("=== Apartment Semantic Search ===")
+    # Set up argument parser
+    parser = argparse.ArgumentParser(
+        description="Search for apartments using semantic search"
+    )
+    parser.add_argument("query", help="The search query for semantic search (required)")
+    parser.add_argument("--city", help="Filter by city")
+    parser.add_argument("--state", help="Filter by state")
+    parser.add_argument("--min-rent", type=int, help="Minimum rent")
+    parser.add_argument("--max-rent", type=int, help="Maximum rent")
+    parser.add_argument("--min-beds", type=float, help="Minimum number of bedrooms")
+    parser.add_argument("--max-beds", type=float, help="Maximum number of bedrooms")
+    parser.add_argument("--min-baths", type=float, help="Minimum number of bathrooms")
+    parser.add_argument("--max-baths", type=float, help="Maximum number of bathrooms")
+    parser.add_argument(
+        "--studio", action="store_true", help="Include studio apartments"
+    )
+    parser.add_argument(
+        "--has-available-units",
+        action="store_true",
+        help="Only show apartments with available units",
+    )
+    parser.add_argument(
+        "--results",
+        type=int,
+        default=10,
+        help="Number of results to return (default: 10)",
+    )
 
-    while True:
-        # Get search query
-        query = input("\nEnter your search query (or 'exit' to quit): ")
-        if query.lower() in ["exit", "quit", "q"]:
-            break
+    # Parse arguments
+    args = parser.parse_args()
 
-        # Get optional filters
-        use_filters = input("Apply filters? (y/n): ").lower() == "y"
+    # Build filter dictionary from arguments
+    filter_dict = {}
+
+    if args.city:
+        filter_dict["city"] = args.city
+
+    if args.state:
+        filter_dict["state"] = args.state
+
+    if args.min_rent:
+        filter_dict["min_rent"] = {"$gte": args.min_rent}
+
+    if args.max_rent:
+        filter_dict["max_rent"] = {"$lte": args.max_rent}
+
+    if args.min_beds:
+        filter_dict["min_beds"] = {"$gte": args.min_beds}
+
+    if args.max_beds:
+        filter_dict["max_beds"] = {"$lte": args.max_beds}
+
+    if args.min_baths:
+        filter_dict["min_baths"] = {"$gte": args.min_baths}
+
+    if args.max_baths:
+        filter_dict["max_baths"] = {"$lte": args.max_baths}
+
+    if args.studio:
+        filter_dict["is_studio"] = "true"
+
+    if args.has_available_units:
+        filter_dict["has_available_units"] = "true"
+
+    # Don't pass empty filter dictionary
+    if not filter_dict:
         filter_dict = None
 
-        if use_filters:
-            filter_dict = {}
+    # Search for apartments
+    results = search_apartments(args.query, filter_dict, args.results)
 
-            # City filter
-            city = input("City (press Enter to skip): ")
-            if city:
-                filter_dict["city"] = city
-
-            # Price range filter
-            try:
-                min_price = input("Minimum rent (press Enter to skip): ")
-                if min_price:
-                    filter_dict["min_rent"] = {"$gte": int(min_price)}
-            except ValueError:
-                print("Invalid price, skipping min_rent filter")
-
-            try:
-                max_price = input("Maximum rent (press Enter to skip): ")
-                if max_price:
-                    filter_dict["max_rent"] = {"$lte": int(max_price)}
-            except ValueError:
-                print("Invalid price, skipping max_rent filter")
-
-            # Beds filter
-            try:
-                min_beds = input("Minimum beds (press Enter to skip): ")
-                if min_beds:
-                    filter_dict["min_beds"] = {"$gte": float(min_beds)}
-            except ValueError:
-                print("Invalid value, skipping min_beds filter")
-
-        # Get number of results
-        try:
-            top_k = int(input("Number of results to return (default 10): ") or "10")
-        except ValueError:
-            top_k = 10
-            print("Invalid value, using default of 10 results")
-
-        # Search for apartments
-        results = search_apartments(query, filter_dict, top_k)
-
-        # Print results
-        print_results(results)
+    # Print results
+    print_results(results)
 
 
 if __name__ == "__main__":
