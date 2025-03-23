@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import PropertyCard, { Property } from "./PropertyCard";
-import { Map, Loader2 } from "lucide-react";
+import PropertyCardSkeleton from "./PropertyCardSkeleton";
+import { Map, Loader2, ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 // Fallback image for properties without images
@@ -11,6 +12,9 @@ const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80",
 ];
 
+// Number of items to display per page
+const ITEMS_PER_PAGE = 15;
+
 interface PropertyGridProps {
   propertyIds?: string[]; // Array of property IDs
   properties?: Property[]; // For backward compatibility
@@ -18,6 +22,7 @@ interface PropertyGridProps {
   error?: string;
   showMapToggle?: boolean;
   searchTerm?: string;
+  onLoadMore?: () => void; // Callback for loading more results
 }
 
 const PropertyGrid: React.FC<PropertyGridProps> = ({
@@ -27,26 +32,100 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   error,
   showMapToggle = true,
   searchTerm = "",
+  onLoadMore,
 }) => {
   // Use either propertyIds or properties (for backward compatibility)
-  const items = propertyIds.length > 0 ? propertyIds : properties;
-  const itemCount = items.length;
+  const allItems = propertyIds.length > 0 ? propertyIds : properties;
+  const totalItemCount = allItems.length;
+
+  // State for pagination
+  const [page, setPage] = useState(1);
+  const [visibleItems, setVisibleItems] = useState<Array<string | Property>>([]);
+  const [hasMoreItems, setHasMoreItems] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // Observer for infinite scrolling
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading || isLoadingMore) return;
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMoreItems) {
+          loadMoreItems();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, isLoadingMore, hasMoreItems]
+  );
+
+  // Initialize visible items on first render and when items change
+  useEffect(() => {
+    if (allItems.length > 0) {
+      const initialItems = allItems.slice(0, ITEMS_PER_PAGE);
+      setVisibleItems(initialItems);
+      setHasMoreItems(allItems.length > ITEMS_PER_PAGE);
+      setPage(1);
+    } else {
+      setVisibleItems([]);
+      setHasMoreItems(false);
+    }
+  }, [allItems]);
+
+  // Function to load more items
+  const loadMoreItems = () => {
+    if (!hasMoreItems || loading || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+
+    // Simulate a small delay to show loading state
+    setTimeout(() => {
+      const nextPage = page + 1;
+      const startIndex = (nextPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+      const newItems = allItems.slice(0, endIndex);
+
+      setVisibleItems(newItems);
+      setPage(nextPage);
+      setHasMoreItems(endIndex < allItems.length);
+      setIsLoadingMore(false);
+
+      // If we're reaching the end of our loaded items, request more from backend
+      if (endIndex >= allItems.length - ITEMS_PER_PAGE && onLoadMore) {
+        onLoadMore();
+      }
+    }, 500);
+  };
 
   // Debug output
   console.log("PropertyGrid props:", {
     propertyIdsCount: propertyIds?.length || 0,
     propertiesCount: properties?.length || 0,
-    itemsCount: itemCount,
+    visibleItemsCount: visibleItems.length,
+    totalItemCount,
+    page,
+    hasMoreItems,
     loading,
     error,
     searchTerm,
   });
 
+  // Render skeleton loading state
+  const renderSkeletons = () => {
+    return Array.from({ length: 6 }, (_, index) => (
+      <PropertyCardSkeleton key={index} featured={index === 0} />
+    ));
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          {loading ? (
+          {loading && visibleItems.length === 0 ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <h2 className="text-2xl font-semibold">Searching...</h2>
@@ -56,21 +135,21 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           ) : (
             <>
               <h2 className="text-2xl font-semibold">
-                {itemCount} results
+                {totalItemCount} results
                 {searchTerm && (
                   <span className="ml-2 font-normal text-muted-foreground">for "{searchTerm}"</span>
                 )}
               </h2>
               <p className="text-muted-foreground">
-                {itemCount > 0
-                  ? `Showing ${itemCount} available properties`
+                {totalItemCount > 0
+                  ? `Showing ${visibleItems.length} of ${totalItemCount} available properties`
                   : "No properties found matching your criteria"}
               </p>
             </>
           )}
         </div>
 
-        {showMapToggle && itemCount > 0 && (
+        {showMapToggle && totalItemCount > 0 && (
           <Link
             to="/map"
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg"
@@ -81,25 +160,10 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
         )}
       </div>
 
-      {loading ? (
+      {/* Initial loading state */}
+      {loading && visibleItems.length === 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((_, index) => (
-            <div
-              key={index}
-              className="rounded-xl overflow-hidden shadow-sm border border-gray-100 animate-pulse"
-            >
-              <div className="aspect-[4/3] bg-gray-200"></div>
-              <div className="p-4">
-                <div className="h-5 bg-gray-200 rounded mb-3 w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-4 w-1/2"></div>
-                <div className="flex gap-3 pt-2 border-t border-gray-100">
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              </div>
-            </div>
-          ))}
+          {renderSkeletons()}
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -128,20 +192,42 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
             Try Again
           </button>
         </div>
-      ) : itemCount > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((item, index) => {
-            // If item is a string (ID), pass it to PropertyCard
-            // If item is a Property object, pass it as is (for backward compatibility)
-            return (
-              <PropertyCard
-                key={typeof item === "string" ? item : item.id || index}
-                property={item}
-                featured={index === 0}
-              />
-            );
-          })}
-        </div>
+      ) : visibleItems.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {visibleItems.map((item, index) => {
+              // If item is a string (ID), pass it to PropertyCard
+              // If item is a Property object, pass it as is (for backward compatibility)
+              return (
+                <PropertyCard
+                  key={typeof item === "string" ? item : item.id || index}
+                  property={item}
+                  featured={index === 0}
+                />
+              );
+            })}
+          </div>
+
+          {/* Load more section */}
+          {hasMoreItems && (
+            <div ref={loadMoreRef} className="flex justify-center items-center py-8 mt-4">
+              {isLoadingMore ? (
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+                  <p className="text-sm text-muted-foreground">Loading more properties...</p>
+                </div>
+              ) : (
+                <button
+                  onClick={loadMoreItems}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                  <span>Load more properties</span>
+                </button>
+              )}
+            </div>
+          )}
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
           <div className="bg-gray-100 rounded-full p-8 mb-5">

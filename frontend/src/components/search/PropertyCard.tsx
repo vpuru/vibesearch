@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Bed, Bath, Square, Heart, Loader2 } from "lucide-react";
 import { fetchApartmentPreview } from "../../services/apartmentService";
 
@@ -22,6 +22,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false }) => {
+  const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [propertyData, setPropertyData] = useState<Property | null>(null);
@@ -70,6 +71,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
     setCurrentImageIndex((prev) =>
       prev === (propertyData.images?.length - 1 || 0) ? 0 : prev + 1
     );
+  };
+
+  // Navigate to property detail page
+  const handleCardClick = () => {
+    if (propertyData) {
+      navigate(`/property/detail/${propertyData.id}`);
+    }
   };
 
   // Show loading state while fetching property data
@@ -127,14 +135,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
   };
 
   return (
-    <Link
-      to={`/property/detail/${propertyData.id}`}
-      className={`group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white border border-gray-100 hover-scale ${
+    <div
+      onClick={handleCardClick}
+      className={`group cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white border border-gray-100 hover:border-gray-200 ${
         featured ? "md:col-span-2" : ""
       }`}
     >
       <div className="relative">
-        <div className="aspect-[4/3] overflow-hidden" onClick={nextImage}>
+        <div className="aspect-[4/3] overflow-hidden">
           <img
             src={imageUrl}
             alt={propertyData.title || "Apartment"}
@@ -143,6 +151,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
               // Fallback if image fails to load
               (e.target as HTMLImageElement).src = defaultImage;
             }}
+            onClick={(e) => nextImage(e)}
           />
         </div>
 
@@ -203,7 +212,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

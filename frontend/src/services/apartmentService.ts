@@ -18,6 +18,7 @@ interface SearchParams {
   query: string;
   filters?: SearchFilters;
   limit?: number;
+  page?: number;
 }
 
 interface SearchResponseMatch {
@@ -217,6 +218,11 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
 
     if (params.limit) {
       queryParams.append("limit", params.limit.toString());
+    }
+
+    // Add pagination parameter
+    if (params.page) {
+      queryParams.append("page", params.page.toString());
     }
 
     if (params.filters) {
