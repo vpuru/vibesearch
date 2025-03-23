@@ -243,8 +243,8 @@ const PropertyDetails: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-16">
-      {/* Top Navigation */}
-      <div className="sticky top-0 z-20 bg-white shadow-sm border-b">
+      {/* Top Navigation - removed sticky positioning */}
+      <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <a href="/search" className="flex items-center text-gray-700" onClick={handleBackClick}>
             <ArrowLeft className="h-5 w-5 mr-2" />

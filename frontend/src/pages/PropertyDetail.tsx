@@ -7,7 +7,7 @@ const PropertyDetail: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="flex-grow">
+      <div className="flex-grow pt-16">
         <PropertyDetails />
       </div>
       <Footer />
