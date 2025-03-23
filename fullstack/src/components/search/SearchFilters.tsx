@@ -1,0 +1,168 @@
+
+import React from 'react';
+import { Search, X, Sliders } from 'lucide-react';
+
+const SearchFilters = () => {
+  const [showFilters, setShowFilters] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [filters, setFilters] = React.useState({
+    bedrooms: '',
+    bathrooms: '',
+    priceMin: '',
+    priceMax: '',
+    amenities: [] as string[]
+  });
+
+  const amenitiesList = [
+    'Air Conditioning', 'Balcony', 'Dishwasher', 'Elevator', 
+    'Fitness Center', 'Furnished', 'Parking', 'Pet Friendly', 
+    'Pool', 'Washer/Dryer', 'Wheelchair Access', 'WiFi'
+  ];
+
+  const toggleAmenity = (amenity: string) => {
+    setFilters(prev => {
+      const newAmenities = prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity];
+      
+      return { ...prev, amenities: newAmenities };
+    });
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      bedrooms: '',
+      bathrooms: '',
+      priceMin: '',
+      priceMax: '',
+      amenities: []
+    });
+  };
+
+  return (
+    <div className="w-full bg-white shadow-sm border-b">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-grow">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input 
+              type="text" 
+              placeholder="Describe your ideal apartment..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-full py-3 px-4 bg-white border border-gray-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+            />
+          </div>
+          
+          <button 
+            className="inline-flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-lg"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Sliders className="h-5 w-5" />
+            <span>Filters</span>
+          </button>
+        </div>
+        
+        {showFilters && (
+          <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white animate-fade-in">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-medium">Refine Search</h3>
+              <button 
+                className="text-sm text-muted-foreground hover:text-foreground"
+                onClick={clearFilters}
+              >
+                Clear all
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
+                <select 
+                  id="bedrooms" 
+                  value={filters.bedrooms}
+                  onChange={(e) => setFilters({...filters, bedrooms: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Any</option>
+                  <option value="studio">Studio</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4+">4+</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">Bathrooms</label>
+                <select 
+                  id="bathrooms"
+                  value={filters.bathrooms}
+                  onChange={(e) => setFilters({...filters, bathrooms: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                >
+                  <option value="">Any</option>
+                  <option value="1">1</option>
+                  <option value="1.5">1.5</option>
+                  <option value="2">2</option>
+                  <option value="2.5">2.5</option>
+                  <option value="3+">3+</option>
+                </select>
+              </div>
+              
+              <div>
+                <label htmlFor="price-min" className="block text-sm font-medium text-gray-700 mb-1">Min Price</label>
+                <input 
+                  type="number" 
+                  id="price-min" 
+                  placeholder="$0"
+                  value={filters.priceMin}
+                  onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="price-max" className="block text-sm font-medium text-gray-700 mb-1">Max Price</label>
+                <input 
+                  type="number" 
+                  id="price-max" 
+                  placeholder="No max"
+                  value={filters.priceMax}
+                  onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
+              <div className="flex flex-wrap gap-2">
+                {amenitiesList.map((amenity) => (
+                  <button
+                    key={amenity}
+                    onClick={() => toggleAmenity(amenity)}
+                    className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 transition-colors ${
+                      filters.amenities.includes(amenity)
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {amenity}
+                    {filters.amenities.includes(amenity) && (
+                      <X className="h-3 w-3" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default SearchFilters;
