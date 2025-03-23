@@ -1,0 +1,657 @@
+{
+  "apartment": {
+    "amenities": [
+      {
+        "title": "Community Amenities",
+        "value": ["Laundry Facilities", "Pool", "Courtyard"]
+      },
+      {
+        "title": "Apartment Features",
+        "value": [
+          "Air Conditioning",
+          "Refrigerator",
+          "Heating",
+          "Range",
+          "Air Conditioning",
+          "Heating",
+          "Intercom",
+          "Kitchen",
+          "Range",
+          "Refrigerator",
+          "Balcony"
+        ]
+      }
+    ],
+    "baths": "2 ba",
+    "beds": "2 bd",
+    "breadcrumbs": ["California", "Los Angeles County", "Sherman Oaks", "4532 Murietta Ave"],
+    "contact": {
+      "logo": "https://images1.apartments.com/i2/KIJ0V_gOdenXGn0b-EuOQEyNkK-nDlYc7fd7X31LeEk/115/xenon-investment-corporation-logo.jpg",
+      "name": "",
+      "phone": "+1-747-326-3918"
+    },
+    "coordinates": {
+      "latitude": 34.15409,
+      "longitude": -118.43776
+    },
+    "description": "About 4532 Murietta Ave\n                        Located less than half a mile from the famous Ventura Blvd, this apartment is very spacious and modern. It has a large kitchen with plenty of cabinets for storage, it includes stainless steel Appliances and Granite counter tops and Master bath includes spa style tub, and dual sink vanity With Washer/dryer included in the unit!! This Building has 33 Modernize Renovated Units, which are a mix of Two- Bedrooms, Two Bedrooms with Loft and Roof Top Decks, and Three Bedrooms. This apartment is in the ideal location in the Valley.\n\n                4532 Murietta Ave is an apartment community located in Los Angeles County and the 91423 ZIP Code. This area is served by the Los Angeles Unified attendance zone.\n\n\n\n    \n        \n            \n                Unique Features\n                \n                    \n                            \n                                Secured Entry\n                            \n                            \n                                Fountain Courtyard\n                            \n                            \n                                in unit laundry\n                            \n                            \n                                Touch Less Amazon Delivery",
+    "fees": [
+      {
+        "policies": [
+          {
+            "header": "Dogs Allowed",
+            "values": [
+              {
+                "key": "",
+                "value": ""
+              },
+              {
+                "key": "Fees not specified",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "header": "Cats Allowed",
+            "values": [
+              {
+                "key": "",
+                "value": ""
+              },
+              {
+                "key": "Fees not specified",
+                "value": ""
+              },
+              {
+                "key": "",
+                "value": ""
+              }
+            ]
+          }
+        ],
+        "title": "Pet policies are negotiable."
+      },
+      {
+        "policies": [
+          {
+            "header": "Property Information",
+            "values": [
+              {
+                "key": "Built in 1987",
+                "value": ""
+              },
+              {
+                "key": "33 units/3 stories",
+                "value": ""
+              }
+            ]
+          }
+        ],
+        "title": "Details"
+      }
+    ],
+    "id": "vgpln0e",
+    "isVerified": true,
+    "lastUpdated": "Today",
+    "location": {
+      "city": "Sherman Oaks",
+      "fullAddress": "4532 Murietta Ave, Sherman Oaks, CA 91423",
+      "postalCode": "91423",
+      "state": "California",
+      "streetAddress": "4532 Murietta Ave"
+    },
+    "models": [
+      {
+        "availability": "2 Available units",
+        "availabilityInfo": "",
+        "details": ["2 Beds", "2 Baths", "1,200 Sq Ft", "$3,198 Deposit"],
+        "leaseOptions": "",
+        "modelName": "2BR/2.0BA",
+        "rentLabel": "$2,798",
+        "units": [
+          {
+            "availability": "Now",
+            "price": "$2,798",
+            "sqft": "1,200",
+            "type": "Unit 203"
+          },
+          {
+            "availability": "Mar 4",
+            "price": "$2,798",
+            "sqft": "1,200",
+            "type": "Unit 105"
+          }
+        ]
+      }
+    ],
+    "neighborhoodDescription": "A thriving neighborhood in the San Fernando Valley region of Los Angeles, Sherman Oaks is located 16 miles northwest of downtown Los Angeles and just 12 miles northeast of Santa Monica, housing the famous Santa Monica Pier. With other popular cities like Beverly Hills and Hollywood nearby, residents have convenient access to everything wonderful and exciting about living in Los Angeles, California.\n\t\t\t\t\tWith a portion of the Santa Monica Mountains within its boundaries, Sherman Oaks offers beautiful natural landscapes paired with modern amenities and a lively community. Sherman Oaks provides an incredible selection of restaurants, shopping, entertainment, community parks, and more.\n\t\t\t\t\tWith access to LAX, the Los Angeles International Airport, and several interstate highways, residents have convenient and easy travel options. Sherman Oaks is within a short drive of the Los Angeles Zoo, Universal Studios Hollywood, and the famous Hollywood sign.\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\tLearn more about living in Sherman Oaks",
+    "parkingFees": [],
+    "petFees": [
+      {
+        "fees": [
+          {
+            "key": "Fees not specified",
+            "value": ""
+          }
+        ],
+        "title": ""
+      },
+      {
+        "fees": [
+          {
+            "key": "Fees not specified",
+            "value": ""
+          }
+        ],
+        "title": ""
+      }
+    ],
+    "photos": [
+      "https://images1.apartments.com/i2/r_fkzHCimoG6UjXl0vh8n3zPaqkL8U_i-ticeN_iZEc/111/4532-murietta-ave-sherman-oaks-ca-primary-photo.jpg",
+      "https://images1.apartments.com/m2/qzUsgoZOKaqCxUcwW1ezx11jydZe8amwaZFljATMP-o/H330W495/4532-murietta-ave-sherman-oaks-ca-map-image-of-the-property.jpg",
+      "https://images1.apartments.com/i2/PtaJeoyfzUnXCnkMF79w3SWO7s6HeW9gyv9jQpv6gfU/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/Qs6EAXJyqmPlEkPjXDZ4-o3gRcddeHGlHzr9sc5uYwI/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/5zUGPlqH3670b-P86-PrsfSJ-Vr6PoINSawfy40l0zU/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/SscVKYLz4dt2yccmSXceRKCcgI2_EHYrRDp3WaJZ3KY/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/rUAn6bauFrIr58i4l05Oaq5TAhYTouFP-7eVSd0xg2Q/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/PB6HBuc0prMMean5qeVHOJJII2t4z4Xg3JYOZW1n2qc/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/d4X_IFTkcfcp4_v5QX7W2n_MpnbT_0wkIQKbnwcD7YY/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/rk6CdDJ8xB76HKnjz4h0WpiBAj40Z52e3B2rxq7uqd0/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/7xcRIGkrv4BobW85U3klSHgRSEQfOV5U8ppiR0fcur0/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/CByKjzxxlg4Uzb_mFYc5XkpVdq2YnCdEIXK17gv5Sz0/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/9PXrE8osgwgCuAUayPhr0H1DRnHjzB9gaj0b-lO23t8/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/2NsyZYwcPGKHV3TAMgBBechgMnCS176l4AUxdXi4dMM/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/nSAZxlVjNjwdGsDHYkfsuU6887wJCt-RltUyEiaCqOE/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/I_PwpzkAV6y8HoWFfTuTjH0AKFp4SGKZ5SJj-ZcpZdU/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/5qHHRn6WWqv_lx-_G2DV6sXe05BpisKXV7NDgsP4H24/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/duGEdpg8RfkyStKFSGOKdF8Tn2zx0SBsGj6UVLreCpQ/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/DQRTcYvv0mhgcY5AaTkBQ0pBtlX9NKSYGScY6YTERqQ/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/TO5OsZai6x-gvTLS1Sk85qGQ24wsxoh2_AlZSCc87g8/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/CtPF8EeOzvvK60E03nsrzodLrkDQk4h0u5cWcy5Fl_U/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/JH7A_mB0Zfp3My6BlkRxD0hZFBjlGy2iAqWcSp1o0dg/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/mnfWfdPTDBxNDm-Sd9i0fbRwqKhUzASLknEu-y33lsE/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/nehAG_KJqCHJrhhlhpg0FixWM243bpogP0L91zXFgbo/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/CxabogalYjoIqJdGruI_rbozFYhgVDFH_c_CUbzd1AY/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/nWTZw5EwAElJ-QEGm6GJdfUb7fNJadYXM3IPFJFhHwE/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/l5aWV9qZwbX2B_UFyZkA_ooAd222Ddjg0BTGrbo7w50/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/l-33KLA3DUh92m7DqV-Sc0VYd8i4e1zo5TKBsoZSfWc/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/21-PsdRyROYype6UJOrvbV8H7L3vgiHsrScB0d0hhf4/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/QHJ8PE3Dvb0LbAD-QDZJkSLl9OJ1jpQxn1VlLotUrQo/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/OcmNxp5AjP1Sc1vz1sMPGjSyFF7ekEQ3U56lmRQ-Ry0/117/4532-murietta-ave-sherman-oaks-ca-interior-photo.jpg",
+      "https://images1.apartments.com/i2/21cYJsAN_gF07BzU-nddNyB-Ymp05hV3EzkKCXz79OA/117/4532-murietta-ave-sherman-oaks-ca-building-photo.jpg",
+      "https://images1.apartments.com/i2/4Q7h5MaimLJVQ2JDMrZ7dwLah3QlTU8xReCiuthu7zo/117/4532-murietta-ave-sherman-oaks-ca-building-photo.jpg",
+      "https://images1.apartments.com/i2/06r638Ri98SDmGl3aG6ywaPtKfplfAWX5QTG8cZ9fYo/117/4532-murietta-ave-sherman-oaks-ca-building-photo.jpg",
+      "https://images1.apartments.com/i2/jQKnjkVZVXdMIrGFWp97B8q3wbC1Li9WhGmhCWhl7Co/117/4532-murietta-ave-sherman-oaks-ca-building-photo.jpg",
+      "https://images1.apartments.com/i2/7A18-ELVwrhFD4qfaRPU2yS2ijJHPoeyMNyE0rG2kPU/117/4532-murietta-ave-sherman-oaks-ca-building-photo.jpg"
+    ],
+    "poi": [
+      {
+        "distance": "0.4 mi",
+        "name": "Westfield Fashion Square",
+        "url": "https://www.apartments.com/malls/ca/sherman-oaks/westfield-fashion-square/5wwgcmp/",
+        "walk": "8 min"
+      },
+      {
+        "distance": "0.5 mi",
+        "name": "Stern & Ventura Shopping Center",
+        "url": "https://www.apartments.com/malls/ca/sherman-oaks/stern-ventura-shopping-center/yw4tjdr/",
+        "walk": "9 min"
+      },
+      {
+        "distance": "0.7 mi",
+        "name": "Oak Ridge Plaza",
+        "url": "https://www.apartments.com/malls/ca/sherman-oaks/oak-ridge-plaza/j8cxbm4/",
+        "walk": "13 min"
+      },
+      {
+        "distance": "4.0 mi",
+        "drive": "7 min",
+        "name": "The Japanese Garden"
+      },
+      {
+        "distance": "4.4 mi",
+        "drive": "11 min",
+        "name": "Sepulveda Basin Wildlife Reserve"
+      },
+      {
+        "distance": "4.9 mi",
+        "drive": "14 min",
+        "name": "Franklin Canyon Park"
+      },
+      {
+        "distance": "5.0 mi",
+        "drive": "14 min",
+        "name": "Sooky Goldman Nature Center"
+      },
+      {
+        "distance": "5.5 mi",
+        "drive": "10 min",
+        "name": "Skirball Cultural Center"
+      },
+      {
+        "distance": "0.9 mi",
+        "name": "Sherman Oaks Hospital",
+        "url": "https://www.apartments.com/hospital/ca/sherman-oaks-hospital/eq4qkxn/",
+        "walk": "17 min"
+      },
+      {
+        "distance": "3.2 mi",
+        "drive": "6 min",
+        "name": "Encino Hospital Medical Center",
+        "url": "https://www.apartments.com/hospital/ca/encino-hospital-medical-center/hdc6kw2/"
+      },
+      {
+        "distance": "4.2 mi",
+        "drive": "8 min",
+        "name": "Valley Presbyterian Hospital",
+        "url": "https://www.apartments.com/hospital/ca/valley-presbyterian-hospital/vpellme/"
+      },
+      {
+        "distance": "22.1 mi",
+        "drive": "29 min",
+        "name": "Los Angeles Air Force Base",
+        "url": "https://www.apartments.com/military/ca/el-segundo/los-angeles-air-force-base/"
+      }
+    ],
+    "propertyName": "4532 Murietta Ave",
+    "rating": null,
+    "rent": {
+      "max": null,
+      "min": 2798
+    },
+    "rentals": [
+      {
+        "applyNowUrl": "",
+        "availability": 1,
+        "availableDate": "2025-01-25T00:00:00",
+        "baths": 2,
+        "beds": 2,
+        "description": "",
+        "details": ["2 Beds", "2 Baths"],
+        "hasKnownAvailabilities": true,
+        "hasOnlineScheduling": false,
+        "hasSpecialtyPropertyDisclaimer": false,
+        "interiorAmenities": {},
+        "isNew": false,
+        "isTourExcluded": false,
+        "key": "3g1smge",
+        "maxRent": 2798,
+        "maxSquareFeet": 1200,
+        "modelId": 3274726,
+        "modelName": "2BR/2.0BA",
+        "rent": 2798,
+        "squareFeet": 1200,
+        "unitCount": 1
+      },
+      {
+        "applyNowUrl": "",
+        "availability": 1,
+        "availableDate": "2025-01-25T00:00:00",
+        "baths": 2,
+        "beds": 2,
+        "description": "MOVE IN SPECIAL\n\u2022\tAdvertised rent: $2,798/month\n\u2022\tConcession Amount: $2,400 =(3,198-2,798)x6 - This will be given as a one-time credit to rent account after all leases have been executed. One full month and deposit are due at move in.\n\u2022\tRent: $3,198/month\n\nFEES\n\u2022\tRefrigerator: Included\n\u2022\tWasher/Dryer: Included, In unit\n\u2022\tUtilities: Not Included\n\u2022\tParking: Ask the agent - ranges per area\n...Contact the property to learn more about this unit.",
+        "details": ["2 Beds", "2 Baths"],
+        "hasKnownAvailabilities": true,
+        "hasOnlineScheduling": false,
+        "hasSpecialtyPropertyDisclaimer": false,
+        "interiorAmenities": {},
+        "isNew": false,
+        "isTourExcluded": false,
+        "key": "cttne7e",
+        "maxRent": 2798,
+        "maxSquareFeet": 1200,
+        "modelId": 3274726,
+        "modelName": "2BR/2.0BA",
+        "rent": 2798,
+        "squareFeet": 1200,
+        "unitCount": 1,
+        "unitNumber": "203"
+      },
+      {
+        "applyNowUrl": "",
+        "availability": 1,
+        "availableDate": "2025-03-04T00:00:00",
+        "baths": 2,
+        "beds": 2,
+        "description": "MOVE IN SPECIAL\n\u2022\tAdvertised rent: $2,798/month\n\u2022\tConcession Amount: $2,400 =(3,198-2,798)x6 - This will be given as a one-time credit to rent account after all leases have been executed. One full month and deposit are due at move in.\n\u2022\tRent: $3,198/month\n\nFEES\n\u2022\tRefrigerator: Included\n\u2022\tWasher/Dryer: Included, In unit \n\u2022\tUtilities: Not Included\n\u2022\tParking: Ask the agent - ranges per area\n...Contact the property to learn more about this unit.",
+        "details": ["2 Beds", "2 Baths"],
+        "hasKnownAvailabilities": true,
+        "hasOnlineScheduling": false,
+        "hasSpecialtyPropertyDisclaimer": false,
+        "interiorAmenities": {},
+        "isNew": false,
+        "isTourExcluded": false,
+        "key": "ptse4rt",
+        "maxRent": 2798,
+        "maxSquareFeet": 1200,
+        "modelId": 3274726,
+        "modelName": "2BR/2.0BA",
+        "rent": 2798,
+        "squareFeet": 1200,
+        "unitCount": 1,
+        "unitNumber": "105"
+      }
+    ],
+    "requiredFees": [
+      {
+        "fees": [
+          {
+            "key": "Application Fee",
+            "value": "$40"
+          }
+        ],
+        "title": ""
+      }
+    ],
+    "schools": {
+      "colleges": [
+        {
+          "distance": "3.4 mi",
+          "drive": "Valley College",
+          "name": "Valley College"
+        },
+        {
+          "distance": "6.3 mi",
+          "drive": "New York Film Academy",
+          "name": "New York Film Academy"
+        },
+        {
+          "distance": "10.1 mi",
+          "drive": "UCLA",
+          "name": "UCLA"
+        },
+        {
+          "distance": "11.2 mi",
+          "drive": "Mount St. Mary's Coll, Chalon",
+          "name": "Mount St. Mary's Coll, Chalon"
+        }
+      ],
+      "private": [
+        {
+          "grades": "PK-8",
+          "name": "St. Francis De Sales",
+          "numberOfStudents": "327",
+          "type": "Private Elementary & Middle School"
+        },
+        {
+          "grades": "PK-5",
+          "name": "Woodcrest Preschool",
+          "numberOfStudents": "",
+          "type": "Private Elementary School"
+        },
+        {
+          "grades": "9-12",
+          "name": "Notre Dame High School",
+          "numberOfStudents": "1,229",
+          "type": "Private High School"
+        }
+      ],
+      "public": [
+        {
+          "grades": "K-5",
+          "name": "Dixie Canyon Community Charter",
+          "numberOfStudents": "610",
+          "type": "Charter Elementary School"
+        },
+        {
+          "grades": "K-5",
+          "name": "Erwin Elementary",
+          "numberOfStudents": "606",
+          "type": "Public Elementary School"
+        },
+        {
+          "grades": "K-5",
+          "name": "Bellingham Elementary",
+          "numberOfStudents": "409",
+          "type": "Public Elementary School"
+        },
+        {
+          "grades": "K-5",
+          "name": "Franklin Elementary",
+          "numberOfStudents": "611",
+          "type": "Public Elementary School"
+        },
+        {
+          "grades": "6-8",
+          "name": "Louis D. Armstrong Middle School",
+          "numberOfStudents": "1,329",
+          "type": "Charter Middle School"
+        },
+        {
+          "grades": "6-8",
+          "name": "Van Nuys Middle",
+          "numberOfStudents": "869",
+          "type": "Public Middle School"
+        },
+        {
+          "grades": "9-12",
+          "name": "Ulysses S. Grant Senior High",
+          "numberOfStudents": "1,783",
+          "type": "Public High School"
+        }
+      ]
+    },
+    "scores": {
+      "transitScore": 50,
+      "walkScore": 79
+    },
+    "scrapedAt": "2025-02-21T04:22:58.183Z",
+    "specials": {
+      "description": "",
+      "title": ""
+    },
+    "sqft": "1,200 sq ft",
+    "transitAndPOI": [
+      {
+        "distance": "5.1 mi",
+        "drive": "9 min",
+        "name": "North Hollywood Station",
+        "url": "https://www.apartments.com/transit/ca/valley-village/north-hollywood-station/lsnn4hg/"
+      },
+      {
+        "distance": "5.4 mi",
+        "drive": "9 min",
+        "name": "Universal City/Studio City",
+        "url": "https://www.apartments.com/transit/ca/studio-city/universal-city-studio-city/9pbgll5/"
+      },
+      {
+        "distance": "8.4 mi",
+        "drive": "13 min",
+        "name": "Hollywood/Highland Station",
+        "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-highland-station/2jmydt9/"
+      },
+      {
+        "distance": "8.6 mi",
+        "drive": "13 min",
+        "name": "Hollywood/Vine Station",
+        "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-vine-station/vrhx5fg/"
+      },
+      {
+        "distance": "12.5 mi",
+        "drive": "18 min",
+        "name": "Westwood/Rancho Park",
+        "url": "https://www.apartments.com/transit/ca/rancho-park/westwood-rancho-park/e0exzyp/"
+      },
+      {
+        "distance": "4.9 mi",
+        "drive": "10 min",
+        "name": "Van Nuys",
+        "url": "https://www.apartments.com/transit/ca/van-nuys/van-nuys/b4brglb/"
+      },
+      {
+        "distance": "8.0 mi",
+        "drive": "14 min",
+        "name": "Burbank-Bob Hope Airport",
+        "url": "https://www.apartments.com/transit/ca/burbank/burbank-bob-hope-airport/rf0bxf3/"
+      },
+      {
+        "distance": "8.4 mi",
+        "drive": "14 min",
+        "name": "Downtown Burbank",
+        "url": "https://www.apartments.com/transit/ca/burbank/downtown-burbank/6q7mdyv/"
+      },
+      {
+        "distance": "8.9 mi",
+        "drive": "16 min",
+        "name": "Burbank Airport - North (Av Line) Metrolink Station",
+        "url": "https://www.apartments.com/transit/ca/burbank/burbank-airport-north-av-line-metrolink-station/w1pgghl/"
+      },
+      {
+        "distance": "8.9 mi",
+        "drive": "15 min",
+        "name": "Sun Valley",
+        "url": "https://www.apartments.com/transit/ca/sun-valley/sun-valley/nq6xmnn/"
+      },
+      {
+        "distance": "8.0 mi",
+        "drive": "14 min",
+        "name": "Bob Hope"
+      },
+      {
+        "distance": "19.5 mi",
+        "drive": "28 min",
+        "name": "Los Angeles International"
+      },
+      {
+        "distance": "0.4 mi",
+        "name": "Westfield Fashion Square",
+        "url": "https://www.apartments.com/malls/ca/sherman-oaks/westfield-fashion-square/5wwgcmp/",
+        "walk": "8 min"
+      },
+      {
+        "distance": "0.5 mi",
+        "name": "Stern & Ventura Shopping Center",
+        "url": "https://www.apartments.com/malls/ca/sherman-oaks/stern-ventura-shopping-center/yw4tjdr/",
+        "walk": "9 min"
+      },
+      {
+        "distance": "0.7 mi",
+        "name": "Oak Ridge Plaza",
+        "url": "https://www.apartments.com/malls/ca/sherman-oaks/oak-ridge-plaza/j8cxbm4/",
+        "walk": "13 min"
+      },
+      {
+        "distance": "4.0 mi",
+        "drive": "7 min",
+        "name": "The Japanese Garden"
+      },
+      {
+        "distance": "4.4 mi",
+        "drive": "11 min",
+        "name": "Sepulveda Basin Wildlife Reserve"
+      },
+      {
+        "distance": "4.9 mi",
+        "drive": "14 min",
+        "name": "Franklin Canyon Park"
+      },
+      {
+        "distance": "5.0 mi",
+        "drive": "14 min",
+        "name": "Sooky Goldman Nature Center"
+      },
+      {
+        "distance": "5.5 mi",
+        "drive": "10 min",
+        "name": "Skirball Cultural Center"
+      },
+      {
+        "distance": "0.9 mi",
+        "name": "Sherman Oaks Hospital",
+        "url": "https://www.apartments.com/hospital/ca/sherman-oaks-hospital/eq4qkxn/",
+        "walk": "17 min"
+      },
+      {
+        "distance": "3.2 mi",
+        "drive": "6 min",
+        "name": "Encino Hospital Medical Center",
+        "url": "https://www.apartments.com/hospital/ca/encino-hospital-medical-center/hdc6kw2/"
+      },
+      {
+        "distance": "4.2 mi",
+        "drive": "8 min",
+        "name": "Valley Presbyterian Hospital",
+        "url": "https://www.apartments.com/hospital/ca/valley-presbyterian-hospital/vpellme/"
+      },
+      {
+        "distance": "22.1 mi",
+        "drive": "29 min",
+        "name": "Los Angeles Air Force Base",
+        "url": "https://www.apartments.com/military/ca/el-segundo/los-angeles-air-force-base/"
+      }
+    ],
+    "transportation": [
+      {
+        "distance": "5.1 mi",
+        "drive": "9 min",
+        "name": "North Hollywood Station",
+        "url": "https://www.apartments.com/transit/ca/valley-village/north-hollywood-station/lsnn4hg/"
+      },
+      {
+        "distance": "5.4 mi",
+        "drive": "9 min",
+        "name": "Universal City/Studio City",
+        "url": "https://www.apartments.com/transit/ca/studio-city/universal-city-studio-city/9pbgll5/"
+      },
+      {
+        "distance": "8.4 mi",
+        "drive": "13 min",
+        "name": "Hollywood/Highland Station",
+        "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-highland-station/2jmydt9/"
+      },
+      {
+        "distance": "8.6 mi",
+        "drive": "13 min",
+        "name": "Hollywood/Vine Station",
+        "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-vine-station/vrhx5fg/"
+      },
+      {
+        "distance": "12.5 mi",
+        "drive": "18 min",
+        "name": "Westwood/Rancho Park",
+        "url": "https://www.apartments.com/transit/ca/rancho-park/westwood-rancho-park/e0exzyp/"
+      },
+      {
+        "distance": "4.9 mi",
+        "drive": "10 min",
+        "name": "Van Nuys",
+        "url": "https://www.apartments.com/transit/ca/van-nuys/van-nuys/b4brglb/"
+      },
+      {
+        "distance": "8.0 mi",
+        "drive": "14 min",
+        "name": "Burbank-Bob Hope Airport",
+        "url": "https://www.apartments.com/transit/ca/burbank/burbank-bob-hope-airport/rf0bxf3/"
+      },
+      {
+        "distance": "8.4 mi",
+        "drive": "14 min",
+        "name": "Downtown Burbank",
+        "url": "https://www.apartments.com/transit/ca/burbank/downtown-burbank/6q7mdyv/"
+      },
+      {
+        "distance": "8.9 mi",
+        "drive": "16 min",
+        "name": "Burbank Airport - North (Av Line) Metrolink Station",
+        "url": "https://www.apartments.com/transit/ca/burbank/burbank-airport-north-av-line-metrolink-station/w1pgghl/"
+      },
+      {
+        "distance": "8.9 mi",
+        "drive": "15 min",
+        "name": "Sun Valley",
+        "url": "https://www.apartments.com/transit/ca/sun-valley/sun-valley/nq6xmnn/"
+      },
+      {
+        "distance": "8.0 mi",
+        "drive": "14 min",
+        "name": "Bob Hope"
+      },
+      {
+        "distance": "19.5 mi",
+        "drive": "28 min",
+        "name": "Los Angeles International"
+      }
+    ],
+    "url": "https://www.apartments.com/4532-murietta-ave-sherman-oaks-ca/vgpln0e/"
+  }
+}

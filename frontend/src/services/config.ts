@@ -7,6 +7,8 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0
 export const API_ENDPOINTS = {
   search: `${API_BASE_URL}/api/search`,
   health: `${API_BASE_URL}/api/health`,
+  apartmentPreview: `${API_BASE_URL}/api/apartment/preview`,
+  apartmentDetails: `${API_BASE_URL}/api/apartment/details`,
 };
 
 // Configuration for testing mode

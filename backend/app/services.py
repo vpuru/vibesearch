@@ -1,4 +1,5 @@
 import os
+import json
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 from dotenv import load_dotenv
@@ -21,6 +22,11 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 
 # Constants
 INDEX_NAME = "apartments-search"
+# Path to apartments.json file
+APARTMENTS_FILE = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "apartments.json"
+)
+
 
 def create_embedding(text):
     """Create an embedding for the given text using sentence-transformers"""
@@ -30,6 +36,7 @@ def create_embedding(text):
     except Exception as e:
         print(f"Error creating embedding: {e}")
         return None
+
 
 def search_apartments(query, filter_dict=None, top_k=10):
     """
@@ -65,3 +72,73 @@ def search_apartments(query, filter_dict=None, top_k=10):
         formatted_results.append(result)
 
     return formatted_results
+
+
+def get_apartment_preview_by_id(apartment_id):
+    """
+    Get preview data for a specific apartment by ID
+
+    Args:
+        apartment_id (str): The ID of the apartment
+
+    Returns:
+        dict: Preview data for the apartment or None if not found
+    """
+    try:
+        with open(APARTMENTS_FILE, "r") as f:
+            apartments = json.load(f)
+
+        # Find the apartment with the matching ID
+        for apartment in apartments:
+            if apartment.get("id") == apartment_id:
+                # Extract only the preview data
+                preview = {
+                    "id": apartment.get("id"),
+                    "propertyName": apartment.get("propertyName"),
+                    "location": {
+                        "city": apartment.get("location", {}).get("city"),
+                        "state": apartment.get("location", {}).get("state"),
+                    },
+                    "rent": apartment.get("rent"),
+                    "beds": apartment.get("beds"),
+                    "baths": apartment.get("baths"),
+                    "sqft": apartment.get("sqft"),
+                    "photos": (
+                        apartment.get("photos", [])[0]
+                        if apartment.get("photos") and len(apartment.get("photos")) > 0
+                        else None
+                    ),
+                }
+                return preview
+
+        # If no matching apartment is found
+        return None
+    except Exception as e:
+        print(f"Error retrieving apartment preview: {e}")
+        return None
+
+
+def get_apartment_details_by_id(apartment_id):
+    """
+    Get all details for a specific apartment by ID
+
+    Args:
+        apartment_id (str): The ID of the apartment
+
+    Returns:
+        dict: All data for the apartment or None if not found
+    """
+    try:
+        with open(APARTMENTS_FILE, "r") as f:
+            apartments = json.load(f)
+
+        # Find the apartment with the matching ID
+        for apartment in apartments:
+            if apartment.get("id") == apartment_id:
+                return apartment
+
+        # If no matching apartment is found
+        return None
+    except Exception as e:
+        print(f"Error retrieving apartment details: {e}")
+        return None

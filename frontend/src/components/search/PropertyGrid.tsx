@@ -12,7 +12,8 @@ const FALLBACK_IMAGES = [
 ];
 
 interface PropertyGridProps {
-  properties: Property[];
+  propertyIds?: string[]; // Array of property IDs
+  properties?: Property[]; // For backward compatibility
   loading: boolean;
   error?: string;
   showMapToggle?: boolean;
@@ -20,19 +21,27 @@ interface PropertyGridProps {
 }
 
 const PropertyGrid: React.FC<PropertyGridProps> = ({
-  properties = [], // Default to empty array if properties is undefined
+  propertyIds = [], // Default to empty array
+  properties = [], // For backward compatibility
   loading = false,
   error,
   showMapToggle = true,
   searchTerm = "",
 }) => {
+  // Use either propertyIds or properties (for backward compatibility)
+  const items = propertyIds.length > 0 ? propertyIds : properties;
+  const itemCount = items.length;
+
   // Debug output
   console.log("PropertyGrid props:", {
+    propertyIdsCount: propertyIds?.length || 0,
     propertiesCount: properties?.length || 0,
+    itemsCount: itemCount,
     loading,
     error,
     searchTerm,
   });
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
@@ -47,21 +56,21 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           ) : (
             <>
               <h2 className="text-2xl font-semibold">
-                {properties.length} results
+                {itemCount} results
                 {searchTerm && (
                   <span className="ml-2 font-normal text-muted-foreground">for "{searchTerm}"</span>
                 )}
               </h2>
               <p className="text-muted-foreground">
-                {properties.length > 0
-                  ? `Showing ${properties.length} available properties`
+                {itemCount > 0
+                  ? `Showing ${itemCount} available properties`
                   : "No properties found matching your criteria"}
               </p>
             </>
           )}
         </div>
 
-        {showMapToggle && properties.length > 0 && (
+        {showMapToggle && itemCount > 0 && (
           <Link
             to="/map"
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg"
@@ -95,37 +104,43 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
           <div className="bg-red-50 rounded-full p-8 mb-5">
-            <svg className="h-12 w-12 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            <svg
+              className="h-12 w-12 text-red-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
             </svg>
           </div>
           <h3 className="text-xl font-semibold mb-2 text-red-600">Error Loading Properties</h3>
-          <p className="text-gray-600 max-w-md">
-            {error}
-          </p>
-          <button 
+          <p className="text-gray-600 max-w-md">{error}</p>
+          <button
             className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
             onClick={() => window.location.reload()}
           >
             Try Again
           </button>
         </div>
-      ) : properties.length > 0 ? (
+      ) : itemCount > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {properties.map((property, index) => (
-            <PropertyCard
-              key={property.id || index}
-              property={{
-                ...property,
-                // Ensure property has images
-                images:
-                  property.images && property.images.length > 0
-                    ? property.images
-                    : [FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)]],
-              }}
-              featured={index === 0}
-            />
-          ))}
+          {items.map((item, index) => {
+            // If item is a string (ID), pass it to PropertyCard
+            // If item is a Property object, pass it as is (for backward compatibility)
+            return (
+              <PropertyCard
+                key={typeof item === "string" ? item : item.id || index}
+                property={item}
+                featured={index === 0}
+              />
+            );
+          })}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -134,8 +149,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           </div>
           <h3 className="text-xl font-semibold mb-2">No properties found</h3>
           <p className="text-muted-foreground max-w-md">
-            Try adjusting your search criteria or try a different search term to find more
-            options.
+            Try adjusting your search criteria or try a different search term to find more options.
           </p>
         </div>
       )}

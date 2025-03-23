@@ -30,6 +30,34 @@ interface SearchResponse {
   results: SearchResponseMatch[];
 }
 
+// New interface for apartment preview data
+export interface ApartmentPreview {
+  id: string;
+  propertyName: string;
+  location: {
+    city: string;
+    state: string;
+  };
+  rent: {
+    min: number;
+    max: number;
+  };
+  beds: string;
+  baths: string;
+  sqft: string;
+  photos: string;
+}
+
+// New interface for apartment preview response
+interface ApartmentPreviewResponse {
+  apartment: ApartmentPreview;
+}
+
+// New interface for apartment details response
+interface ApartmentDetailsResponse {
+  apartment: any; // Full apartment object
+}
+
 // Convert Pinecone metadata to frontend Property type
 const mapMetadataToProperty = (match: SearchResponseMatch): Property => {
   // Validate that metadata exists and is an object
@@ -92,6 +120,55 @@ const mapMetadataToProperty = (match: SearchResponseMatch): Property => {
     images: images,
     description: metadata.description || "",
     features: features,
+  };
+};
+
+// Map apartment preview to Property interface
+export const mapApartmentPreviewToProperty = (preview: ApartmentPreview): Property => {
+  // Extract numeric value from beds string (e.g., "Studio - 1 bd" -> 1)
+  let bedrooms = 0;
+  if (preview.beds) {
+    if (preview.beds.toLowerCase().includes("studio")) {
+      bedrooms = 0;
+    } else {
+      const bedsMatch = preview.beds.match(/(\d+)/g);
+      if (bedsMatch && bedsMatch.length > 0) {
+        bedrooms = parseInt(bedsMatch[bedsMatch.length - 1], 10) || 0;
+      }
+    }
+  }
+
+  // Extract numeric value from baths string
+  let bathrooms = 0;
+  if (preview.baths) {
+    const bathsMatch = preview.baths.match(/(\d+)/g);
+    if (bathsMatch && bathsMatch.length > 0) {
+      bathrooms = parseInt(bathsMatch[0], 10) || 0;
+    }
+  }
+
+  // Extract min sqft value
+  let squareFeet = 0;
+  if (preview.sqft) {
+    const sqftMatch = preview.sqft.match(/(\d+)/g);
+    if (sqftMatch && sqftMatch.length > 0) {
+      squareFeet = parseInt(sqftMatch[0], 10) || 0;
+    }
+  }
+
+  return {
+    id: preview.id,
+    title: preview.propertyName || "Apartment",
+    address: preview.location
+      ? `${preview.location.city || ""}, ${preview.location.state || ""}`
+      : "Location unavailable",
+    price: preview.rent ? preview.rent.min || 0 : 0,
+    bedrooms,
+    bathrooms,
+    squareFeet,
+    images: preview.photos ? [preview.photos] : [],
+    description: "",
+    features: [],
   };
 };
 
@@ -226,6 +303,106 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
     console.error("Error searching apartments:", error);
 
     // Rethrow the error to be handled by the component
+    throw error;
+  }
+};
+
+// New function to fetch apartment preview by ID
+export const fetchApartmentPreview = async (id: string): Promise<Property> => {
+  try {
+    // If using test data, return mock data
+    if (USE_TEST_DATA) {
+      return mockSearchResults("")[0];
+    }
+
+    // Set up AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
+    // Make the API request
+    const response = await fetch(`${API_ENDPOINTS.apartmentPreview}/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      signal: controller.signal,
+      mode: "cors",
+      cache: "no-cache",
+      credentials: "same-origin",
+    });
+
+    // Clear the timeout
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API error response:", errorText);
+      throw new Error(
+        `Failed to fetch apartment preview: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data: ApartmentPreviewResponse = await response.json();
+    console.log("Apartment preview data:", data);
+
+    // Map the preview data to Property type
+    if (!data.apartment) {
+      throw new Error("Invalid API response format, apartment not found");
+    }
+
+    const property = mapApartmentPreviewToProperty(data.apartment);
+    console.log("Mapped apartment preview to property:", property);
+
+    return property;
+  } catch (error) {
+    console.error(`Error fetching apartment preview for ID ${id}:`, error);
+    throw error;
+  }
+};
+
+// New function to fetch detailed apartment data by ID
+export const fetchApartmentDetails = async (id: string): Promise<any> => {
+  try {
+    // If using test data, return mock data
+    if (USE_TEST_DATA) {
+      return mockSearchResults("")[0];
+    }
+
+    // Set up AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+
+    // Make the API request
+    const response = await fetch(`${API_ENDPOINTS.apartmentDetails}/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      signal: controller.signal,
+      mode: "cors",
+      cache: "no-cache",
+      credentials: "same-origin",
+    });
+
+    // Clear the timeout
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API error response:", errorText);
+      throw new Error(
+        `Failed to fetch apartment details: ${response.status} ${response.statusText}`
+      );
+    }
+
+    const data: ApartmentDetailsResponse = await response.json();
+    console.log("Apartment details data:", data);
+
+    return data.apartment;
+  } catch (error) {
+    console.error(`Error fetching apartment details for ID ${id}:`, error);
     throw error;
   }
 };
