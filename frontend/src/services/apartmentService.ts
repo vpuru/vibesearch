@@ -39,6 +39,10 @@ export interface ApartmentPreview {
     city: string;
     state: string;
   };
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
   rent: {
     min: number;
     max: number;
@@ -170,6 +174,7 @@ export const mapApartmentPreviewToProperty = (preview: ApartmentPreview): Proper
     images: preview.photos ? [preview.photos] : [],
     description: "",
     features: [],
+    coordinates: preview.coordinates || undefined,
   };
 };
 

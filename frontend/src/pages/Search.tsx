@@ -6,6 +6,7 @@ import SearchFilters, { SearchFilterValues } from "../components/search/SearchFi
 import PropertyGrid from "../components/search/PropertyGrid";
 import { searchApartments } from "../services/apartmentService";
 import { useSearch } from "../contexts/SearchContext";
+import { Link } from "react-router-dom";
 
 // Number of items to fetch per page
 const ITEMS_PER_PAGE = 25;
@@ -193,6 +194,14 @@ const Search = () => {
           initialValues={filterValues || undefined}
         />
         <main className="flex-grow">
+          <div className="container mx-auto px-4 py-4 flex justify-end">
+            <Link
+              to={`/map${initialQuery ? `?q=${encodeURIComponent(initialQuery)}` : ""}`}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <span>View on Map</span>
+            </Link>
+          </div>
           <PropertyGrid
             propertyIds={apartmentIds}
             loading={loading}

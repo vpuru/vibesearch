@@ -99,6 +99,13 @@ def get_apartment_preview_by_id(apartment_id):
                         "city": apartment.get("location", {}).get("city"),
                         "state": apartment.get("location", {}).get("state"),
                     },
+                    "coordinates": apartment.get(
+                        "coordinates",
+                        {
+                            "latitude": 34.0522,  # Default to Los Angeles if not available
+                            "longitude": -118.2437,
+                        },
+                    ),
                     "rent": apartment.get("rent"),
                     "beds": apartment.get("beds"),
                     "baths": apartment.get("baths"),

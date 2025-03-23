@@ -1,105 +1,207 @@
+import React, { useState, useEffect } from "react";
+import { ArrowLeft, Search, X, List, Map as MapIcon, Loader2 } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Property } from "../search/PropertyCard";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { Icon, LatLngExpression } from "leaflet";
+import { useSearch } from "../../contexts/SearchContext";
+import { searchApartments, fetchApartmentPreview } from "../../services/apartmentService";
 
-import React, { useState } from 'react';
-import { ArrowLeft, Search, X, List, Map as MapIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Property } from '../search/PropertyCard';
+// Fix Leaflet icon issue
+// @ts-ignore - Needed to fix Leaflet icon issue
+delete Icon.Default.prototype._getIconUrl;
+Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
 
-const mockProperties: Property[] = [
-  {
-    id: '1',
-    title: 'Modern Downtown Apartment',
-    address: '123 Main St, New York, NY',
-    price: 2500,
-    bedrooms: 2,
-    bathrooms: 2,
-    squareFeet: 1200,
-    images: [
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80',
-      'https://images.unsplash.com/photo-1502005097973-6a7082348e28?ixlib=rb-4.0.3&auto=format&fit=crop&w=2344&q=80'
-    ],
-    description: 'Beautiful modern apartment in the heart of downtown. Features high ceilings, hardwood floors, and stunning city views.',
-    features: ['City View', 'Hardwood Floors', 'Fitness Center']
-  },
-  {
-    id: '2',
-    title: 'Cozy Studio with Garden View',
-    address: '456 Park Ave, Brooklyn, NY',
-    price: 1800,
-    bedrooms: 0,
-    bathrooms: 1,
-    squareFeet: 650,
-    images: [
-      'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80',
-      'https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80'
-    ],
-    description: 'Charming studio apartment with a beautiful garden view. Perfect for professionals or students.',
-    features: ['Garden View', 'Pet Friendly', 'Recently Renovated']
-  },
-  {
-    id: '3',
-    title: 'Luxury Penthouse with Terrace',
-    address: '789 Broadway, Manhattan, NY',
-    price: 5500,
-    bedrooms: 3,
-    bathrooms: 2.5,
-    squareFeet: 2200,
-    images: [
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80',
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80'
-    ],
-    description: 'Stunning penthouse with a private terrace and panoramic city views. Features include high-end appliances and smart home technology.',
-    features: ['Terrace', 'Panoramic Views', 'Smart Home']
-  },
-  {
-    id: '4',
-    title: 'Spacious Loft in Historic Building',
-    address: '101 Greene St, SoHo, NY',
-    price: 3800,
-    bedrooms: 1,
-    bathrooms: 1,
-    squareFeet: 1500,
-    images: [
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80',
-      'https://images.unsplash.com/photo-1617103996702-96ff29b1c467?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80'
-    ],
-    description: 'Unique loft apartment in a converted historic building. Features exposed brick walls, high ceilings, and large windows.',
-    features: ['Historic Building', 'Exposed Brick', 'High Ceilings']
-  },
-  {
-    id: '5',
-    title: 'Minimalist Apartment with River View',
-    address: '222 Riverside Dr, Upper West Side, NY',
-    price: 2900,
-    bedrooms: 1,
-    bathrooms: 1,
-    squareFeet: 900,
-    images: [
-      'https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80'
-    ],
-    description: 'Modern minimalist apartment with stunning river views. Open floor plan with high-end finishes and appliances.',
-    features: ['River View', 'Doorman', 'In-unit Laundry']
-  },
-  {
-    id: '6',
-    title: 'Charming Brownstone Apartment',
-    address: '333 Clinton St, Brooklyn, NY',
-    price: 2400,
-    bedrooms: 2,
-    bathrooms: 1,
-    squareFeet: 1100,
-    images: [
-      'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80',
-      'https://images.unsplash.com/photo-1574362848149-11496d93a7c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80'
-    ],
-    description: 'Classic brownstone apartment with original architectural details and modern updates. Quiet tree-lined street.',
-    features: ['Original Details', 'Fireplace', 'Private Entrance']
-  }
-];
+// Define custom marker icon
+const customIcon = new Icon({
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  shadowSize: [41, 41],
+});
+
+// Default center location (Los Angeles coordinates)
+const DEFAULT_CENTER: LatLngExpression = [34.0522, -118.2437];
+const DEFAULT_ZOOM = 12;
+
+// Helper component to update map view when selected property changes
+const MapViewUpdater = ({ center }: { center: LatLngExpression }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, 14);
+  }, [center, map]);
+  return null;
+};
+
+// Custom interface for property with location data
+interface PropertyWithLocation extends Property {
+  location?: {
+    lat: number;
+    lng: number;
+  };
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+}
 
 const MapView: React.FC = () => {
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+  const navigate = useNavigate();
+
+  const { apartmentIds, searchTerm, filterValues, searchPerformed } = useSearch();
+
+  const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [mapCenter, setMapCenter] = useState<LatLngExpression>(DEFAULT_CENTER);
+
+  // Track if we've loaded property details for display
+  const [loadedPropertyDetails, setLoadedPropertyDetails] = useState<Record<string, boolean>>({});
+
+  // Function to load property details
+  const loadPropertyDetails = async (propertyId: string) => {
+    if (loadedPropertyDetails[propertyId]) return;
+
+    try {
+      const property = await fetchApartmentPreview(propertyId);
+
+      // Use actual coordinates if available from API
+      const propertyWithLocation: PropertyWithLocation = {
+        ...property,
+        location: property.coordinates
+          ? {
+              lat: property.coordinates.latitude,
+              lng: property.coordinates.longitude,
+            }
+          : {
+              // Fallback to Los Angeles area if coordinates not available
+              lat: 34.0522 + (Math.random() - 0.5) * 0.05,
+              lng: -118.2437 + (Math.random() - 0.5) * 0.05,
+            },
+      };
+
+      setProperties((prevProperties) => {
+        // Check if this property is already in the array
+        const existingIndex = prevProperties.findIndex((p) => p.id === propertyId);
+
+        if (existingIndex >= 0) {
+          // Replace the existing property
+          const newProperties = [...prevProperties];
+          newProperties[existingIndex] = propertyWithLocation;
+          return newProperties;
+        } else {
+          // Add the new property
+          return [...prevProperties, propertyWithLocation];
+        }
+      });
+
+      // If this is the first property with location, center map on it
+      if (properties.length === 0 && propertyWithLocation.location) {
+        setMapCenter([propertyWithLocation.location.lat, propertyWithLocation.location.lng]);
+      }
+
+      setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
+    } catch (err) {
+      console.error(`Error loading property ${propertyId}:`, err);
+    }
+  };
+
+  // Load properties based on search results
+  useEffect(() => {
+    const fetchProperties = async () => {
+      if (!apartmentIds.length) return;
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Load property details for each ID
+        const promises = apartmentIds.slice(0, 25).map((id) => loadPropertyDetails(id));
+        await Promise.all(promises);
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Error loading properties:", err);
+        setError("Failed to load property details");
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, [apartmentIds]);
+
+  // Update map center when a property is selected
+  useEffect(() => {
+    if (selectedProperty?.location) {
+      setMapCenter([selectedProperty.location.lat, selectedProperty.location.lng]);
+    }
+  }, [selectedProperty]);
+
+  // Perform search if we have searchTerm/filterValues but no results
+  useEffect(() => {
+    const performSearch = async () => {
+      if (searchTerm || initialQuery) {
+        // Use existing search filters or create a basic one with just the query
+        const filters = filterValues || { query: searchTerm || initialQuery };
+
+        try {
+          setLoading(true);
+          // Use the search function to get results
+          const results = await searchApartments({
+            query: filters.query,
+            filters: {
+              min_beds: filters.min_beds,
+              max_beds: filters.max_beds,
+              min_baths: filters.min_baths,
+              max_baths: filters.max_baths,
+              min_rent: filters.min_rent,
+              max_rent: filters.max_rent,
+              studio: filters.studio,
+              city: filters.city,
+              state: filters.state,
+            },
+            limit: 25,
+          });
+
+          // Load each property's details
+          const propertyPromises = results.map((result) => loadPropertyDetails(result.id));
+          await Promise.all(propertyPromises);
+
+          setLoading(false);
+        } catch (err) {
+          console.error("Error searching for properties:", err);
+          setError("Failed to search for properties");
+          setLoading(false);
+        }
+      }
+    };
+
+    // Only perform a search if we don't already have properties and we have a search term
+    if (properties.length === 0 && (searchTerm || initialQuery)) {
+      performSearch();
+    }
+  }, [searchTerm, initialQuery, filterValues]);
+
+  const handleMapSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const query = formData.get("mapSearch") as string;
+
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -109,19 +211,21 @@ const MapView: React.FC = () => {
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span>Back to Search</span>
           </Link>
-          
-          <div className="hidden md:block relative w-96">
+
+          <form onSubmit={handleMapSearch} className="hidden md:block relative w-96">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
-            <input 
-              type="text" 
-              placeholder="Search location..." 
+            <input
+              type="text"
+              name="mapSearch"
+              defaultValue={searchTerm || initialQuery}
+              placeholder="Search location..."
               className="pl-10 w-full py-2 px-4 bg-gray-50 border border-gray-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
-          </div>
-          
-          <button 
+          </form>
+
+          <button
             className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
             onClick={() => setShowSidebar(!showSidebar)}
           >
@@ -129,20 +233,25 @@ const MapView: React.FC = () => {
           </button>
         </div>
       </header>
-      
+
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <div 
+        <div
           className={`w-full md:w-96 bg-white border-r flex-shrink-0 overflow-y-auto transition-all duration-300 transform ${
-            showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+            showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           } md:static fixed inset-y-0 left-0 z-20 pt-16 md:pt-0`}
         >
           <div className="p-4 border-b">
             <div className="flex justify-between items-center">
               <h2 className="font-semibold text-lg">
-                {mockProperties.length} results
+                {properties.length} results{" "}
+                {searchTerm && (
+                  <span className="font-normal text-sm text-muted-foreground">
+                    for "{searchTerm || initialQuery}"
+                  </span>
+                )}
               </h2>
-              <button 
+              <button
                 className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
                 onClick={() => setShowSidebar(false)}
               >
@@ -150,79 +259,167 @@ const MapView: React.FC = () => {
               </button>
             </div>
           </div>
-          
+
           <div className="p-2">
-            {mockProperties.map((property) => (
-              <div 
-                key={property.id}
-                className={`p-2 mb-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
-                  selectedProperty?.id === property.id ? 'ring-2 ring-primary' : ''
-                }`}
-                onClick={() => setSelectedProperty(property)}
-              >
-                <div className="flex">
-                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                    <img 
-                      src={property.images[0]} 
-                      alt={property.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="ml-3 flex-grow">
-                    <p className="font-semibold text-primary">${property.price.toLocaleString()}</p>
-                    <h3 className="font-medium text-sm line-clamp-1">{property.title}</h3>
-                    <p className="text-muted-foreground text-xs line-clamp-1">{property.address}</p>
-                    <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
-                      <span>{property.bedrooms} bed</span>
-                      <span>•</span>
-                      <span>{property.bathrooms} bath</span>
+            {loading && properties.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">Loading properties...</p>
+              </div>
+            ) : error ? (
+              <div className="p-4 text-center">
+                <p className="text-red-500">{error}</p>
+                <button
+                  className="mt-2 text-primary hover:underline"
+                  onClick={() => window.location.reload()}
+                >
+                  Try again
+                </button>
+              </div>
+            ) : properties.length === 0 ? (
+              <div className="p-4 text-center">
+                <p className="text-muted-foreground">No properties found.</p>
+                <Link to="/" className="mt-2 text-primary hover:underline block">
+                  Return to homepage
+                </Link>
+              </div>
+            ) : (
+              properties.map((property) => (
+                <div
+                  key={property.id}
+                  className={`p-2 mb-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
+                    selectedProperty?.id === property.id ? "ring-2 ring-primary" : ""
+                  }`}
+                  onClick={() => setSelectedProperty(property)}
+                >
+                  <div className="flex">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                      <img
+                        src={
+                          property.images && property.images.length > 0
+                            ? property.images[0]
+                            : "https://placehold.co/600x400?text=No+Image"
+                        }
+                        alt={property.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="ml-3 flex-grow">
+                      <p className="font-semibold text-primary">
+                        ${property.price.toLocaleString()}
+                      </p>
+                      <h3 className="font-medium text-sm line-clamp-1">{property.title}</h3>
+                      <p className="text-muted-foreground text-xs line-clamp-1">
+                        {property.address}
+                      </p>
+                      <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
+                        <span>{property.bedrooms} bed</span>
+                        <span>•</span>
+                        <span>{property.bathrooms} bath</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
-        
+
         {/* Map */}
         <div className="flex-1 relative">
-          {/* Placeholder for actual map implementation */}
-          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-            <div className="text-center">
-              <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                Interactive map would be displayed here. <br />
-                (Requires map API implementation)
-              </p>
+          {properties.length > 0 ? (
+            <MapContainer
+              center={mapCenter}
+              zoom={DEFAULT_ZOOM}
+              style={{ height: "100%", width: "100%" }}
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+
+              {/* Update map view when selected property changes */}
+              <MapViewUpdater center={mapCenter} />
+
+              {properties
+                .filter((p) => p.location)
+                .map(
+                  (property) =>
+                    property.location && (
+                      <Marker
+                        key={property.id}
+                        position={[property.location.lat, property.location.lng]}
+                        icon={customIcon}
+                        eventHandlers={{
+                          click: () => {
+                            setSelectedProperty(property);
+                          },
+                        }}
+                      >
+                        <Popup>
+                          <div className="text-center">
+                            <h3 className="font-medium">{property.title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              ${property.price.toLocaleString()}
+                            </p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    )
+                )}
+            </MapContainer>
+          ) : (
+            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+              {loading ? (
+                <div className="text-center">
+                  <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
+                  <p className="text-muted-foreground">Loading map data...</p>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    No properties to display. <br />
+                    Try refining your search.
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-          
+          )}
+
           {/* Property popup */}
           {selectedProperty && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4">
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-in-right">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-[1000]">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-up">
                 <div className="relative">
-                  <img 
-                    src={selectedProperty.images[0]} 
+                  <img
+                    src={
+                      selectedProperty.images && selectedProperty.images.length > 0
+                        ? selectedProperty.images[0]
+                        : "https://placehold.co/600x400?text=No+Image"
+                    }
                     alt={selectedProperty.title}
                     className="w-full h-48 object-cover"
                   />
-                  <button 
+                  <button
                     className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-sm"
                     onClick={() => setSelectedProperty(null)}
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
-                
+
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-semibold">{selectedProperty.title}</h3>
-                    <p className="text-lg font-semibold text-primary">${selectedProperty.price.toLocaleString()}</p>
+                    <p className="text-lg font-semibold text-primary">
+                      ${selectedProperty.price.toLocaleString()}
+                    </p>
                   </div>
-                  
+
                   <p className="text-muted-foreground text-sm mb-3">{selectedProperty.address}</p>
-                  
+
                   <div className="flex items-center justify-between py-2 border-y border-gray-100">
                     <div className="text-center">
                       <p className="text-muted-foreground text-xs">Beds</p>
@@ -237,9 +434,9 @@ const MapView: React.FC = () => {
                       <p className="font-medium">{selectedProperty.squareFeet.toLocaleString()}</p>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4">
-                    <Link 
+                    <Link
                       to={`/property/${selectedProperty.id}`}
                       className="block w-full py-2 bg-primary text-white rounded-lg text-center font-medium"
                     >

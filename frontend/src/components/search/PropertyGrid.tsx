@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import PropertyCard, { Property } from "./PropertyCard";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import { Map, Loader2, ArrowDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 // Fallback image for properties without images
 const FALLBACK_IMAGES = [
@@ -34,6 +34,9 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   searchTerm = "",
   onLoadMore,
 }) => {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("q") || searchTerm;
+
   // Use either propertyIds or properties (for backward compatibility)
   const allItems = propertyIds.length > 0 ? propertyIds : properties;
   const totalItemCount = allItems.length;
@@ -151,7 +154,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
 
         {showMapToggle && totalItemCount > 0 && (
           <Link
-            to="/map"
+            to={`/map${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ""}`}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg"
           >
             <Map className="h-4 w-4" />

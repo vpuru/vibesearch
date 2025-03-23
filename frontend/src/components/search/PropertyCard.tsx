@@ -14,6 +14,10 @@ export interface Property {
   images: string[];
   description: string;
   features: string[];
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 interface PropertyCardProps {
