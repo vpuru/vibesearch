@@ -2,14 +2,35 @@
 import React from 'react';
 import { Search, X, Sliders } from 'lucide-react';
 
-const SearchFilters = () => {
+export interface SearchFilterValues {
+  query: string;
+  min_beds?: number;
+  max_beds?: number;
+  min_baths?: number;
+  max_baths?: number;
+  min_rent?: number;
+  max_rent?: number;
+  studio?: boolean;
+  city?: string;
+  state?: string;
+  amenities?: string[];
+}
+
+interface SearchFiltersProps {
+  onSearch: (filters: SearchFilterValues) => void;
+  initialQuery?: string;
+}
+
+const SearchFilters: React.FC<SearchFiltersProps> = ({ onSearch, initialQuery = '' }) => {
   const [showFilters, setShowFilters] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState('');
+  const [searchQuery, setSearchQuery] = React.useState(initialQuery);
   const [filters, setFilters] = React.useState({
     bedrooms: '',
     bathrooms: '',
     priceMin: '',
     priceMax: '',
+    city: '',
+    state: '',
     amenities: [] as string[]
   });
 
@@ -35,14 +56,87 @@ const SearchFilters = () => {
       bathrooms: '',
       priceMin: '',
       priceMax: '',
+      city: '',
+      state: '',
       amenities: []
     });
+  };
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    
+    if (!searchQuery.trim()) return;
+    
+    // Convert form values to API filter values
+    const searchFilters: SearchFilterValues = {
+      query: searchQuery,
+    };
+    
+    // Add min/max beds based on dropdown selection
+    if (filters.bedrooms) {
+      if (filters.bedrooms === 'studio') {
+        searchFilters.studio = true;
+      } else if (filters.bedrooms.includes('+')) {
+        // Handle "4+" case
+        searchFilters.min_beds = parseFloat(filters.bedrooms.replace('+', ''));
+      } else {
+        // Handle exact bedroom count
+        const bedroomValue = parseFloat(filters.bedrooms);
+        searchFilters.min_beds = bedroomValue;
+        searchFilters.max_beds = bedroomValue;
+      }
+    }
+    
+    // Add min/max baths based on dropdown selection
+    if (filters.bathrooms) {
+      if (filters.bathrooms.includes('+')) {
+        // Handle "3+" case
+        searchFilters.min_baths = parseFloat(filters.bathrooms.replace('+', ''));
+      } else {
+        // Handle exact bathroom count
+        const bathroomValue = parseFloat(filters.bathrooms);
+        searchFilters.min_baths = bathroomValue;
+        searchFilters.max_baths = bathroomValue;
+      }
+    }
+    
+    // Add price range if specified
+    if (filters.priceMin) {
+      searchFilters.min_rent = parseInt(filters.priceMin);
+    }
+    
+    if (filters.priceMax) {
+      searchFilters.max_rent = parseInt(filters.priceMax);
+    }
+    
+    // Add city/state if specified
+    if (filters.city) {
+      searchFilters.city = filters.city;
+    }
+    
+    if (filters.state) {
+      searchFilters.state = filters.state;
+    }
+    
+    // Add amenities if selected
+    if (filters.amenities.length > 0) {
+      searchFilters.amenities = filters.amenities;
+    }
+    
+    onSearch(searchFilters);
+  };
+
+  // Handle Enter key in search box
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   return (
     <div className="w-full bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex flex-col md:flex-row gap-4">
+        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
@@ -52,18 +146,30 @@ const SearchFilters = () => {
               placeholder="Describe your ideal apartment..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="pl-10 w-full py-3 px-4 bg-white border border-gray-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
           </div>
           
-          <button 
-            className="inline-flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-lg"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Sliders className="h-5 w-5" />
-            <span>Filters</span>
-          </button>
-        </div>
+          <div className="flex gap-2">
+            <button 
+              type="button"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Sliders className="h-5 w-5" />
+              <span>Filters</span>
+            </button>
+            
+            <button 
+              type="submit"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-lg"
+            >
+              <Search className="h-5 w-5" />
+              <span>Search</span>
+            </button>
+          </div>
+        </form>
         
         {showFilters && (
           <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white animate-fade-in">
@@ -77,7 +183,7 @@ const SearchFilters = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               <div>
                 <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">Bedrooms</label>
                 <select 
@@ -135,6 +241,30 @@ const SearchFilters = () => {
                   className="w-full p-2 border border-gray-300 rounded-md"
                 />
               </div>
+              
+              <div>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <input 
+                  type="text" 
+                  id="city" 
+                  placeholder="Any city"
+                  value={filters.city}
+                  onChange={(e) => setFilters({...filters, city: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                <input 
+                  type="text" 
+                  id="state" 
+                  placeholder="Any state"
+                  value={filters.state}
+                  onChange={(e) => setFilters({...filters, state: e.target.value})}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                />
+              </div>
             </div>
             
             <div>
@@ -142,6 +272,7 @@ const SearchFilters = () => {
               <div className="flex flex-wrap gap-2">
                 {amenitiesList.map((amenity) => (
                   <button
+                    type="button"
                     key={amenity}
                     onClick={() => toggleAmenity(amenity)}
                     className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 transition-colors ${

@@ -1,0 +1,697 @@
+{
+  "id": "s0bgjz5",
+  "propertyName": "Hacienda Apartments",
+  "url": "https://www.apartments.com/hacienda-apartments-los-angeles-ca/s0bgjz5/",
+  "breadcrumbs": ["California", "Los Angeles County", "Los Angeles", "Hacienda Apartments"],
+  "lastUpdated": "2 Days Ago",
+  "location": {
+    "fullAddress": "7367 Hollywood Blvd, Los Angeles, CA 90046 Leasing Office: 7083 Hollywood Blvd, Los Angeles, CA 90028",
+    "state": "California",
+    "city": "Los Angeles",
+    "postalCode": "90028",
+    "streetAddress": "7367 Hollywood Blvd"
+  },
+  "coordinates": {
+    "latitude": 34.10205,
+    "longitude": -118.35077
+  },
+  "rating": null,
+  "isVerified": false,
+  "rent": {
+    "min": 1795,
+    "max": 2150
+  },
+  "beds": "Studio - 1 bd",
+  "baths": "1 ba",
+  "sqft": "500 - 800 sq ft",
+  "transportation": [
+    {
+      "name": "Hollywood/Highland Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-highland-station/2jmydt9/",
+      "walk": "14 min",
+      "distance": "0.7 mi"
+    },
+    {
+      "name": "Hollywood/Vine Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-vine-station/vrhx5fg/",
+      "drive": "3 min",
+      "distance": "1.5 mi"
+    },
+    {
+      "name": "Hollywood/Western Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-western-station/5573hym/",
+      "drive": "6 min",
+      "distance": "2.4 mi"
+    },
+    {
+      "name": "Vermont/Sunset Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/vermont-sunset-station/dgehtfl/",
+      "drive": "7 min",
+      "distance": "3.6 mi"
+    },
+    {
+      "name": "Universal City/Studio City",
+      "url": "https://www.apartments.com/transit/ca/studio-city/universal-city-studio-city/9pbgll5/",
+      "drive": "8 min",
+      "distance": "4.1 mi"
+    },
+    {
+      "name": "Glendale",
+      "url": "https://www.apartments.com/transit/ca/glendale/glendale/j5fsp64/",
+      "drive": "13 min",
+      "distance": "6.7 mi"
+    },
+    {
+      "name": "Downtown Burbank",
+      "url": "https://www.apartments.com/transit/ca/burbank/downtown-burbank/6q7mdyv/",
+      "drive": "15 min",
+      "distance": "7.1 mi"
+    },
+    {
+      "name": "Los Angeles",
+      "url": "https://www.apartments.com/transit/ca/los-angeles/los-angeles/llwtn2d/",
+      "drive": "14 min",
+      "distance": "7.9 mi"
+    },
+    {
+      "name": "Burbank-Bob Hope Airport",
+      "url": "https://www.apartments.com/transit/ca/burbank/burbank-bob-hope-airport/rf0bxf3/",
+      "drive": "16 min",
+      "distance": "8.1 mi"
+    },
+    {
+      "name": "Burbank Airport - North (Av Line) Metrolink Station",
+      "url": "https://www.apartments.com/transit/ca/burbank/burbank-airport-north-av-line-metrolink-station/w1pgghl/",
+      "drive": "17 min",
+      "distance": "8.6 mi"
+    },
+    {
+      "name": "Bob Hope",
+      "drive": "18 min",
+      "distance": "9.2 mi"
+    },
+    {
+      "name": "Los Angeles International",
+      "drive": "27 min",
+      "distance": "13.0 mi"
+    }
+  ],
+  "poi": [
+    {
+      "name": "Martel Plaza",
+      "url": "https://www.apartments.com/malls/ca/los-angeles/martel-plaza/8lezgc2/",
+      "walk": "6 min",
+      "distance": "0.3 mi"
+    },
+    {
+      "name": "Sunset Fuller Plaza",
+      "url": "https://www.apartments.com/malls/ca/los-angeles/sunset-fuller-plaza/d9ms6ek/",
+      "walk": "6 min",
+      "distance": "0.4 mi"
+    },
+    {
+      "name": "W Sunset Blvd",
+      "url": "https://www.apartments.com/malls/ca/los-angeles/w-sunset-blvd/t41n4b8/",
+      "walk": "8 min",
+      "distance": "0.4 mi"
+    },
+    {
+      "name": "Runyon Canyon",
+      "walk": "9 min",
+      "distance": "0.5 mi"
+    },
+    {
+      "name": "La Brea Tar Pits",
+      "drive": "9 min",
+      "distance": "3.7 mi"
+    },
+    {
+      "name": "Zimmer Children's Museum",
+      "drive": "9 min",
+      "distance": "3.8 mi"
+    },
+    {
+      "name": "Griffith Observatory",
+      "drive": "15 min",
+      "distance": "5.8 mi"
+    },
+    {
+      "name": "Griffith Park",
+      "drive": "25 min",
+      "distance": "8.5 mi"
+    },
+    {
+      "name": "Southern California Hospital at Hollywood",
+      "url": "https://www.apartments.com/hospital/ca/southern-california-hospital-at-hollywood/f0jke7s/",
+      "drive": "4 min",
+      "distance": "1.8 mi"
+    },
+    {
+      "name": "Cedars-Sinai Medical Center",
+      "url": "https://www.apartments.com/hospital/ca/cedars-sinai-medical-center/xdvf5tq/",
+      "drive": "8 min",
+      "distance": "3.4 mi"
+    },
+    {
+      "name": "Kaiser Foundation Hospital - Los Angeles",
+      "url": "https://www.apartments.com/hospital/ca/kaiser-foundation-hospital-los-angeles/ztk578y/",
+      "drive": "7 min",
+      "distance": "3.4 mi"
+    },
+    {
+      "name": "Los Angeles Air Force Base",
+      "url": "https://www.apartments.com/military/ca/el-segundo/los-angeles-air-force-base/",
+      "drive": "27 min",
+      "distance": "14.7 mi"
+    }
+  ],
+  "transitAndPOI": [
+    {
+      "name": "Hollywood/Highland Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-highland-station/2jmydt9/",
+      "walk": "14 min",
+      "distance": "0.7 mi"
+    },
+    {
+      "name": "Hollywood/Vine Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-vine-station/vrhx5fg/",
+      "drive": "3 min",
+      "distance": "1.5 mi"
+    },
+    {
+      "name": "Hollywood/Western Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/hollywood-western-station/5573hym/",
+      "drive": "6 min",
+      "distance": "2.4 mi"
+    },
+    {
+      "name": "Vermont/Sunset Station",
+      "url": "https://www.apartments.com/transit/ca/hollywood/vermont-sunset-station/dgehtfl/",
+      "drive": "7 min",
+      "distance": "3.6 mi"
+    },
+    {
+      "name": "Universal City/Studio City",
+      "url": "https://www.apartments.com/transit/ca/studio-city/universal-city-studio-city/9pbgll5/",
+      "drive": "8 min",
+      "distance": "4.1 mi"
+    },
+    {
+      "name": "Glendale",
+      "url": "https://www.apartments.com/transit/ca/glendale/glendale/j5fsp64/",
+      "drive": "13 min",
+      "distance": "6.7 mi"
+    },
+    {
+      "name": "Downtown Burbank",
+      "url": "https://www.apartments.com/transit/ca/burbank/downtown-burbank/6q7mdyv/",
+      "drive": "15 min",
+      "distance": "7.1 mi"
+    },
+    {
+      "name": "Los Angeles",
+      "url": "https://www.apartments.com/transit/ca/los-angeles/los-angeles/llwtn2d/",
+      "drive": "14 min",
+      "distance": "7.9 mi"
+    },
+    {
+      "name": "Burbank-Bob Hope Airport",
+      "url": "https://www.apartments.com/transit/ca/burbank/burbank-bob-hope-airport/rf0bxf3/",
+      "drive": "16 min",
+      "distance": "8.1 mi"
+    },
+    {
+      "name": "Burbank Airport - North (Av Line) Metrolink Station",
+      "url": "https://www.apartments.com/transit/ca/burbank/burbank-airport-north-av-line-metrolink-station/w1pgghl/",
+      "drive": "17 min",
+      "distance": "8.6 mi"
+    },
+    {
+      "name": "Bob Hope",
+      "drive": "18 min",
+      "distance": "9.2 mi"
+    },
+    {
+      "name": "Los Angeles International",
+      "drive": "27 min",
+      "distance": "13.0 mi"
+    },
+    {
+      "name": "Martel Plaza",
+      "url": "https://www.apartments.com/malls/ca/los-angeles/martel-plaza/8lezgc2/",
+      "walk": "6 min",
+      "distance": "0.3 mi"
+    },
+    {
+      "name": "Sunset Fuller Plaza",
+      "url": "https://www.apartments.com/malls/ca/los-angeles/sunset-fuller-plaza/d9ms6ek/",
+      "walk": "6 min",
+      "distance": "0.4 mi"
+    },
+    {
+      "name": "W Sunset Blvd",
+      "url": "https://www.apartments.com/malls/ca/los-angeles/w-sunset-blvd/t41n4b8/",
+      "walk": "8 min",
+      "distance": "0.4 mi"
+    },
+    {
+      "name": "Runyon Canyon",
+      "walk": "9 min",
+      "distance": "0.5 mi"
+    },
+    {
+      "name": "La Brea Tar Pits",
+      "drive": "9 min",
+      "distance": "3.7 mi"
+    },
+    {
+      "name": "Zimmer Children's Museum",
+      "drive": "9 min",
+      "distance": "3.8 mi"
+    },
+    {
+      "name": "Griffith Observatory",
+      "drive": "15 min",
+      "distance": "5.8 mi"
+    },
+    {
+      "name": "Griffith Park",
+      "drive": "25 min",
+      "distance": "8.5 mi"
+    },
+    {
+      "name": "Southern California Hospital at Hollywood",
+      "url": "https://www.apartments.com/hospital/ca/southern-california-hospital-at-hollywood/f0jke7s/",
+      "drive": "4 min",
+      "distance": "1.8 mi"
+    },
+    {
+      "name": "Cedars-Sinai Medical Center",
+      "url": "https://www.apartments.com/hospital/ca/cedars-sinai-medical-center/xdvf5tq/",
+      "drive": "8 min",
+      "distance": "3.4 mi"
+    },
+    {
+      "name": "Kaiser Foundation Hospital - Los Angeles",
+      "url": "https://www.apartments.com/hospital/ca/kaiser-foundation-hospital-los-angeles/ztk578y/",
+      "drive": "7 min",
+      "distance": "3.4 mi"
+    },
+    {
+      "name": "Los Angeles Air Force Base",
+      "url": "https://www.apartments.com/military/ca/el-segundo/los-angeles-air-force-base/",
+      "drive": "27 min",
+      "distance": "14.7 mi"
+    }
+  ],
+  "scores": {
+    "walkScore": 86,
+    "transitScore": 56
+  },
+  "specials": {
+    "label": "1 Month Free",
+    "title": "",
+    "description": "Move in Special\n                \n                    1 Month FREE, *** on approval credit/Income and on one-year lease agreement*** + $20 Parking"
+  },
+  "neighborhoodDescription": "There are numerous nicknames for Los Angeles, just as there are various vibes within this sprawling city. Between rugged mountains and sandy shorelines, a laid-back surf culture and a high-powered commercial district, and food trucks and some of the world’s top-rated restaurants, Los Angeles features diversity in every aspect possible. Somehow, all the pieces of this city fit together seamlessly, making Los Angeles the unique destination we know and love. From Rodeo Drive and Beverly Hills to Hollywood and Chinatown, there is the perfect neighborhood for everyone in Los Angeles.\n\t\t\t\t\tFrom celebrity sightings to unbeatable shopping destinations, Los Angeles is hard to beat. Enjoy a hike in the Santa Monica Mountains, Griffith Park, or Topanga State Park, enjoy the famous entertainment at Universal Studios Hollywood, see the stars along the legendary Hollywood Walk of Fame, or stop into the Los Angeles County Museum of Art.\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\tLearn more about living in Los Angeles",
+  "schools": {
+    "public": [
+      {
+        "type": "Public Elementary School",
+        "name": "Gardner Street Elementary",
+        "grades": "K-5",
+        "numberOfStudents": "362"
+      },
+      {
+        "type": "Public Elementary School",
+        "name": "Cheremoya Avenue Elementary",
+        "grades": "K-5",
+        "numberOfStudents": "159"
+      },
+      {
+        "type": "Public Middle School",
+        "name": "Hubert Howe Bancroft Middle",
+        "grades": "6-8",
+        "numberOfStudents": "446"
+      },
+      {
+        "type": "Public High School",
+        "name": "Hollywood Senior High",
+        "grades": "9-12",
+        "numberOfStudents": "1,107"
+      }
+    ],
+    "private": [
+      {
+        "type": "Private Elementary School",
+        "name": "Briskin Elementary School",
+        "grades": "K-6",
+        "numberOfStudents": "213"
+      },
+      {
+        "type": "Private Elementary School",
+        "name": "West Hollywood Children's Academy",
+        "grades": "PK-1",
+        "numberOfStudents": "11"
+      },
+      {
+        "type": "Private Middle & High School",
+        "name": "Aviva High School",
+        "grades": "7-12",
+        "numberOfStudents": "48"
+      }
+    ],
+    "colleges": [
+      {
+        "name": "Musicians Institute",
+        "drive": "Musicians Institute",
+        "distance": "0.8 mi"
+      },
+      {
+        "name": "Los Angeles Film School",
+        "drive": "Los Angeles Film School",
+        "distance": "1.6 mi"
+      },
+      {
+        "name": "City College",
+        "drive": "City College",
+        "distance": "4.4 mi"
+      },
+      {
+        "name": "New York Film Academy",
+        "drive": "New York Film Academy",
+        "distance": "5.0 mi"
+      }
+    ]
+  },
+  "fees": [
+    {
+      "title": "Details",
+      "policies": [
+        {
+          "header": "Utilities Included",
+          "values": [
+            {
+              "key": "Gas",
+              "value": ""
+            },
+            {
+              "key": "Water",
+              "value": ""
+            },
+            {
+              "key": "Trash Removal",
+              "value": ""
+            },
+            {
+              "key": "Sewer",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "header": "Lease Options",
+          "values": [
+            {
+              "key": "12",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "header": "Property Information",
+          "values": [
+            {
+              "key": "Built in 1961",
+              "value": ""
+            },
+            {
+              "key": "50 units/3 stories",
+              "value": ""
+            },
+            {
+              "key": "Furnished Units Available",
+              "value": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "requiredFees": [
+    {
+      "title": "",
+      "fees": [
+        {
+          "key": "Application Fee",
+          "value": "$55"
+        }
+      ]
+    }
+  ],
+  "petFees": [
+    {
+      "title": "",
+      "fees": [
+        {
+          "key": "Pet deposit",
+          "value": "$350"
+        },
+        {
+          "key": "Pet Limit",
+          "value": "2"
+        },
+        {
+          "key": "Requirements:",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "title": "",
+      "fees": [
+        {
+          "key": "Pet deposit",
+          "value": "$350"
+        },
+        {
+          "key": "Pet Limit",
+          "value": "2"
+        }
+      ]
+    }
+  ],
+  "parkingFees": [
+    {
+      "title": "",
+      "fees": [
+        {
+          "key": "Garage",
+          "value": "--"
+        }
+      ]
+    }
+  ],
+  "description": "About Hacienda Apartments\n                        Great location in the heart of Hollywood, just minutes from Sunset Strip, most treading restaurants, coffee houses, theatres, and shopping within walking distance to the famous Runyon Canyon hike trail, to enjoy an early morning walk or a late afternoon walk to admire a beautiful sunset.\n\nSingle units and Studios available - Unit includes  freshly painted, laminated wood flooring, stove refrigerator, wall attached AC, heater included, and one assigned parking \nspace.\n\nPHOTOS DISPALY ARE A REPRESENTATION OF THE COMMUNITY BUT MAY NOT BE OF THE EXACT APARTMENT.\n\nCommunity includes.\n\nSwimming pool\nLaundry on-site\nLobby \nSurveillance cameras \n\nSecurity Deposit Depends on Credit\nApplication fee (s)50.00\n\n                Hacienda Apartments is an apartment community located in Los Angeles County and the 90046 ZIP Code. This area is served by the Los Angeles Unified attendance zone.\n\n\n\n    \n        \n            \n                Unique Features\n                \n                    \n                            \n                                Gated Parking\n                            \n                            \n                                Hollywood\n                            \n                            \n                                Pool\n                            \n                            \n                                Ac And Heater\n                            \n                            \n                                Runyon Canyon Park\n                            \n                            \n                                Metro\n                            \n                            \n                                Pet Friendly\n                            \n                            \n                                Spacious And Bright Living Room\n                            \n                            \n                                La\n                            \n                            \n                                On Site Manager\n                            \n                            \n                                On Site Laundry Room\n                            \n                            \n                                On Site Management",
+  "amenities": [
+    {
+      "title": "Community Amenities",
+      "value": [
+        "Pool",
+        "Laundry Facilities",
+        "Furnished Units Available",
+        "Elevator",
+        "Laundry Facilities",
+        "Controlled Access",
+        "Maintenance on site",
+        "Property Manager on Site",
+        "Furnished Units Available",
+        "Recycling",
+        "Elevator",
+        "Disposal Chutes",
+        "Pool",
+        "Walking/Biking Trails",
+        "Gated",
+        "Fenced Lot"
+      ]
+    },
+    {
+      "title": "Apartment Features",
+      "value": [
+        "Air Conditioning",
+        "Dishwasher",
+        "High Speed Internet Access",
+        "Hardwood Floors",
+        "Walk-In Closets",
+        "Refrigerator",
+        "Tub/Shower",
+        "Disposal",
+        "High Speed Internet Access",
+        "Air Conditioning",
+        "Heating",
+        "Ceiling Fans",
+        "Smoke Free",
+        "Cable Ready",
+        "Security System",
+        "Tub/Shower",
+        "Intercom",
+        "Dishwasher",
+        "Disposal",
+        "Pantry",
+        "Kitchen",
+        "Oven",
+        "Refrigerator",
+        "Hardwood Floors",
+        "Vinyl Flooring",
+        "Walk-In Closets",
+        "Linen Closet",
+        "Window Coverings",
+        "Wet Bar",
+        "Balcony",
+        "Patio"
+      ]
+    }
+  ],
+  "contact": {
+    "phone": "+1-213-698-3353",
+    "logo": "https://www.apartments.com/a/775e0d/content/images/fallbackimage.png",
+    "name": ""
+  },
+  "models": [
+    {
+      "modelName": "Studio",
+      "rentLabel": "$1,795",
+      "details": ["Studio", "1 Bath", "500 Sq Ft"],
+      "leaseOptions": "",
+      "availability": "",
+      "availabilityInfo": "Available Now",
+      "units": []
+    },
+    {
+      "modelName": "1 Bedroom Apartment",
+      "rentLabel": "$2,150",
+      "details": ["1 Bed", "1 Bath", "800 Sq Ft", "$1,000 Deposit"],
+      "leaseOptions": "",
+      "availability": "",
+      "availabilityInfo": "Available Now",
+      "units": []
+    }
+  ],
+  "rentals": [
+    {
+      "modelId": 2708599,
+      "modelName": "Studio",
+      "details": ["Studio", "1 Bath"],
+      "key": "8f216q1",
+      "beds": 0,
+      "baths": 1,
+      "rent": 1795,
+      "maxRent": 1795,
+      "squareFeet": 500,
+      "maxSquareFeet": 500,
+      "availableDate": "2024-01-08T00:00:00",
+      "availability": 1,
+      "hasKnownAvailabilities": true,
+      "unitCount": 30,
+      "isNew": false,
+      "description": "",
+      "interiorAmenities": {
+        "subCategories": [
+          {
+            "name": "Features",
+            "amenities": [
+              "Air Conditioning",
+              "Disposal",
+              "Kitchen",
+              "Hollywood",
+              "La",
+              "Metro",
+              "On Site Laundry Room",
+              "On Site Manager",
+              "Runyon Canyon Park",
+              "Hardwood Floors"
+            ]
+          }
+        ]
+      },
+      "hasOnlineScheduling": false,
+      "hasSpecialtyPropertyDisclaimer": false,
+      "isTourExcluded": false,
+      "applyNowUrl": ""
+    },
+    {
+      "modelId": 3324317,
+      "modelName": "1 Bedroom Apartment ",
+      "details": ["1 Bed", "1 Bath"],
+      "key": "fhbkc3r",
+      "beds": 1,
+      "baths": 1,
+      "rent": 2150,
+      "maxRent": 2150,
+      "squareFeet": 800,
+      "maxSquareFeet": 800,
+      "availableDate": "2023-09-30T00:00:00",
+      "availability": 1,
+      "hasKnownAvailabilities": true,
+      "unitCount": 0,
+      "isNew": false,
+      "description": "",
+      "interiorAmenities": {
+        "subCategories": [
+          {
+            "name": "Highlights",
+            "amenities": ["Air Conditioning", "Heating", "Intercom"]
+          },
+          {
+            "name": "Kitchen Features & Appliances",
+            "amenities": ["Dishwasher", "Disposal", "Kitchen", "Oven"]
+          },
+          {
+            "name": "Unique Features",
+            "amenities": [
+              "Ac And Heater",
+              "Gated Parking",
+              "On Site Management",
+              "Pet Friendly",
+              "Pool",
+              "Spacious And Bright Living Room"
+            ]
+          }
+        ]
+      },
+      "hasOnlineScheduling": false,
+      "hasSpecialtyPropertyDisclaimer": false,
+      "isTourExcluded": false,
+      "applyNowUrl": ""
+    }
+  ],
+  "scrapedAt": "2025-02-21T04:22:41.834Z",
+  "photos": [
+    "https://images1.apartments.com/i2/dkFJcpH3SpBgDfuFe2grxRnV7WNXIABHJ6nrdFg7M3g/111/hacienda-apartments-los-angeles-ca-primary-photo.jpg",
+    "https://images1.apartments.com/m2/7B51tXvqbtzhXTYAuQQ8feRnrq6FG-_bfs72DcyFIEY/H330W495/hacienda-apartments-los-angeles-ca-map-image-of-the-property.jpg",
+    "https://images1.apartments.com/i2/xtkn5_lAleTEuHws5Mf0_kjW2_l07wkKGnbQVtimbfI/117/hacienda-apartments-los-angeles-ca-1br-1ba---800sf---living-room.jpg",
+    "https://images1.apartments.com/i2/jMaCMJDVI0mdryvlPhzNMwJSyqkBh2a_-8iIPrxvMEI/117/hacienda-apartments-los-angeles-ca-1br-1ba---800sf---dining-room.jpg",
+    "https://images1.apartments.com/i2/Y8jjn8ZKC225vI-6yU-PrLUzc5G_z1lroA_QnLLkM2E/117/hacienda-apartments-los-angeles-ca-studio---500sf---bathroom.jpg",
+    "https://images1.apartments.com/i2/PpTX0jAQCI2b3Wf-YWlt1RwI1x1xMOrU-dFypjSCy_I/117/hacienda-apartments-los-angeles-ca-entrance.jpg",
+    "https://images1.apartments.com/i2/WUnCvkudgYw5c4pW7LaVuiTWi2NkvpSeYVoPOD0c3HA/117/hacienda-apartments-los-angeles-ca-lobby.jpg",
+    "https://images1.apartments.com/i2/lxCGwY8FNJwwaeCdTJ9_cEYYGd9hTPqPZNBsTOxnHPQ/117/hacienda-apartments-los-angeles-ca-pool.jpg",
+    "https://images1.apartments.com/i2/A97YFvJ2eIVq6LBd7FtIr0xgV7gNgM6a7qrkJjyL7hQ/117/hacienda-apartments-los-angeles-ca-laundry--app-coin-operated.jpg",
+    "https://images1.apartments.com/i2/pnerOfV_gXMAL4O59EbNsVEg5wF5FAXuAhjBiWKNNdk/117/hacienda-apartments-los-angeles-ca-1br-1ba---800sf---kitchen.jpg",
+    "https://images1.apartments.com/i2/ErOP-3GYaT6wISxJ_k9HioGF2JFd1KskBaHTnXcfAvk/117/hacienda-apartments-los-angeles-ca-lobby-2nd-floor.jpg",
+    "https://images1.apartments.com/i2/XS9BIK2rF6Fcijh-dL8VcZaAw1fdXPmSeq3pDXRaFcA/117/hacienda-apartments-los-angeles-ca-lobby-2nd-floor-elevator.jpg",
+    "https://images1.apartments.com/i2/s972iXC7YwTniD7Dl5r0R2hAywZse1mJKfi5G71eirk/117/hacienda-apartments-los-angeles-ca-1br-1ba---800sf---bedroom.jpg",
+    "https://images1.apartments.com/i2/o34oCIcCBb_5Yxr3wGJ9D-EHxYXSqjVeokb4FQSOyDI/117/hacienda-apartments-los-angeles-ca-1br-1ba---800sf---bathroom.jpg",
+    "https://images1.apartments.com/i2/v8_QXq2FxEUwM5rwiMzppi-BP90Y1vTn-OQ61ha6T4g/117/hacienda-apartments-los-angeles-ca-garage.jpg",
+    "https://images1.apartments.com/i2/2Y-lj_CH8hQkEut1TFaC1xklVcNbVzSkk3r3ILl58wc/117/hacienda-apartments-los-angeles-ca-building-photo.jpg",
+    "https://images1.apartments.com/i2/u3oB1gqGZfrec_hiibAwmtzpJk8DAQ52n9Cou7bB-2c/117/hacienda-apartments-los-angeles-ca-studio---500sf---kitchen.jpg",
+    "https://images1.apartments.com/i2/SL8WcyaNGvUt5SPPSiLssYJGCVbRCT5Ba9WAa4qWsSE/117/hacienda-apartments-los-angeles-ca-studio---500sf---bathroom.jpg",
+    "https://images1.apartments.com/i2/vrp9sVZ1AOIlua0n0U45gLDXMKPTSyGGE_1LFtVO41E/117/hacienda-apartments-los-angeles-ca-studio---500sf---kitchen.jpg",
+    "https://images1.apartments.com/i2/wNiuB2YvbSfdYsaMC1SJi_Et3PLF5tClgwVAv2MgbRA/117/hacienda-apartments-los-angeles-ca-studio---500sf---living-room.jpg",
+    "https://images1.apartments.com/i2/IKjCO6NMUFOOmgzCD-MCu5jQLOi8byoPXs3HcOFeWTM/117/hacienda-apartments-los-angeles-ca-studio---500sf---living-room.jpg",
+    "https://images1.apartments.com/i2/waFCIxzNWL30198ixYpiGEW8tVpzdbqNfk2SqdfoK_Q/117/hacienda-apartments-los-angeles-ca-studio---500sf---living-room.jpg",
+    "https://images1.apartments.com/i2/gRVpqCj-RzhdJ9ZCeYnMf2AwqZE48ORrT8Vx9Blupbk/117/hacienda-apartments-los-angeles-ca-studio---500sf---living-room.jpg",
+    "https://images1.apartments.com/i2/U5-Y9Ib0vqPAYggUq5sjZYyCF4ewqapmDDyvBd4UVEc/117/hacienda-apartments-los-angeles-ca-1br-1ba---800sf---balcony.jpg",
+    "https://images1.apartments.com/i2/YVctXRU25Ty9JHrh-R4Q-6gSSNKaQGz_g5QFgisaJ-U/117/hacienda-apartments-los-angeles-ca-building-photo.jpg",
+    "https://images1.apartments.com/i2/Gs6ErwZMdbRHBCfUwrAjYENCK8jL2X3oU_i_kdK_AUs/117/hacienda-apartments-los-angeles-ca-building-photo.jpg"
+  ]
+}

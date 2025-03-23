@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Bed, Bath, Square, Heart } from 'lucide-react';
@@ -35,13 +34,43 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
     e.preventDefault();
     e.stopPropagation();
     setCurrentImageIndex((prev) => 
-      prev === property.images.length - 1 ? 0 : prev + 1
+      prev === (property.images?.length - 1 || 0) ? 0 : prev + 1
     );
   };
   
+  // Ensure the property has valid images
+  const hasValidImages = Array.isArray(property.images) && property.images.length > 0;
+  
+  // Default image in case of missing images
+  const defaultImage = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=2340&q=80';
+  
+  // Calculate a valid image index
+  const validImageIndex = hasValidImages 
+    ? Math.min(currentImageIndex, property.images.length - 1) 
+    : 0;
+  
+  // Safe image URL
+  const imageUrl = hasValidImages 
+    ? property.images[validImageIndex] 
+    : defaultImage;
+    
+  // Safe feature handling
+  const features = Array.isArray(property.features) ? property.features : [];
+
+  // Safe formatters
+  const formatPrice = (price: number | undefined): string => {
+    if (typeof price !== 'number' || isNaN(price)) return '$0';
+    return `$${price.toLocaleString()}`;
+  };
+
+  const formatSquareFeet = (sqft: number | undefined): string => {
+    if (typeof sqft !== 'number' || isNaN(sqft)) return '0';
+    return sqft.toLocaleString();
+  };
+
   return (
     <Link 
-      to={`/property/${property.id}`}
+      to={`/property/${property.id || 'detail'}`}
       className={`group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white border border-gray-100 hover-scale ${
         featured ? 'md:col-span-2' : ''
       }`}
@@ -52,9 +81,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
           onClick={nextImage}
         >
           <img 
-            src={property.images[currentImageIndex]} 
-            alt={property.title} 
+            src={imageUrl} 
+            alt={property.title || 'Apartment'} 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+            onError={(e) => {
+              // Fallback if image fails to load
+              (e.target as HTMLImageElement).src = defaultImage;
+            }}
           />
         </div>
         
@@ -69,9 +102,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
           </button>
         </div>
         
-        {property.features.length > 0 && (
+        {features.length > 0 && (
           <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
-            {property.features.slice(0, 2).map((feature, index) => (
+            {features.slice(0, 2).map((feature, index) => (
               <span 
                 key={index} 
                 className="px-2 py-1 bg-white/80 backdrop-blur-sm text-xs font-medium rounded-full"
@@ -85,29 +118,29 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
       
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg">{property.title}</h3>
-          <p className="text-lg font-semibold text-primary">${property.price.toLocaleString()}</p>
+          <h3 className="font-semibold text-lg">{property.title || 'Apartment'}</h3>
+          <p className="text-lg font-semibold text-primary">{formatPrice(property.price)}</p>
         </div>
         
         <div className="flex items-center text-muted-foreground text-sm mb-3">
           <MapPin className="h-3 w-3 mr-1" />
-          <span>{property.address}</span>
+          <span>{property.address || 'Address unavailable'}</span>
         </div>
         
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <div className="flex items-center text-muted-foreground">
             <Bed className="h-4 w-4 mr-1" />
-            <span className="text-sm">{property.bedrooms} bed</span>
+            <span className="text-sm">{typeof property.bedrooms === 'number' ? property.bedrooms : 0} bed</span>
           </div>
           
           <div className="flex items-center text-muted-foreground">
             <Bath className="h-4 w-4 mr-1" />
-            <span className="text-sm">{property.bathrooms} bath</span>
+            <span className="text-sm">{typeof property.bathrooms === 'number' ? property.bathrooms : 0} bath</span>
           </div>
           
           <div className="flex items-center text-muted-foreground">
             <Square className="h-4 w-4 mr-1" />
-            <span className="text-sm">{property.squareFeet.toLocaleString()} sq ft</span>
+            <span className="text-sm">{formatSquareFeet(property.squareFeet)} sq ft</span>
           </div>
         </div>
       </div>
