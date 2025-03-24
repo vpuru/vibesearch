@@ -18,10 +18,10 @@ ALTER TABLE waitlist ENABLE ROW LEVEL SECURITY;
 -- Create policy for row insertion (to be used with anon key)
 CREATE POLICY waitlist_insert_policy ON waitlist
   FOR INSERT
-  TO anon
+  TO authenticated, anon
   WITH CHECK (true);
 
 -- Only admins with service_role key should access the entries
 CREATE POLICY waitlist_select_policy ON waitlist
   FOR SELECT
-  USING (auth.role() = 'service_role');
+  USING (auth.role() = 'service_role' OR auth.role() = 'authenticated');

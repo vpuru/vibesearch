@@ -65,6 +65,21 @@ This project is built with:
 - Tailwind CSS
 - Supabase (for waitlist data storage)
 
+## Supabase Setup
+
+This project uses Supabase to store waitlist submissions. To set up:
+
+1. Create a Supabase account and project
+2. Set up the waitlist table - see detailed instructions in [supabase/README.md](./supabase/README.md)
+3. Get your Supabase URL and anon key from Project Settings > API
+4. Create a .env file with these values:
+   ```
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+If you encounter any RLS-related errors (code: 42501), see the troubleshooting section in the [Supabase README](./supabase/README.md).
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/cda98a1d-e050-4907-b180-9fa27bdae664) and click on Share -> Publish.
