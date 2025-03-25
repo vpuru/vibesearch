@@ -4,7 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Property } from "../search/PropertyCard";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { Icon, LatLngExpression } from "leaflet";
+import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "leaflet";
 import { useSearch } from "../../contexts/SearchContext";
 import { searchApartments, fetchApartmentPreview } from "../../services/apartmentService";
 
@@ -31,12 +31,43 @@ const customIcon = new Icon({
 const DEFAULT_CENTER: LatLngExpression = [34.0522, -118.2437];
 const DEFAULT_ZOOM = 12;
 
-// Helper component to update map view when selected property changes
-const MapViewUpdater = ({ center }: { center: LatLngExpression }) => {
+// Add this function after the DEFAULT_ZOOM constant
+const calculateMapBounds = (properties: PropertyWithLocation[]): LatLngBoundsExpression | null => {
+  const propertiesWithLocation = properties.filter((p) => p.location);
+  if (propertiesWithLocation.length === 0) return null;
+
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+
+  propertiesWithLocation.forEach((property) => {
+    if (property.location) {
+      minLat = Math.min(minLat, property.location.lat);
+      maxLat = Math.max(maxLat, property.location.lat);
+      minLng = Math.min(minLng, property.location.lng);
+      maxLng = Math.max(maxLng, property.location.lng);
+    }
+  });
+
+  // Add some padding to the bounds
+  const latPadding = (maxLat - minLat) * 0.1;
+  const lngPadding = (maxLng - minLng) * 0.1;
+
+  return [
+    [minLat - latPadding, minLng - lngPadding] as LatLngTuple,
+    [maxLat + latPadding, maxLng + lngPadding] as LatLngTuple,
+  ];
+};
+
+// Helper component to update map view when bounds change
+const MapBoundsUpdater = ({ bounds }: { bounds: LatLngBoundsExpression | null }) => {
   const map = useMap();
   useEffect(() => {
-    map.setView(center, 14);
-  }, [center, map]);
+    if (bounds) {
+      map.fitBounds(bounds);
+    }
+  }, [bounds, map]);
   return null;
 };
 
@@ -69,7 +100,10 @@ const MapView: React.FC = () => {
   // Track if we've loaded property details for display
   const [loadedPropertyDetails, setLoadedPropertyDetails] = useState<Record<string, boolean>>({});
 
-  // Function to load property details
+  // Update the type of mapBounds state
+  const [mapBounds, setMapBounds] = useState<LatLngBoundsExpression | null>(null);
+
+  // Modify the loadPropertyDetails function
   const loadPropertyDetails = async (propertyId: string) => {
     if (loadedPropertyDetails[propertyId]) return;
 
@@ -106,16 +140,21 @@ const MapView: React.FC = () => {
         }
       });
 
-      // If this is the first property with location, center map on it
-      if (properties.length === 0 && propertyWithLocation.location) {
-        setMapCenter([propertyWithLocation.location.lat, propertyWithLocation.location.lng]);
-      }
-
       setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
     } catch (err) {
       console.error(`Error loading property ${propertyId}:`, err);
     }
   };
+
+  // Add effect to update map bounds when properties change
+  useEffect(() => {
+    if (properties.length > 0) {
+      const bounds = calculateMapBounds(properties);
+      if (bounds) {
+        setMapBounds(bounds);
+      }
+    }
+  }, [properties]);
 
   // Load properties based on search results
   useEffect(() => {
@@ -339,8 +378,8 @@ const MapView: React.FC = () => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
 
-              {/* Update map view when selected property changes */}
-              <MapViewUpdater center={mapCenter} />
+              {/* Replace MapViewUpdater with MapBoundsUpdater */}
+              {mapBounds && <MapBoundsUpdater bounds={mapBounds} />}
 
               {properties
                 .filter((p) => p.location)
