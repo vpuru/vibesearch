@@ -10,6 +10,7 @@ interface SearchContextType {
   setFilterValues: (filters: SearchFilterValues | null) => void;
   searchPerformed: boolean;
   setSearchPerformed: (performed: boolean) => void;
+  searchQuery: string;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
@@ -19,6 +20,8 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterValues, setFilterValues] = useState<SearchFilterValues | null>(null);
   const [searchPerformed, setSearchPerformed] = useState(false);
+
+  const searchQuery = filterValues?.query || searchTerm;
 
   return (
     <SearchContext.Provider
@@ -31,6 +34,7 @@ export const SearchProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setFilterValues,
         searchPerformed,
         setSearchPerformed,
+        searchQuery,
       }}
     >
       {children}

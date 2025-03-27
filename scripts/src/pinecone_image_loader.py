@@ -26,20 +26,9 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 # Constants
 INPUT_FILE = "apartment_descriptions.jsonl"  # JSONL file in scripts directory
 INDEX_NAME = "apartments-search"
+NAMESPACE = "images"  # Separate namespace for image embeddings
 EMBEDDING_DIMENSION = 384  # Dimension for all-MiniLM-L6-v2
-
-
-def combine_descriptions(apartment):
-    """Combine all photo descriptions for an apartment into a single semantic document"""
-    descriptions = []
-    for photo in apartment.get("photos", []):
-        desc = photo.get("description", "").strip()
-        if desc:
-            descriptions.append(desc)
-
-    # Join all descriptions with newlines and remove duplicate phrases
-    combined = " ".join(descriptions)
-    return combined
+MAX_METADATA_SIZE = 40000  # Pinecone's limit is 40KB
 
 
 def create_embedding(text):
@@ -52,70 +41,49 @@ def create_embedding(text):
         return None
 
 
-def prepare_apartment_data(apartments):
-    """Prepare apartment data for Pinecone upsert"""
+def prepare_image_data(apartments):
+    """Prepare image data for Pinecone upsert"""
     vectors = []
-    MAX_METADATA_SIZE = 40000  # Pinecone's limit is 40KB
 
-    def truncate_description(desc, max_size):
-        """Truncate description to fit within max_size bytes while keeping whole words"""
-        if len(desc.encode("utf-8")) <= max_size:
-            return desc
+    for apartment in tqdm(apartments, desc="Creating image embeddings"):
+        property_id = apartment["id"]
 
-        # Start with half the characters (since UTF-8 can use multiple bytes per char)
-        pos = len(desc) // 2
-        while len(desc[:pos].encode("utf-8")) > max_size:
-            pos = pos // 2
+        for idx, photo in enumerate(apartment.get("photos", [])):
+            description = photo.get("description", "").strip()
+            if not description:
+                continue
 
-        # Find the last space before the limit
-        while pos < len(desc) and len(desc[:pos].encode("utf-8")) <= max_size:
-            pos += 1
+            # Create embedding for the image description
+            embedding = create_embedding(description)
+            if embedding is None:
+                print(
+                    f"Warning: Failed to create embedding for image {idx} of apartment {property_id}"
+                )
+                continue
 
-        # Go back to last space
-        last_space = desc[:pos].rstrip().rfind(" ")
-        return desc[:last_space] if last_space > 0 else desc[: pos - 1]
+            # Create metadata
+            metadata = {
+                "property_id": property_id,
+                "description": description[
+                    : MAX_METADATA_SIZE - 100
+                ],  # Leave room for other metadata
+                "image_url": photo.get("url", ""),
+                "image_index": idx,
+            }
 
-    for apartment in tqdm(apartments, desc="Creating embeddings"):
-        # Combine all photo descriptions
-        combined_description = combine_descriptions(apartment)
+            # Create vector object with a unique ID combining property ID and image index
+            vector_id = f"{property_id}_{idx}"
+            vector = {"id": vector_id, "values": embedding, "metadata": metadata}
 
-        if not combined_description:
-            print(f"Warning: No descriptions found for apartment {apartment['id']}")
-            continue
+            # Debug information
+            print(f"Vector ID: {vector_id}")
+            print(f"Property ID: {property_id}")
+            print(f"Image index: {idx}")
+            print(f"Description length: {len(description)} chars")
+            print(f"Vector dimension: {len(embedding)}")
+            print(f"First 5 values: {embedding[:5]}")
 
-        # Create embedding for the combined description
-        embedding = create_embedding(combined_description)
-
-        if embedding is None:
-            print(
-                f"Warning: Failed to create embedding for apartment {apartment['id']}"
-            )
-            continue
-
-        # Truncate description if needed
-        truncated_description = truncate_description(
-            combined_description, MAX_METADATA_SIZE - 100
-        )  # Leave room for other metadata
-
-        # Create metadata
-        metadata = {
-            "id": apartment["id"],
-            "combined_description": truncated_description,
-            "photo_count": len(apartment.get("photos", [])),
-        }
-
-        # Create vector object
-        vector = {"id": apartment["id"], "values": embedding, "metadata": metadata}
-
-        # Debug information
-        print(f"Vector ID: {vector['id']}")
-        print(f"Vector dimension: {len(vector['values'])}")
-        print(f"First 5 values: {vector['values'][:5]}")
-        print(f"Description length: {len(combined_description)} chars")
-        print(f"Truncated description length: {len(truncated_description)} chars")
-        print(f"Photo count: {metadata['photo_count']}")
-
-        vectors.append(vector)
+            vectors.append(vector)
 
     return vectors
 
@@ -166,7 +134,9 @@ def upsert_to_pinecone(index, vectors, batch_size=100):
         )
 
         try:
-            response = index.upsert(vectors=batch)
+            response = index.upsert(
+                vectors=batch, namespace=NAMESPACE  # Use the images namespace
+            )
             print(f"Upsert response: {response}")
             # Small delay to avoid rate limiting
             time.sleep(0.5)
@@ -209,7 +179,7 @@ def load_apartments(file_path):
 
 def main():
     start_time = datetime.now()
-    print(f"Starting apartment data import at {start_time}")
+    print(f"Starting image data import at {start_time}")
 
     # Load apartment data
     apartments = load_apartments(INPUT_FILE)
@@ -225,9 +195,9 @@ def main():
         print(f"Error initializing Pinecone index: {e}")
         return
 
-    # Prepare apartment data for Pinecone
-    vectors = prepare_apartment_data(apartments)
-    print(f"Created embeddings for {len(vectors)} apartments")
+    # Prepare image data for Pinecone
+    vectors = prepare_image_data(apartments)
+    print(f"Created embeddings for {len(vectors)} images")
 
     # Upsert to Pinecone
     upsert_to_pinecone(index, vectors)

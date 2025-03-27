@@ -50,7 +50,7 @@ export interface ApartmentPreview {
   beds: string;
   baths: string;
   sqft: string;
-  photos: string;
+  photos: string[] | string; // Can be either an array of URLs or a single URL/JSON string
 }
 
 // New interface for apartment preview response
@@ -161,6 +161,21 @@ export const mapApartmentPreviewToProperty = (preview: ApartmentPreview): Proper
     }
   }
 
+  // Handle photos array
+  let images: string[] = [];
+  if (Array.isArray(preview.photos)) {
+    images = preview.photos;
+  } else if (typeof preview.photos === "string") {
+    try {
+      // Try to parse if it's a JSON string
+      const parsedPhotos = JSON.parse(preview.photos);
+      images = Array.isArray(parsedPhotos) ? parsedPhotos : [preview.photos];
+    } catch {
+      // If parsing fails, treat it as a single photo URL
+      images = [preview.photos];
+    }
+  }
+
   return {
     id: preview.id,
     title: preview.propertyName || "Apartment",
@@ -171,7 +186,7 @@ export const mapApartmentPreviewToProperty = (preview: ApartmentPreview): Proper
     bedrooms,
     bathrooms,
     squareFeet,
-    images: preview.photos ? [preview.photos] : [],
+    images,
     description: "",
     features: [],
     coordinates: preview.coordinates || undefined,
@@ -319,101 +334,46 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
 };
 
 // New function to fetch apartment preview by ID
-export const fetchApartmentPreview = async (id: string): Promise<Property> => {
+export const fetchApartmentPreview = async (
+  apartmentId: string,
+  query?: string
+): Promise<Property> => {
   try {
-    // If using test data, return mock data
-    if (USE_TEST_DATA) {
-      return mockSearchResults("")[0];
+    const url = new URL(`${API_ENDPOINTS.apartmentPreview}/${apartmentId}`);
+    if (query) {
+      url.searchParams.append("query", query);
     }
 
-    // Set up AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-    // Make the API request
-    const response = await fetch(`${API_ENDPOINTS.apartmentPreview}/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      signal: controller.signal,
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "same-origin",
-    });
-
-    // Clear the timeout
-    clearTimeout(timeoutId);
-
+    const response = await fetch(url.toString());
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API error response:", errorText);
-      throw new Error(
-        `Failed to fetch apartment preview: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data: ApartmentPreviewResponse = await response.json();
-    console.log("Apartment preview data:", data);
-
-    // Map the preview data to Property type
-    if (!data.apartment) {
-      throw new Error("Invalid API response format, apartment not found");
-    }
-
-    const property = mapApartmentPreviewToProperty(data.apartment);
-    console.log("Mapped apartment preview to property:", property);
-
-    return property;
+    const data = await response.json();
+    return mapApartmentPreviewToProperty(data);
   } catch (error) {
-    console.error(`Error fetching apartment preview for ID ${id}:`, error);
+    console.error("Error fetching apartment preview:", error);
     throw error;
   }
 };
 
 // New function to fetch detailed apartment data by ID
-export const fetchApartmentDetails = async (id: string): Promise<any> => {
+export const fetchApartmentDetails = async (apartmentId: string, query?: string): Promise<any> => {
   try {
-    // If using test data, return mock data
-    if (USE_TEST_DATA) {
-      return mockSearchResults("")[0];
+    const url = new URL(`${API_ENDPOINTS.apartmentDetails}/${apartmentId}`);
+    if (query) {
+      url.searchParams.append("query", query);
     }
 
-    // Set up AbortController for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
-
-    // Make the API request
-    const response = await fetch(`${API_ENDPOINTS.apartmentDetails}/${id}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      signal: controller.signal,
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "same-origin",
-    });
-
-    // Clear the timeout
-    clearTimeout(timeoutId);
-
+    const response = await fetch(url.toString());
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API error response:", errorText);
-      throw new Error(
-        `Failed to fetch apartment details: ${response.status} ${response.statusText}`
-      );
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data: ApartmentDetailsResponse = await response.json();
-    console.log("Apartment details data:", data);
-
+    const data = await response.json();
     return data.apartment;
   } catch (error) {
-    console.error(`Error fetching apartment details for ID ${id}:`, error);
+    console.error("Error fetching apartment details:", error);
     throw error;
   }
 };

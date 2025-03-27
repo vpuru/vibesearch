@@ -144,7 +144,7 @@ interface ApartmentDetail {
 const PropertyDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { searchPerformed } = useSearch();
+  const { searchQuery } = useSearch();
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
@@ -165,7 +165,7 @@ const PropertyDetails: React.FC = () => {
         setError(null);
 
         console.log(`Fetching details for apartment ID: ${id}`);
-        const data = await fetchApartmentDetails(id);
+        const data = await fetchApartmentDetails(id, searchQuery);
         setApartment(data);
 
         console.log("Apartment details loaded:", data);
@@ -178,7 +178,7 @@ const PropertyDetails: React.FC = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, searchQuery]);
 
   const toggleFavorite = () => {
     setIsFavorite(!isFavorite);
@@ -189,7 +189,7 @@ const PropertyDetails: React.FC = () => {
     e.preventDefault();
 
     // If a search was performed, navigate back to search
-    if (searchPerformed) {
+    if (searchQuery) {
       navigate("/search");
     } else {
       // Otherwise, navigate back in history

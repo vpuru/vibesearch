@@ -74,12 +74,51 @@ def search_apartments(query, filter_dict=None, top_k=10):
     return formatted_results
 
 
-def get_apartment_preview_by_id(apartment_id):
+def get_relevant_images(query, property_id, top_k=4):
+    """
+    Get the most relevant images for a property based on a query
+
+    Args:
+        query (str): The search query
+        property_id (str): The property ID to filter by
+        top_k (int): Number of images to return
+
+    Returns:
+        list: List of image URLs
+    """
+    try:
+        # Create query embedding
+        query_embedding = model.encode(query).tolist()
+
+        # Search in the images namespace with property_id filter
+        results = pc.Index(INDEX_NAME).query(
+            vector=query_embedding,
+            namespace="images",
+            filter={"property_id": property_id},
+            top_k=top_k,
+            include_metadata=True,
+        )
+
+        # Extract image URLs from results
+        image_urls = [
+            match.metadata["image_url"]
+            for match in results.matches
+            if "image_url" in match.metadata
+        ]
+
+        return image_urls
+    except Exception as e:
+        print(f"Error getting relevant images: {e}")
+        return []
+
+
+def get_apartment_preview_by_id(apartment_id, query=None):
     """
     Get preview data for a specific apartment by ID
 
     Args:
         apartment_id (str): The ID of the apartment
+        query (str, optional): Search query to find relevant images
 
     Returns:
         dict: Preview data for the apartment or None if not found
@@ -91,6 +130,15 @@ def get_apartment_preview_by_id(apartment_id):
         # Find the apartment with the matching ID
         for apartment in apartments:
             if apartment.get("id") == apartment_id:
+                # Get relevant images if query is provided, otherwise use first 4 photos
+                photos = []
+                if query and len(query.strip()) > 0:
+                    photos = get_relevant_images(query, apartment_id)
+
+                # If no relevant images found or no query provided, use first 4 photos
+                if not photos and apartment.get("photos"):
+                    photos = apartment.get("photos")[:4]
+
                 # Extract only the preview data
                 preview = {
                     "id": apartment.get("id"),
@@ -110,11 +158,7 @@ def get_apartment_preview_by_id(apartment_id):
                     "beds": apartment.get("beds"),
                     "baths": apartment.get("baths"),
                     "sqft": apartment.get("sqft"),
-                    "photos": (
-                        apartment.get("photos", [])[0]
-                        if apartment.get("photos") and len(apartment.get("photos")) > 0
-                        else None
-                    ),
+                    "photos": photos if photos else None,
                 }
                 return preview
 

@@ -84,35 +84,20 @@ def search():
         return jsonify({"error": error_message}), 500
 
 
-@search_bp.route("/api/apartment/preview/<string:apartment_id>", methods=["GET"])
-def apartment_preview(apartment_id):
+@search_bp.route("/api/apartment/preview/<string:apartment_id>")
+def get_apartment_preview(apartment_id):
     """
     Get preview data for a specific apartment by ID
-
-    Args:
-        apartment_id (str): The ID of the apartment to retrieve preview data for
-
-    Returns:
-        JSON: Preview data for the apartment or error message
     """
     try:
-        # Log the request for debugging
-        print(f"DEBUG: Apartment preview request for ID: {apartment_id}")
-
-        # Get apartment preview data
-        apartment = get_apartment_preview_by_id(apartment_id)
-
-        if apartment is None:
+        query = request.args.get("query", "")
+        preview = get_apartment_preview_by_id(apartment_id, query)
+        if preview:
+            return jsonify(preview)
+        else:
             return jsonify({"error": "Apartment not found"}), 404
-
-        return jsonify({"apartment": apartment})
     except Exception as e:
-        error_message = f"Error in apartment preview endpoint: {str(e)}"
-        print(error_message)
-        import traceback
-
-        print(traceback.format_exc())
-        return jsonify({"error": error_message}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 @search_bp.route("/api/apartment/details/<string:apartment_id>", methods=["GET"])

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Bed, Bath, Square, Heart, Loader2 } from "lucide-react";
 import { fetchApartmentPreview } from "../../services/apartmentService";
+import { useSearch } from "../../contexts/SearchContext";
 
 export interface Property {
   id: string;
@@ -27,6 +28,7 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false }) => {
   const navigate = useNavigate();
+  const { searchQuery } = useSearch();
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [propertyData, setPropertyData] = useState<Property | null>(null);
@@ -48,7 +50,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
         setError(null);
         const apartmentId = property;
         console.log(`Fetching preview data for apartment ID: ${apartmentId}`);
-        const data = await fetchApartmentPreview(apartmentId);
+        const data = await fetchApartmentPreview(apartmentId, searchQuery);
         setPropertyData(data);
       } catch (err) {
         console.error("Error fetching property data:", err);
@@ -59,7 +61,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
     };
 
     fetchData();
-  }, [property]);
+  }, [property, searchQuery]);
 
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
