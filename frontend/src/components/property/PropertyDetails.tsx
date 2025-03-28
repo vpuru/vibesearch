@@ -274,6 +274,7 @@ const PropertyDetails: React.FC = () => {
       <div className="bg-gray-100">
         <div className="container mx-auto px-4 py-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Anchor Image */}
             <div className="rounded-xl overflow-hidden shadow-sm aspect-[4/3]">
               <img
                 src={apartment.photos[selectedImageIndex]}
@@ -281,27 +282,37 @@ const PropertyDetails: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              {apartment.photos.slice(0, 4).map((image, index) => (
+            {/* Thumbnails Container */}
+            <div className="rounded-xl shadow-sm aspect-[4/3]">
+              <div className="overflow-x-auto overflow-y-visible h-full p-2 custom-scrollbar">
                 <div
-                  key={index}
-                  className={`rounded-xl overflow-hidden shadow-sm aspect-[4/3] cursor-pointer transition-all ${
-                    selectedImageIndex === index ? "ring-4 ring-primary" : "hover:opacity-90"
-                  }`}
-                  onClick={() => setSelectedImageIndex(index)}
+                  className="grid grid-flow-col grid-rows-2 gap-x-4 gap-y-4 h-full"
+                  style={{ gridAutoColumns: "calc(50% - 0.5rem)" }}
                 >
-                  <img
-                    src={image}
-                    alt={`${apartment.propertyName} - Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                  {apartment.photos.map((image, index) => (
+                    <div
+                      key={index}
+                      className={`rounded overflow-hidden cursor-pointer transition-all ${
+                        selectedImageIndex === index
+                          ? "ring-4 ring-primary ring-offset-4"
+                          : "hover:opacity-90"
+                      }`}
+                      onClick={() => setSelectedImageIndex(index)}
+                    >
+                      <img
+                        src={image}
+                        alt={`${apartment.propertyName} - Image ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
 
       {/* Property Details */}
       <div className="container mx-auto px-4 py-8">
