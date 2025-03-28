@@ -111,7 +111,7 @@ def get_apartment_preview_by_id(apartment_id):
                     "baths": apartment.get("baths"),
                     "sqft": apartment.get("sqft"),
                     "photos": (
-                        apartment.get("photos", [])[0]
+                        apartment.get("photos", [])
                         if apartment.get("photos") and len(apartment.get("photos")) > 0
                         else None
                     ),

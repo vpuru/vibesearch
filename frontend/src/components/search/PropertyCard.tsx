@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { MapPin, Bed, Bath, Square, Heart, Loader2 } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchApartmentPreview } from "../../services/apartmentService";
 
 export interface Property {
@@ -70,10 +70,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!propertyData) return;
+    if (!propertyData || !hasValidImages) return;
 
     setCurrentImageIndex((prev) =>
-      prev === (propertyData.images?.length - 1 || 0) ? 0 : prev + 1
+      prev === (propertyData.images.length - 1) ? 0 : prev + 1
+    );
+  };
+
+  const previousImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!propertyData || !hasValidImages) return;
+
+    setCurrentImageIndex((prev) =>
+      prev === 0 ? propertyData.images.length - 1 : prev - 1
     );
   };
 
@@ -155,9 +165,28 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
               // Fallback if image fails to load
               (e.target as HTMLImageElement).src = defaultImage;
             }}
-            onClick={(e) => nextImage(e)}
           />
         </div>
+
+        {/* Image navigation arrows - Only show if there are multiple images */}
+        {hasValidImages && propertyData.images.length > 1 && (
+          <>
+            <button
+              onClick={previousImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+              aria-label="Next image"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </>
+        )}
 
         <div className="absolute top-2 right-2">
           <button
@@ -169,6 +198,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
             <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
           </button>
         </div>
+
+        {/* Image counter indicator - Only show if there are multiple images */}
+        {hasValidImages && propertyData.images.length > 1 && (
+          <div className="absolute bottom-2 right-2">
+            <div className="px-2 py-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full">
+              {validImageIndex + 1}/{propertyData.images.length}
+            </div>
+          </div>
+        )}
 
         {features.length > 0 && (
           <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">

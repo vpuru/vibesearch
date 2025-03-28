@@ -50,7 +50,7 @@ export interface ApartmentPreview {
   beds: string;
   baths: string;
   sqft: string;
-  photos: string;
+  photos: string[];
 }
 
 // New interface for apartment preview response
@@ -171,7 +171,7 @@ export const mapApartmentPreviewToProperty = (preview: ApartmentPreview): Proper
     bedrooms,
     bathrooms,
     squareFeet,
-    images: preview.photos ? [preview.photos] : [],
+    images: preview.photos ? preview.photos : [],
     description: "",
     features: [],
     coordinates: preview.coordinates || undefined,
