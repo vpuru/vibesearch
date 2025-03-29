@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, MapPin, Menu } from 'lucide-react';
+import { MapPin, Menu, Info } from 'lucide-react';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = React.useState(false);
@@ -45,18 +44,13 @@ const Navbar = () => {
           </div>
         </div>
         <div className="flex items-center space-x-4">
-          <Link to="/search" className="p-2 rounded-full hover:bg-secondary transition-colors">
-            <Search className="h-5 w-5" />
-          </Link>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 shadow-sm text-gray-700 rounded-full text-sm font-medium">
+            <Info className="h-4 w-4 text-primary" />
+            <span>Built for LA — We are expanding to other cities soon!</span>
+          </div>
           <button className="md:hidden p-2 rounded-full hover:bg-secondary transition-colors">
             <Menu className="h-5 w-5" />
           </button>
-          <Link 
-            to="/search" 
-            className="hidden md:block px-4 py-2 bg-primary text-white rounded-full text-sm font-medium shadow-sm hover:shadow-md transition-all"
-          >
-            Find Apartments
-          </Link>
         </div>
       </div>
     </nav>

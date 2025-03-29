@@ -270,11 +270,9 @@ const PropertyDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Image Gallery */}
       <div className="bg-gray-100">
         <div className="container mx-auto px-4 py-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Anchor Image */}
             <div className="rounded-xl overflow-hidden shadow-sm aspect-[4/3]">
               <img
                 src={apartment.photos[selectedImageIndex]}
@@ -282,7 +280,6 @@ const PropertyDetails: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            {/* Thumbnails Container */}
             <div className="rounded-xl shadow-sm aspect-[4/3]">
               <div className="overflow-x-auto overflow-y-visible h-full p-2 custom-scrollbar">
                 <div
@@ -312,8 +309,6 @@ const PropertyDetails: React.FC = () => {
           </div>
         </div>
       </div>
-
-
       {/* Property Details */}
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
