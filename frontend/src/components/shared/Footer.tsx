@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
@@ -34,11 +33,6 @@ const Footer = () => {
               <li>
                 <Link to="/map" className="text-muted-foreground hover:text-foreground transition-colors">
                   Map View
-                </Link>
-              </li>
-              <li>
-                <Link to="/favorites" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Favorites
                 </Link>
               </li>
             </ul>
