@@ -38,9 +38,6 @@ const Navbar = () => {
             <Link to="/map" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
               Map View
             </Link>
-            <Link to="/favorites" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
-              Favorites
-            </Link>
           </div>
         </div>
         <div className="flex items-center space-x-4">

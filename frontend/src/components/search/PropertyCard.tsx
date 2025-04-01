@@ -27,7 +27,6 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false }) => {
   const navigate = useNavigate();
-  const [isFavorite, setIsFavorite] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [propertyData, setPropertyData] = useState<Property | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,12 +59,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
 
     fetchData();
   }, [property]);
-
-  const toggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsFavorite(!isFavorite);
-  };
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -189,14 +182,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
         )}
 
         <div className="absolute top-2 right-2">
-          <button
-            onClick={toggleFavorite}
-            className={`w-8 h-8 flex items-center justify-center rounded-full ${
-              isFavorite ? "bg-primary text-white" : "bg-white/80 backdrop-blur-sm text-gray-700"
-            } shadow-sm transition-colors`}
-          >
-            <Heart className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
-          </button>
+          {/* Favorites button removed */}
         </div>
 
         {/* Image counter indicator - Only show if there are multiple images */}

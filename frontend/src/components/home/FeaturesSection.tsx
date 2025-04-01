@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Search, Map, Filter, Clock, Star, Shield } from 'lucide-react';
 
@@ -22,11 +21,6 @@ const features = [
     icon: <Clock className="h-6 w-6 text-primary" />,
     title: 'Real-time Updates',
     description: 'Get notified immediately when new properties matching your criteria become available.'
-  },
-  {
-    icon: <Star className="h-6 w-6 text-primary" />,
-    title: 'Save Favorites',
-    description: 'Bookmark properties you love and compare them side by side to make the best decision.'
   },
   {
     icon: <Shield className="h-6 w-6 text-primary" />,

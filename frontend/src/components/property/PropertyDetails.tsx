@@ -145,7 +145,6 @@ const PropertyDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { searchPerformed } = useSearch();
-  const [isFavorite, setIsFavorite] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [apartment, setApartment] = useState<ApartmentDetail | null>(null);
@@ -179,10 +178,6 @@ const PropertyDetails: React.FC = () => {
 
     fetchData();
   }, [id]);
-
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-  };
 
   // Handle back navigation
   const handleBackClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -252,20 +247,7 @@ const PropertyDetails: React.FC = () => {
           </a>
 
           <div className="flex items-center gap-4">
-            <button
-              className={`flex items-center gap-1 text-sm ${
-                isFavorite ? "text-primary" : "text-gray-700"
-              }`}
-              onClick={toggleFavorite}
-            >
-              <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />
-              <span className="hidden md:inline">Save</span>
-            </button>
-
-            <button className="flex items-center gap-1 text-sm text-gray-700">
-              <Share2 className="h-5 w-5" />
-              <span className="hidden md:inline">Share</span>
-            </button>
+            {/* Favorites and share buttons removed */}
           </div>
         </div>
       </div>
