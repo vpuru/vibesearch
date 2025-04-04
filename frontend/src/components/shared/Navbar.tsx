@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Menu, Info } from 'lucide-react';
+import { MapPin, Menu, Info, Search } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = React.useState(false);
@@ -21,32 +22,41 @@ const Navbar = () => {
 
   return (
     <nav 
-      className={`fixed top-0 left-0 right-0 z-50 px-4 py-4 transition-all duration-300 ${
-        scrolled ? 'glass shadow-sm' : 'bg-transparent'
-      }`}
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 py-4 px-6 md:px-10 transition-all duration-300",
+        scrolled 
+          ? "bg-white/90 backdrop-blur-md shadow-sm" 
+          : "bg-transparent"
+      )}
     >
-      <div className="container mx-auto flex items-center justify-between">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-8">
-          <Link to="/" className="flex items-center space-x-2">
-            <MapPin className="h-5 w-5 text-primary" />
-            <span className="font-display text-xl font-semibold">Vibe Search</span>
+          <Link to="/" className="flex items-center space-x-1 -mt-1.5">
+            <span className="text-vibe-navy font-serif font-medium text-2xl">iris</span>
           </Link>
-          <div className="hidden md:flex items-center space-x-6">
-            <Link to="/search" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+          <div className="flex items-center space-x-6">
+            <Link 
+              to="/search" 
+              className="text-vibe-charcoal hover:text-vibe-navy md:text-base text-base transition-colors duration-200"
+            >
               Search
             </Link>
-            <Link to="/map" className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors">
+            <Link 
+              to="/map" 
+              className="text-vibe-charcoal hover:text-vibe-navy md:text-base text-base transition-colors duration-200"
+            >
               Map View
             </Link>
           </div>
         </div>
+        
         <div className="flex items-center space-x-4">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 shadow-sm text-gray-700 rounded-full text-sm font-medium">
-            <Info className="h-4 w-4 text-primary" />
-            <span>Built for LA — We are expanding to other cities soon!</span>
+          <div className="px-3 py-1 bg-vibe-navy/10 text-vibe-navy rounded-full text-md font-medium flex items-center space-x-1">
+            <MapPin className="w-3 h-3" />
+            <span>Built for LA — New Cities Soon!</span>
           </div>
-          <button className="md:hidden p-2 rounded-full hover:bg-secondary transition-colors">
-            <Menu className="h-5 w-5" />
+          <button className="md:hidden text-vibe-charcoal">
+            <Menu className="w-6 h-6" />
           </button>
         </div>
       </div>

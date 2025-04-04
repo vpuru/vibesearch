@@ -9,7 +9,7 @@ const Footer = () => {
             <span className="font-serif text-xl text-navy">iris</span>
           </div>
           <p className="text-xs text-muted-foreground mt-4 md:mt-0">
-            © {new Date().getFullYear()} All rights reserved.
+            © {new Date().getFullYear()} All Rights Reserved
           </p>
         </div>
       </div>
