@@ -5,7 +5,7 @@ const features = [
   {
     icon: <MessageSquare className="h-6 w-6 text-vibe-navy" />,
     title: 'Describe Your Dream Apartment',
-    description: 'Tell us what you\'re looking for using natural language or images — "sunny loft with creative energy" or "peaceful cottage near nature."'
+    description: 'Tell us what you\'re looking for using words or images — "sunny loft with creative energy" or "peaceful cottage near nature."'
   },
   {
     icon: <Brain className="h-6 w-6 text-vibe-navy" />,
@@ -51,7 +51,7 @@ const FeaturesSection = () => {
           </p>
         </div>
         
-        <div className="w-full h-[250px] sm:h-[280px] md:h-[320px] bg-black/5 rounded-xl flex items-center justify-center mb-10 md:mb-12 max-w-3xl mx-auto">
+        <div className="w-full h-[250px] sm:h-[280px] md:h-[320px] bg-black/5 rounded-xl flex items-center justify-center mb-10 md:mb-12 max-w-3xl mx-auto -mt-5">
           <div className="text-vibe-charcoal/50">Demo Video Placeholder</div>
         </div>
         
