@@ -137,13 +137,13 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
             <h2 className="text-2xl font-semibold text-red-500">Error</h2>
           ) : (
             <>
-              <h2 className="text-2xl font-semibold">
-                {totalItemCount} results
+              <h2 className="text-2xl font-semibold text-vibe-navy font-sans leading-none flex items-baseline">
+                <span>{totalItemCount} results</span>
                 {searchTerm && (
-                  <span className="ml-2 font-normal text-muted-foreground">for "{searchTerm}"</span>
+                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">for "{searchTerm}"</span>
                 )}
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-vibe-charcoal/70 font-sans mt-1.5">
                 {totalItemCount > 0
                   ? `Showing ${visibleItems.length} of ${totalItemCount} available properties`
                   : "No properties found matching your criteria"}

@@ -233,7 +233,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="pl-10 w-full py-3 px-4 bg-white border border-gray-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              className="pl-10 w-full py-3 px-4 bg-white border border-gray-200 text-vibe-charcoal/70 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
           </div>
 
@@ -243,7 +243,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${
                 showFilters
                   ? "bg-vibe-navy text-white"
-                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                  : "bg-gray-200 text-vibe-charcoal/70 hover:bg-gray-300"
               }`}
               onClick={() => setShowFilters(!showFilters)}
             >
@@ -264,9 +264,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         {showFilters && (
           <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white animate-fade-in">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium">Refine Search</h3>
+              <h3 className="font-medium font-sans text-vibe-charcoal/70">Refine Search</h3>
               <button
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="text-sm text-vibe-charcoal/70 hover:text-vibe-charcoal"
                 onClick={clearFilters}
               >
                 Clear all
@@ -275,14 +275,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
               <div>
-                <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="bedrooms" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
                   Bedrooms
                 </label>
                 <select
                   id="bedrooms"
                   value={filters.bedrooms}
                   onChange={(e) => setFilters({ ...filters, bedrooms: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
                 >
                   <option value="">Any</option>
                   <option value="studio">Studio</option>
@@ -294,14 +294,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               </div>
 
               <div>
-                <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="bathrooms" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
                   Bathrooms
                 </label>
                 <select
                   id="bathrooms"
                   value={filters.bathrooms}
                   onChange={(e) => setFilters({ ...filters, bathrooms: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
                 >
                   <option value="">Any</option>
                   <option value="1">1</option>
@@ -313,7 +313,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               </div>
 
               <div>
-                <label htmlFor="price-min" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="price-min" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
                   Min Price
                 </label>
                 <input
@@ -322,12 +322,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                   placeholder="$0"
                   value={filters.priceMin}
                   onChange={(e) => setFilters({ ...filters, priceMin: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
                 />
               </div>
 
               <div>
-                <label htmlFor="price-max" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="price-max" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
                   Max Price
                 </label>
                 <input
@@ -336,12 +336,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                   placeholder="No max"
                   value={filters.priceMax}
                   onChange={(e) => setFilters({ ...filters, priceMax: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
                 />
               </div>
 
               <div>
-                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="city" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
                   City
                 </label>
                 <input
@@ -350,12 +350,12 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                   placeholder="Any city"
                   value={filters.city}
                   onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
                 />
               </div>
 
               <div>
-                <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="state" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
                   State
                 </label>
                 <input
@@ -364,13 +364,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                   placeholder="Any state"
                   value={filters.state}
                   onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Amenities</label>
+              <label className="block text-sm font-medium text-vibe-charcoal/70 mb-2">Amenities</label>
               <div className="flex flex-wrap gap-2">
                 {amenitiesList.map((amenity) => (
                   <button
@@ -380,7 +380,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 transition-colors ${
                       filters.amenities.includes(amenity)
                         ? "bg-vibe-navy text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-100 text-vibe-charcoal/70 hover:bg-gray-200"
                     }`}
                   >
                     {amenity}
