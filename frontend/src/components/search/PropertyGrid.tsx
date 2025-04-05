@@ -155,7 +155,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
         {showMapToggle && totalItemCount > 0 && (
           <Link
             to={`/map${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ""}`}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-vibe-navy text-white rounded-lg"
           >
             <Map className="h-4 w-4" />
             <span>View Map</span>
@@ -189,7 +189,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           <h3 className="text-xl font-semibold mb-2 text-red-600">Error Loading Properties</h3>
           <p className="text-gray-600 max-w-md">{error}</p>
           <button
-            className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+            className="mt-4 px-4 py-2 bg-vibe-navy text-white rounded-lg hover:bg-vibe-navy/90"
             onClick={() => window.location.reload()}
           >
             Try Again

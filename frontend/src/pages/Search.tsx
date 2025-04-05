@@ -192,7 +192,7 @@ const Search = () => {
           initialQuery={searchTerm || initialQuery}
           initialValues={filterValues || undefined}
         />
-        <main className="flex-grow">
+        <main className="flex-grow bg-white">
           <PropertyGrid
             propertyIds={apartmentIds}
             loading={loading}

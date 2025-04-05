@@ -210,31 +210,31 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
 
       <div className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg">{propertyData.title || "Apartment"}</h3>
-          <p className="text-lg font-semibold text-primary">{formatPrice(propertyData.price)}</p>
+          <h3 className="font-semibold text-lg font-sans text-vibe-navy">{propertyData.title || "Apartment"}</h3>
+          <p className="text-lg font-semibold text-vibe-navy">{formatPrice(propertyData.price)}</p>
         </div>
 
-        <div className="flex items-center text-muted-foreground text-sm mb-3">
+        <div className="flex items-center text-vibe-charcoal/70 text-sm mb-3">
           <MapPin className="h-3 w-3 mr-1" />
           <span>{propertyData.address || "Address unavailable"}</span>
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-          <div className="flex items-center text-muted-foreground">
+          <div className="flex items-center text-vibe-charcoal/70">
             <Bed className="h-4 w-4 mr-1" />
             <span className="text-sm">
               {typeof propertyData.bedrooms === "number" ? propertyData.bedrooms : 0} bed
             </span>
           </div>
 
-          <div className="flex items-center text-muted-foreground">
+          <div className="flex items-center text-vibe-charcoal/70">
             <Bath className="h-4 w-4 mr-1" />
             <span className="text-sm">
               {typeof propertyData.bathrooms === "number" ? propertyData.bathrooms : 0} bath
             </span>
           </div>
 
-          <div className="flex items-center text-muted-foreground">
+          <div className="flex items-center text-vibe-charcoal/70">
             <Square className="h-4 w-4 mr-1" />
             <span className="text-sm">{formatSquareFeet(propertyData.squareFeet)} sq ft</span>
           </div>

@@ -240,16 +240,20 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           <div className="flex gap-2">
             <button
               type="button"
-              className="inline-flex items-center gap-2 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg"
+              className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${
+                showFilters
+                  ? "bg-vibe-navy text-white"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              }`}
               onClick={() => setShowFilters(!showFilters)}
             >
               <Sliders className="h-5 w-5" />
-              <span>Filters</span>
+              <span>{showFilters ? "Hide Filters" : "Filters"}</span>
             </button>
 
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-4 py-3 bg-primary text-white rounded-lg"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-vibe-navy text-white rounded-lg"
             >
               <Search className="h-5 w-5" />
               <span>Search</span>
@@ -375,7 +379,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     onClick={() => toggleAmenity(amenity)}
                     className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 transition-colors ${
                       filters.amenities.includes(amenity)
-                        ? "bg-primary text-white"
+                        ? "bg-vibe-navy text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                   >
