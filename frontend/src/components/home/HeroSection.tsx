@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, ArrowRight, Home, Upload, X, Loader, ArrowDown, MapPin } from "lucide-react";
-import OpenAI from 'openai';
+import { uploadImages } from "../../services/supabaseService";
+import { useSearch } from "../../contexts/SearchContext";
 
 const HeroSection = () => {
   const globeRef = useRef<HTMLDivElement>(null);
@@ -16,12 +17,14 @@ const HeroSection = () => {
   const [isDragging, setIsDragging] = useState(false);
   const navigate = useNavigate();
 
+  const { setUploadedImages: setContextUploadedImages, setSearchType } = useSearch();
+
   const placeholders = [
     "Describe your ideal apartment and/or upload images...",
     "Modern loft ten minutes away from the pier",
-    "Cozy studio with abundant natural light",
-    "Luxury two bedroom with a pool and a gym",
-    "Artsy space with exposed brick",
+    "Cozy studio with abundant natural light near downtown",
+    "Luxury two bedroom with a pool, gym, and a balcony",
+    "Artsy space with exposed brick, near the Topanga trail",
     "Minimalist design with floor-to-ceiling windows"
   ];
 
@@ -35,63 +38,35 @@ const HeroSection = () => {
   // Handle form submission
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (uploadedImages.length === 0) {
-      if (searchQuery.trim()) {
-        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      }
+    if (!searchQuery.trim() && uploadedImages.length === 0) {
       return;
     }
+    
     setIsLoading(true);
     try {
-      const base64Images = await Promise.all(
-        uploadedImages.map(file => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        })
-      );
+      let searchType: "text" | "image" | "combined" = "text";
+      if (uploadedImages.length > 0) {
+        const uploadedUrls = await uploadImages(uploadedImages);
+        if (!searchQuery.trim()) {
+          searchType = "image";
+        } else {
+          searchType = "combined";
+        }
+        
+        setContextUploadedImages(uploadedUrls);
+        setSearchType(searchType);
+      } else {
+        setContextUploadedImages([]);
+        setSearchType("text");
+      }
       
-      type ContentPart = 
-        | { type: "text"; text: string }
-        | { type: "image_url"; image_url: { url: string } };
-      
-      const textContent: ContentPart = {
-        type: "text",
-        text: "In less than 20 words, describe the attached image(s) in a way that would help refine an apartment search. Focus on aesthetics and design."
-      };
-      
-      const imageContents: ContentPart[] = base64Images.map(dataUrl => ({
-        type: "image_url",
-        image_url: { url: dataUrl as string }
-      }));
-      
-      const content: ContentPart[] = [textContent, ...imageContents];
-      
-      const client = new OpenAI({
-        apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-        dangerouslyAllowBrowser: true
-      });
-      
-      const completion = await client.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that generates semantic search descriptions for apartment listings. Follow the prompt format exactly.' },
-          { role: 'user', content }
-        ],
-      });
-      
-      const llmDescription = completion.choices[0].message.content.trim();
-      const combinedQuery = (searchQuery.trim() ? searchQuery.trim() + " " : "") + llmDescription;
-      navigate(`/search?q=${encodeURIComponent(combinedQuery)}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim() || " ")}`);
     } catch (err) {
-      console.error("Error processing images with OpenAI model:", err);
-      setIsLoading(false); 
+      console.error("Error processing search:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {

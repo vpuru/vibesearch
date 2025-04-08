@@ -4,6 +4,7 @@ from app.services import (
     get_apartment_preview_by_id,
     get_apartment_details_by_id,
 )
+from app.image_processing import process_images_with_gpt4o
 
 search_bp = Blueprint("search", __name__)
 
@@ -70,16 +71,47 @@ def search():
         # Search for apartments
         results = search_apartments(query, filter_dict, top_k)
 
+        # Get the search type if provided
+        search_type = request.args.get("searchType", "text")
+
         # Log the results for debugging
         print(f"DEBUG: Search completed, returned {len(results)} results")
         print(f"DEBUG: Results: {results}")
 
-        return jsonify({"results": results})
+        return jsonify({"results": results, "searchType": search_type})
     except Exception as e:
         error_message = f"Error in search endpoint: {str(e)}"
         print(error_message)
         import traceback
 
+        print(traceback.format_exc())
+        return jsonify({"error": error_message}), 500
+
+
+@search_bp.route("/api/process-images", methods=["POST"])
+def process_images():
+    try:
+        # Get image URLs from request
+        data = request.json
+        if not data or "imageUrls" not in data or not data["imageUrls"]:
+            return jsonify({"error": "Image URLs are required"}), 400
+        
+        image_urls = data["imageUrls"]
+        
+        # Optional user query that might accompany the images
+        user_query = data.get("userQuery", "")
+        
+        # Process images with GPT-4o
+        description = process_images_with_gpt4o(image_urls, user_query)
+        
+        return jsonify({
+            "description": description,
+            "original_urls": image_urls
+        })
+    except Exception as e:
+        error_message = f"Error processing images: {str(e)}"
+        print(error_message)
+        import traceback
         print(traceback.format_exc())
         return jsonify({"error": error_message}), 500
 

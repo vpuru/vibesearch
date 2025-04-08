@@ -5,7 +5,7 @@ const features = [
   {
     icon: <MessageSquare className="h-6 w-6 text-vibe-navy" />,
     title: 'Describe Your Dream Apartment',
-    description: 'Tell us what you\'re looking for using words or images — "sunny loft with creative energy" or "peaceful cottage near nature."'
+    description: 'Tell us what you\'re looking for using words or images — phrases like"sunny loft with creative energy" or upload your vision board.'
   },
   {
     icon: <Brain className="h-6 w-6 text-vibe-navy" />,
@@ -23,7 +23,7 @@ const FeaturesSection = () => {
   useEffect(() => {
     const featureCard = document.getElementById('feature-card');
     if (featureCard) {
-      console.log('Feature card element found:', featureCard);
+      // console.log('Feature card element found:', featureCard);
     } else {
       console.warn('Feature card element not found');
     }
@@ -47,7 +47,7 @@ const FeaturesSection = () => {
             How <span className="text-vibe-navy">iris</span> Works
           </h2>
           <p className="text-sm md:text-base lg:text-lg text-vibe-charcoal/70 max-w-full mx-auto overflow-hidden text-ellipsis">
-            We think apartment hunting should be more intuitive, emotional, and aligned with how people actually think about spaces.
+            We think apartment hunting should be more intuitive and more aligned with how people actually think about spaces.
           </p>
         </div>
         

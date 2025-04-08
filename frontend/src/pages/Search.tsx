@@ -6,6 +6,7 @@ import SearchFilters, { SearchFilterValues } from "../components/search/SearchFi
 import PropertyGrid from "../components/search/PropertyGrid";
 import { searchApartments } from "../services/apartmentService";
 import { useSearch } from "../contexts/SearchContext";
+import { API_ENDPOINTS } from "../services/config";
 
 // Number of items to fetch per page
 const ITEMS_PER_PAGE = 25;
@@ -30,6 +31,12 @@ const Search = () => {
     setFilterValues,
     searchPerformed,
     setSearchPerformed,
+    uploadedImages,
+    setUploadedImages,
+    searchType,
+    setSearchType,
+    imageDescriptions,
+    setImageDescriptions,
   } = useSearch();
 
   const [loading, setLoading] = useState(false);
@@ -72,8 +79,41 @@ const Search = () => {
       // Update URL query parameter
       setSearchParams({ q: newFilterValues.query });
 
+      let finalQuery = newFilterValues.query;
+      let currentSearchType = "text";
+      if (uploadedImages.length > 0) {
+        if (!newFilterValues.query.trim()) {
+          currentSearchType = "image";
+        } else {
+          currentSearchType = "combined";
+        }
+        
+        const imageDescription = await processImages(uploadedImages, newFilterValues.query.trim());
+        setImageDescriptions([imageDescription]);
+        
+        if (currentSearchType === "image") {
+          finalQuery = imageDescription;
+        } else {
+          finalQuery = `${newFilterValues.query.trim()} ${imageDescription}`;
+        }
+
+        console.log(`Search type: ${currentSearchType}, Final query: ${finalQuery}`);
+      }
+      
+      // Update context with search type
+      setSearchType(currentSearchType as "text" | "image" | "combined");
+      
+      // Create modified filter values with the final query
+      const modifiedFilters = {
+        ...newFilterValues,
+        query: finalQuery
+      };
+
       // Perform search with first page of results
-      await fetchResults(newFilterValues, 1);
+      await fetchResults(modifiedFilters, 1, currentSearchType);
+      
+      // Clear uploaded images after search is performed
+      setUploadedImages([]);
     } catch (err) {
       // Handle any other errors in the outer try/catch
       console.error("Unexpected error during search:", err);
@@ -81,6 +121,32 @@ const Search = () => {
       setApartmentIds([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Helper function to process images with backend
+  const processImages = async (imageUrls: string[], userQuery: string): Promise<string> => {
+    try {
+      const response = await fetch(`${API_ENDPOINTS.processImages}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          imageUrls,
+          userQuery
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to process images: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.description;
+    } catch (error) {
+      console.error("Error processing images:", error);
+      return "modern stylish apartment"; // Fallback description
     }
   };
 
@@ -105,7 +171,7 @@ const Search = () => {
   };
 
   // Shared function to fetch results (used by both initial search and pagination)
-  const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {
+  const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number, searchTypeParam?: string) => {
     // Prepare filter parameters for API
     const searchParams = {
       query: searchFilterValues.query,
@@ -122,6 +188,7 @@ const Search = () => {
       },
       limit: ITEMS_PER_PAGE, // Request smaller chunks
       page: pageNum, // Add page parameter
+      searchType: searchTypeParam || searchType || "text",
     };
 
     try {
@@ -198,6 +265,7 @@ const Search = () => {
             loading={loading}
             error={error}
             searchTerm={searchTerm || initialQuery}
+            searchType={searchType}
             onLoadMore={handleLoadMore}
           />
         </main>

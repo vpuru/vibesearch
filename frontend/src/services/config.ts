@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   health: `${API_BASE_URL}/api/health`,
   apartmentPreview: `${API_BASE_URL}/api/apartment/preview`,
   apartmentDetails: `${API_BASE_URL}/api/apartment/details`,
+  processImages: `${API_BASE_URL}/api/process-images`,
 };
 
 // Configuration for testing mode

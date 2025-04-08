@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import PropertyCard, { Property } from "./PropertyCard";
 import PropertyCardSkeleton from "./PropertyCardSkeleton";
 import { Map, Loader2, ArrowDown } from "lucide-react";
@@ -22,6 +22,7 @@ interface PropertyGridProps {
   error?: string;
   showMapToggle?: boolean;
   searchTerm?: string;
+  searchType?: "text" | "image" | "combined" | null;
   onLoadMore?: () => void; // Callback for loading more results
 }
 
@@ -32,13 +33,16 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   error,
   showMapToggle = true,
   searchTerm = "",
+  searchType = "text",
   onLoadMore,
 }) => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("q") || searchTerm;
 
   // Use either propertyIds or properties (for backward compatibility)
-  const allItems = propertyIds.length > 0 ? propertyIds : properties;
+  const allItems = useMemo(() => {
+    return propertyIds.length > 0 ? propertyIds : properties;
+  }, [propertyIds, properties]);
   const totalItemCount = allItems.length;
 
   // State for pagination
@@ -47,40 +51,8 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   const [hasMoreItems, setHasMoreItems] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Observer for infinite scrolling
-  const observer = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (loading || isLoadingMore) return;
-
-      if (observer.current) observer.current.disconnect();
-
-      observer.current = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && hasMoreItems) {
-          loadMoreItems();
-        }
-      });
-
-      if (node) observer.current.observe(node);
-    },
-    [loading, isLoadingMore, hasMoreItems]
-  );
-
-  // Initialize visible items on first render and when items change
-  useEffect(() => {
-    if (allItems.length > 0) {
-      const initialItems = allItems.slice(0, ITEMS_PER_PAGE);
-      setVisibleItems(initialItems);
-      setHasMoreItems(allItems.length > ITEMS_PER_PAGE);
-      setPage(1);
-    } else {
-      setVisibleItems([]);
-      setHasMoreItems(false);
-    }
-  }, [allItems]);
-
   // Function to load more items
-  const loadMoreItems = () => {
+  const loadMoreItems = useCallback(() => {
     if (!hasMoreItems || loading || isLoadingMore) return;
 
     setIsLoadingMore(true);
@@ -102,20 +74,61 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
         onLoadMore();
       }
     }, 500);
-  };
+  }, [hasMoreItems, loading, isLoadingMore, page, allItems, onLoadMore]);
+
+  // Observer for infinite scrolling
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading || isLoadingMore) return;
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMoreItems) {
+          loadMoreItems();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, isLoadingMore, hasMoreItems, loadMoreItems]
+  );
+
+  // Initialize visible items on first render and when items change
+  useEffect(() => {
+    if (allItems.length > 0) {
+      const initialItems = allItems.slice(0, ITEMS_PER_PAGE);
+      
+      // Only update if the items have actually changed (comparing length and first few items)
+      const currentVisibleLength = visibleItems.length;
+      const hasDifferentLength = currentVisibleLength !== Math.min(allItems.length, ITEMS_PER_PAGE);
+      
+      // Only set state when necessary to prevent update loops
+      if (hasDifferentLength || page !== 1) {
+        setVisibleItems(initialItems);
+        setHasMoreItems(allItems.length > ITEMS_PER_PAGE);
+        setPage(1);
+      }
+    } else if (visibleItems.length > 0) {
+      // Only clear if we actually have items
+      setVisibleItems([]);
+      setHasMoreItems(false);
+    }
+  }, [allItems, page, visibleItems.length]);
 
   // Debug output
-  console.log("PropertyGrid props:", {
-    propertyIdsCount: propertyIds?.length || 0,
-    propertiesCount: properties?.length || 0,
-    visibleItemsCount: visibleItems.length,
-    totalItemCount,
-    page,
-    hasMoreItems,
-    loading,
-    error,
-    searchTerm,
-  });
+  // console.log("PropertyGrid props:", {
+  //   propertyIdsCount: propertyIds?.length || 0,
+  //   propertiesCount: properties?.length || 0,
+  //   visibleItemsCount: visibleItems.length,
+  //   totalItemCount,
+  //   page,
+  //   hasMoreItems,
+  //   loading,
+  //   error,
+  //   searchTerm,
+  // });
 
   // Render skeleton loading state
   const renderSkeletons = () => {
@@ -139,8 +152,14 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
             <>
               <h2 className="text-2xl font-semibold text-vibe-navy font-sans leading-none flex items-baseline">
                 <span>{totalItemCount} results</span>
-                {searchTerm && (
+                {searchType === "text" && searchTerm && (
                   <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">for "{searchTerm}"</span>
+                )}
+                {searchType === "image" && (
+                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">matching the images</span>
+                )}
+                {searchType === "combined" && (
+                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">matching images and text</span>
                 )}
               </h2>
               <p className="text-vibe-charcoal/70 font-sans mt-1.5">
@@ -232,13 +251,12 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           )}
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center min-h-[calc(100vh-300px)]">
           <div className="bg-gray-100 rounded-full p-8 mb-5">
             <Map className="h-12 w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">No properties found</h3>
           <p className="text-muted-foreground max-w-md">
-            Try adjusting your search criteria or try a different search term to find more options.
+            Try adjusting your search criteria or try a different combination to find more options.
           </p>
         </div>
       )}
