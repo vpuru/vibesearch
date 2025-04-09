@@ -14,11 +14,18 @@ interface SearchFilters {
   has_available_units?: boolean;
 }
 
+// Interface for search context with image URLs
+interface SearchContext {
+  type: 'text_only' | 'image_only' | 'text_and_image';
+  imageUrls: string[];
+}
+
 interface SearchParams {
   query: string;
   filters?: SearchFilters;
   limit?: number;
   page?: number;
+  context?: SearchContext | null;
 }
 
 interface SearchResponseMatch {
@@ -219,7 +226,11 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
   try {
     // Build query parameters
     const queryParams = new URLSearchParams();
-    queryParams.append("query", params.query);
+    
+    // Only add query parameter if it's provided and not empty
+    if (params.query) {
+      queryParams.append("query", params.query);
+    }
 
     if (params.limit) {
       queryParams.append("limit", params.limit.toString());
@@ -228,6 +239,16 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
     // Add pagination parameter
     if (params.page) {
       queryParams.append("page", params.page.toString());
+    }
+
+    // Add search context (type and image URLs) if available
+    if (params.context) {
+      queryParams.append("search_type", params.context.type);
+      
+      // Add image URLs as a comma-separated list
+      if (params.context.imageUrls && params.context.imageUrls.length > 0) {
+        queryParams.append("image_urls", params.context.imageUrls.join(","));
+      }
     }
 
     if (params.filters) {
@@ -247,6 +268,13 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
 
     // Build the full API URL
     const apiUrl = `${API_ENDPOINTS.search}?${queryParams.toString()}`;
+    
+    console.log("Search API URL:", apiUrl);
+    console.log("Search params being sent:", {
+      query: params.query,
+      context: params.context,
+      filters: params.filters
+    });
 
     // Set up AbortController for timeout
     const controller = new AbortController();
