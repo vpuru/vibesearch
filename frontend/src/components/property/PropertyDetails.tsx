@@ -697,7 +697,7 @@ const PropertyDetails: React.FC = () => {
                   {apartment.contact && apartment.contact.phone && (
                     <a
                       href={`tel:${apartment.contact.phone}`}
-                      className="flex items-center justify-center gap-2 w-full bg-vibe-navy text-white rounded-md py-2 px-4 font-medium hover:bg-vibe-navy/90 transition-colors font-sans"
+                      className="flex items-center justify-center gap-2 w-full bg-[#0F4C81] text-white rounded-md py-2 px-4 font-medium hover:bg-vibe-navy/90 transition-colors font-sans"
                     >
                       <Phone className="h-4 w-4" />
                       <span>{apartment.contact.phone}</span>

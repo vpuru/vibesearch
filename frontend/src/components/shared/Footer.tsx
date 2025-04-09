@@ -8,9 +8,6 @@ const Footer = () => {
           <div>
             <span className="font-serif text-xl text-vibe-navy">iris</span>
           </div>
-          <p className="text-xs text-vibe-charcoal/70 mt-4 md:mt-0">
-            © {new Date().getFullYear()} All Rights Reserved
-          </p>
         </div>
       </div>
     </footer>

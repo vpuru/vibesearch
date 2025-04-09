@@ -53,7 +53,7 @@ const Navbar = () => {
         <div className="flex items-center space-x-4">
           <div className="px-3 py-1 bg-vibe-navy/10 text-vibe-navy rounded-full text-md font-medium flex items-center space-x-1">
             <MapPin className="w-3 h-3" />
-            <span>Built for LA — New Cities Soon!</span>
+            <span>Built for SF — New Cities Soon!</span>
           </div>
           <button className="md:hidden text-vibe-charcoal">
             <Menu className="w-6 h-6" />

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, ArrowRight, Home, Upload, X, Loader, ArrowDown, MapPin } from "lucide-react";
+import { Search, ArrowRight, Home, Upload, X, Loader, ArrowDown, MapPin, MessageSquare } from "lucide-react";
 import OpenAI from 'openai';
+import { submitFeedback } from "../../lib/supabase";
 
 const HeroSection = () => {
   const globeRef = useRef<HTMLDivElement>(null);
@@ -14,6 +15,11 @@ const HeroSection = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [feedbackCategory, setFeedbackCategory] = useState("suggestion");
+  const [feedbackText, setFeedbackText] = useState("");
+  const [isFeedbackSubmitting, setIsFeedbackSubmitting] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const navigate = useNavigate();
 
   const placeholders = [
@@ -198,6 +204,34 @@ const HeroSection = () => {
     }
   };
 
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsFeedbackSubmitting(true);
+    
+    try {
+      const result = await submitFeedback({
+        category: feedbackCategory,
+        text: feedbackText
+      });
+      
+      if (result.success) {
+        setFeedbackSubmitted(true);
+        setTimeout(() => {
+          setShowFeedbackForm(false);
+          setFeedbackSubmitted(false);
+          setFeedbackText("");
+        }, 2000);
+      } else {
+        console.error("Error submitting feedback:", result.error);
+        // Optionally show an error message to the user
+      }
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+    } finally {
+      setIsFeedbackSubmitting(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -304,6 +338,98 @@ const HeroSection = () => {
           <ArrowDown className="h-6 w-6 text-vibe-charcoal" />
         </button>
       </div>
+
+      <div className="fixed bottom-5 right-5 z-20">
+        <button
+          onClick={() => setShowFeedbackForm(true)}
+          className="bg-vibe-navy text-white rounded-full p-3 shadow-lg hover:bg-vibe-navy/90 transition-all duration-200 flex items-center gap-2"
+          aria-label="Provide feedback"
+        >
+          <MessageSquare className="h-5 w-5" />
+          <span className="hidden sm:inline text-sm font-medium">Feedback</span>
+        </button>
+      </div>
+
+      {showFeedbackForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in-up">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-sans font-medium text-vibe-charcoal/70">Help us improve!</h3>
+              <button
+                onClick={() => setShowFeedbackForm(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {feedbackSubmitted ? (
+              <div className="py-8 text-center">
+                <div className="mb-4 text-vibe-navy">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-vibe-charcoal text-lg">Thank you for your feedback!</p>
+              </div>
+            ) : (
+              <form onSubmit={handleFeedbackSubmit}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    What kind of feedback do you have?
+                  </label>
+                  <select
+                    value={feedbackCategory}
+                    onChange={(e) => setFeedbackCategory(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-1 focus:ring-vibe-navy"
+                  >
+                    <option value="suggestion">Suggestion</option>
+                    <option value="bug">Bug Report</option>
+                    <option value="feature">Feature Request</option>
+                  </select>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Your feedback
+                  </label>
+                  <textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md py-2 px-3 text-gray-700 focus:outline-none focus:ring-1 focus:ring-vibe-navy min-h-[120px]"
+                    placeholder="Tell us how we can make the site better..."
+                    required
+                  ></textarea>
+                </div>
+                
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowFeedbackForm(false)}
+                    className="text-gray-500 hover:text-gray-700 font-medium mr-4"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isFeedbackSubmitting || !feedbackText.trim()}
+                    className="bg-vibe-navy text-white py-2 px-4 rounded-md disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isFeedbackSubmitting ? (
+                      <>
+                        <Loader className="h-4 w-4 animate-spin" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      "Submit Feedback"
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
