@@ -40,6 +40,14 @@ const Search = () => {
 
   // Perform search when the component mounts if there's an initial query or we have previous results
   useEffect(() => {
+    if (!initialQuery) {
+      setApartmentIds([]);
+      setSearchPerformed(false);
+      setSearchTerm("");
+      setFilterValues(null);
+      return;
+    }
+    
     // If there's a new query in the URL that doesn't match our current searchTerm,
     // we need to perform a new search
     if (initialQuery && initialQuery !== searchTerm) {
@@ -190,7 +198,8 @@ const Search = () => {
         <SearchFilters
           onSearch={handleSearch}
           initialQuery={searchTerm || initialQuery}
-          initialValues={filterValues || undefined}
+          initialValues={filterValues === null ? undefined : filterValues}
+          key={`filters-${initialQuery}`}
         />
         <main className="flex-grow bg-white flex flex-col">
           <PropertyGrid

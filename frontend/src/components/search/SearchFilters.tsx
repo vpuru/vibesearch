@@ -209,14 +209,23 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       if (Object.values(newFilters).some((v) => v !== "" && (!Array.isArray(v) || v.length > 0))) {
         setShowFilters(true);
       }
+    } else {
+      setFilters({
+        bedrooms: "",
+        bathrooms: "",
+        priceMin: "",
+        priceMax: "",
+        city: "",
+        state: "",
+        amenities: [],
+      });
+      setShowFilters(false);
     }
   }, [initialValues]);
 
   // Set search query when initialQuery changes
   useEffect(() => {
-    if (initialQuery) {
-      setSearchQuery(initialQuery);
-    }
+    setSearchQuery(initialQuery);
   }, [initialQuery]);
 
   return (

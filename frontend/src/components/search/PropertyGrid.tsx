@@ -131,7 +131,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           {loading && visibleItems.length === 0 ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <h2 className="text-2xl font-sans font-semibold">Searching...</h2>
+              <h2 className="text-2xl font-sans text-vibe-navy font-semibold">Searching...</h2>
             </div>
           ) : error ? (
             <h2 className="text-2xl font-semibold text-red-500">Error</h2>
