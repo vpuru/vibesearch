@@ -104,18 +104,18 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
     }, 500);
   };
 
-  // Debug output
-  console.log("PropertyGrid props:", {
-    propertyIdsCount: propertyIds?.length || 0,
-    propertiesCount: properties?.length || 0,
-    visibleItemsCount: visibleItems.length,
-    totalItemCount,
-    page,
-    hasMoreItems,
-    loading,
-    error,
-    searchTerm,
-  });
+  // // Debug output
+  // console.log("PropertyGrid props:", {
+  //   propertyIdsCount: propertyIds?.length || 0,
+  //   propertiesCount: properties?.length || 0,
+  //   visibleItemsCount: visibleItems.length,
+  //   totalItemCount,
+  //   page,
+  //   hasMoreItems,
+  //   loading,
+  //   error,
+  //   searchTerm,
+  // });
 
   // Render skeleton loading state
   const renderSkeletons = () => {
@@ -131,7 +131,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           {loading && visibleItems.length === 0 ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <h2 className="text-2xl font-semibold">Searching...</h2>
+              <h2 className="text-2xl font-sans font-semibold">Searching...</h2>
             </div>
           ) : error ? (
             <h2 className="text-2xl font-semibold text-red-500">Error</h2>
@@ -236,7 +236,6 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           <div className="bg-gray-100 rounded-full p-8 mb-5">
             <Map className="h-12 w-12 text-gray-400" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">No properties found</h3>
           <p className="text-muted-foreground max-w-md">
             Try adjusting your search criteria or try a different search term to find more options.
           </p>
