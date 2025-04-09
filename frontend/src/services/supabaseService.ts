@@ -11,7 +11,7 @@ export const uploadImage = async (file: File): Promise<string | null> => {
     const filePath = `${fileName}`;
 
     const { data, error } = await supabase.storage
-      .from('image-search')
+      .from('image-search-2')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
@@ -23,7 +23,7 @@ export const uploadImage = async (file: File): Promise<string | null> => {
     }
 
     const { data: { publicUrl } } = supabase.storage
-      .from('image-search')
+      .from('image-search-2')
       .getPublicUrl(data.path);
 
     return publicUrl;

@@ -5,7 +5,7 @@ const features = [
   {
     icon: <MessageSquare className="h-6 w-6 text-vibe-navy" />,
     title: 'Describe Your Dream Apartment',
-    description: 'Tell us what you\'re looking for using words or images — phrases like"sunny loft with creative energy" or upload your vision board.'
+    description: 'Tell us what you\'re looking for using words or images — phrases like "sunny loft with in-unit W/D, near the pier" or upload your vision board.'
   },
   {
     icon: <Brain className="h-6 w-6 text-vibe-navy" />,

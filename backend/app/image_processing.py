@@ -27,10 +27,9 @@ def process_images_with_gpt4o(image_urls: List[str], user_query: str = "") -> st
         
         # Add user context if provided
         content_parts = []
-        prompt = "In less than 20 words, describe the attached image(s) in a way that would help match other similar apartment images. Focus on aesthetics and design."
+        prompt = "In less than 20 words, describe the attached image(s) in a way that would help match other similar apartment images. Focus on visual aspects, style, aesthetic, and design."
         if user_query:
-            prompt = f"Based on these images and the user's query: '{user_query}', generate a concise search description focusing on visual aspects, style, and aesthetic preferences visible in the images. Keep it under 20 words."
-        
+            prompt = f"Based on these images and the user's query: '{user_query}', in less than 20 words, describe the attached image(s) in a way that would help match other similar apartment images. Focus on visual aspects, style, aesthetic, and design."
         content_parts.append({"type": "text", "text": prompt})
         
         # Add image URLs
@@ -42,7 +41,6 @@ def process_images_with_gpt4o(image_urls: List[str], user_query: str = "") -> st
         
         messages.append({"role": "user", "content": content_parts})
         
-        # Call GPT-4o
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=messages,

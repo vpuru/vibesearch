@@ -68,6 +68,7 @@ def search():
         if not filter_dict:
             filter_dict = None
 
+        print (query)
         # Search for apartments
         results = search_apartments(query, filter_dict, top_k)
 
@@ -91,17 +92,13 @@ def search():
 @search_bp.route("/api/process-images", methods=["POST"])
 def process_images():
     try:
-        # Get image URLs from request
         data = request.json
         if not data or "imageUrls" not in data or not data["imageUrls"]:
             return jsonify({"error": "Image URLs are required"}), 400
         
         image_urls = data["imageUrls"]
-        
-        # Optional user query that might accompany the images
         user_query = data.get("userQuery", "")
-        
-        # Process images with GPT-4o
+
         description = process_images_with_gpt4o(image_urls, user_query)
         
         return jsonify({

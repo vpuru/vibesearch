@@ -72,8 +72,8 @@ const Search = () => {
     setError(undefined);
     setSearchTerm(newFilterValues.query);
     setFilterValues(newFilterValues);
-    setPage(1); // Reset to first page for new searches
-    setHasMoreResults(true); // Reset pagination state
+    setPage(1);
+    setHasMoreResults(true);
 
     try {
       // Update URL query parameter
@@ -112,8 +112,8 @@ const Search = () => {
       // Perform search with first page of results
       await fetchResults(modifiedFilters, 1, currentSearchType);
       
-      // Clear uploaded images after search is performed
-      setUploadedImages([]);
+      // Don't clear uploaded images after search is performed
+      // setUploadedImages([]);
     } catch (err) {
       // Handle any other errors in the outer try/catch
       console.error("Unexpected error during search:", err);
