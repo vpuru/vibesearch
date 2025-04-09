@@ -125,7 +125,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 flex-grow flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <div>
           {loading && visibleItems.length === 0 ? (
@@ -232,12 +232,12 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           )}
         </>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center flex-grow">
           <div className="bg-gray-100 rounded-full p-8 mb-5">
             <Map className="h-12 w-12 text-gray-400" />
           </div>
           <p className="text-muted-foreground max-w-md">
-            Try adjusting your search criteria or try a different search term to find more options.
+            Try adjusting your search criteria or try a different combination to find more options.
           </p>
         </div>
       )}

@@ -184,7 +184,7 @@ const Search = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <div className="pt-16">
+      <div className="pt-16 flex flex-col flex-grow">
         {" "}
         {/* Space for fixed navbar */}
         <SearchFilters
@@ -192,7 +192,7 @@ const Search = () => {
           initialQuery={searchTerm || initialQuery}
           initialValues={filterValues || undefined}
         />
-        <main className="flex-grow bg-white">
+        <main className="flex-grow bg-white flex flex-col">
           <PropertyGrid
             propertyIds={apartmentIds}
             loading={loading}

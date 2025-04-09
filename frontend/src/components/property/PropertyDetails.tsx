@@ -198,8 +198,8 @@ const PropertyDetails: React.FC = () => {
       <div className="container mx-auto px-4 py-16 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-6" />
-          <h2 className="text-2xl font-semibold mb-2">Loading property details...</h2>
-          <p className="text-muted-foreground">Please wait while we fetch the information.</p>
+          <h2 className="text-2xl font-semibold font-sans mb-2">Loading property details...</h2>
+          <p className="text-vibe-charcoal/70">Please wait while we fetch the information.</p>
         </div>
       </div>
     );
@@ -212,13 +212,13 @@ const PropertyDetails: React.FC = () => {
         <div className="bg-red-50 rounded-full p-8 inline-block mb-6">
           <X className="h-12 w-12 text-red-500" />
         </div>
-        <h2 className="text-2xl font-semibold mb-4">Property Not Found</h2>
-        <p className="text-muted-foreground mb-8">
+        <h2 className="text-2xl font-semibold font-sans mb-4">Property Not Found</h2>
+        <p className="text-vibe-charcoal/70 mb-8">
           {error || "The property you're looking for doesn't exist or has been removed."}
         </p>
         <a
           href="/search"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-vibe-navy text-white rounded-lg"
           onClick={handleBackClick}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -237,11 +237,11 @@ const PropertyDetails: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-screen pb-16 bg-white">      
       {/* Top Navigation - removed sticky positioning */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/search" className="flex items-center text-gray-700" onClick={handleBackClick}>
+          <a href="/search" className="flex items-center text-vibe-charcoal/70" onClick={handleBackClick}>
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span>Back</span>
           </a>
@@ -252,7 +252,7 @@ const PropertyDetails: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-gray-100">
+      <div className="bg-white">
         <div className="container mx-auto px-4 py-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-xl overflow-hidden shadow-sm aspect-[4/3]">
@@ -263,7 +263,7 @@ const PropertyDetails: React.FC = () => {
               />
             </div>
             <div className="rounded-xl shadow-sm aspect-[4/3]">
-              <div className="overflow-x-auto overflow-y-visible h-full p-2 custom-scrollbar">
+              <div className="overflow-x-scroll overflow-y-visible h-full p-2 big-scrollbar">
                 <div
                   className="grid grid-flow-col grid-rows-2 gap-x-4 gap-y-4 h-full"
                   style={{ gridAutoColumns: "calc(50% - 0.5rem)" }}
@@ -273,7 +273,7 @@ const PropertyDetails: React.FC = () => {
                       key={index}
                       className={`rounded overflow-hidden cursor-pointer transition-all ${
                         selectedImageIndex === index
-                          ? "ring-4 ring-primary ring-offset-4"
+                          ? "ring-4 ring-[#0F4C81] ring-offset-4"
                           : "hover:opacity-90"
                       }`}
                       onClick={() => setSelectedImageIndex(index)}
@@ -292,40 +292,40 @@ const PropertyDetails: React.FC = () => {
         </div>
       </div>
       {/* Property Details */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-white">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <div className="mb-6">
               <div className="flex items-start justify-between mb-2">
-                <h1 className="text-3xl font-semibold">{apartment.propertyName}</h1>
-                <p className="text-2xl font-semibold text-primary">
+                <h1 className="text-3xl font-semibold text-vibe-navy font-sans">{apartment.propertyName}</h1>
+                <p className="text-2xl font-semibold text-vibe-charcoal/70">
                   {formatPrice(apartment.rent.min)}
                   {apartment.rent.max ? ` - ${formatPrice(apartment.rent.max)}` : ""}/mo
                 </p>
               </div>
 
-              <div className="flex items-center text-muted-foreground mb-4">
+              <div className="flex items-center text-vibe-charcoal/70 mb-4">
                 <MapPin className="h-4 w-4 mr-1" />
                 <span>{apartment.location.fullAddress}</span>
               </div>
 
               <div className="flex items-center gap-6 py-4 border-y border-gray-200">
                 <div className="flex items-center">
-                  <Bed className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <Bed className="h-5 w-5 mr-2 text-vibe-charcoal/70" />
                   <div>
                     <p className="font-medium">{apartment.beds}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center">
-                  <Bath className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <Bath className="h-5 w-5 mr-2 text-vibe-charcoal/70" />
                   <div>
                     <p className="font-medium">{apartment.baths}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center">
-                  <Square className="h-5 w-5 mr-2 text-muted-foreground" />
+                  <Square className="h-5 w-5 mr-2 text-vibe-charcoal/70" />
                   <div>
                     <p className="font-medium">{apartment.sqft}</p>
                   </div>
@@ -335,18 +335,18 @@ const PropertyDetails: React.FC = () => {
 
             {/* Special Offers */}
             {apartment.specials && apartment.specials.description && (
-              <div className="mb-8 p-4 border border-primary/20 bg-primary/5 rounded-lg">
-                <h2 className="text-xl font-semibold mb-2 text-primary">
+              <div className="mb-8 p-4 border border-vibe-navy/20 bg-vibe-navy/10 rounded-lg">
+                <h2 className="text-xl font-semibold mb-2 text-vibe-navy font-sans">
                   {apartment.specials.label || "Special Offer"}
                 </h2>
-                <p className="whitespace-pre-line">{apartment.specials.description}</p>
+                <p className="whitespace-pre-line font-sans">{apartment.specials.description}</p>
               </div>
             )}
 
             {/* Description */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Description</h2>
-              <p className="text-gray-700 whitespace-pre-line">
+              <h2 className="text-xl font-semibold mb-4 font-sans">Description</h2>
+              <p className="text-vibe-charcoal whitespace-pre-line font-sans max-h-[400px] overflow-y-auto pr-2 big-scrollbar">
                 {apartment.description.replace(/About.*?\n/i, "")}
               </p>
             </div>
@@ -354,16 +354,16 @@ const PropertyDetails: React.FC = () => {
             {/* Floor Plans */}
             {apartment.models && apartment.models.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Floor Plans</h2>
+                <h2 className="text-xl font-semibold mb-4 font-sans">Floor Plans</h2>
                 <div className="space-y-4">
                   {apartment.models.map((model, idx) => (
                     <div key={idx} className="border rounded-lg overflow-hidden">
-                      <div className="bg-gray-50 p-4 border-b">
+                      <div className="bg-vibe-navy/10 p-4 border-b">
                         <div className="flex justify-between items-center">
-                          <h3 className="font-semibold">{model.modelName}</h3>
-                          <p className="font-semibold text-primary">{model.rentLabel}</p>
+                          <h3 className="font-semibold font-sans">{model.modelName}</h3>
+                          <p className="font-semibold text-vibe-navy">{model.rentLabel}</p>
                         </div>
-                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
+                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-vibe-charcoal/70">
                           {model.details.map((detail, detailIdx) => (
                             <span key={detailIdx}>{detail}</span>
                           ))}
@@ -372,12 +372,12 @@ const PropertyDetails: React.FC = () => {
 
                       {model.units && model.units.length > 0 && (
                         <div className="p-4">
-                          <h4 className="text-sm font-medium mb-2">Available Units</h4>
+                          <h4 className="text-sm font-medium mb-2 font-sans">Available Units</h4>
                           <div className="space-y-2">
                             {model.units.map((unit, unitIdx) => (
                               <div
                                 key={unitIdx}
-                                className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded"
+                                className="flex justify-between items-center text-sm p-2 bg-white rounded border"
                               >
                                 <span>{unit.type}</span>
                                 <span>{unit.sqft}</span>
@@ -398,15 +398,15 @@ const PropertyDetails: React.FC = () => {
 
             {/* Features & Amenities */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Features & Amenities</h2>
+              <h2 className="text-xl font-semibold mb-4 font-sans">Features & Amenities</h2>
 
               {apartment.amenities.map((section, sectionIdx) => (
                 <div key={sectionIdx} className="mb-4">
-                  <h3 className="font-medium mb-2">{section.title}</h3>
+                  <h3 className="font-medium mb-2 font-sans">{section.title}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {section.value.map((feature, featureIdx) => (
                       <div key={featureIdx} className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-primary mr-2 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-vibe-navy mr-2 flex-shrink-0" />
                         <span>{feature}</span>
                       </div>
                     ))}
@@ -418,8 +418,8 @@ const PropertyDetails: React.FC = () => {
             {/* Location & Transportation */}
             {apartment.coordinates && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Location</h2>
-                <div className="mb-4 aspect-video bg-gray-100 rounded-xl overflow-hidden relative">
+                <h2 className="text-xl font-semibold mb-4 font-sans">Location</h2>
+                <div className="mb-4 aspect-video bg-vibe-navy/5 rounded-xl overflow-hidden relative">
                   <iframe
                     title="Property Location"
                     width="100%"
@@ -433,16 +433,16 @@ const PropertyDetails: React.FC = () => {
                 {/* Transportation */}
                 {apartment.transportation && apartment.transportation.length > 0 && (
                   <div className="mt-4">
-                    <h3 className="font-medium mb-2">Transportation</h3>
+                    <h3 className="font-medium mb-2 font-sans">Transportation</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {apartment.transportation.slice(0, 6).map((item, idx) => (
                         <div key={idx} className="flex items-start">
-                          <div className="bg-gray-100 p-2 rounded mr-3">
-                            <MapPin className="h-5 w-5 text-primary" />
+                          <div className="bg-vibe-navy/10 p-2 rounded mr-3 border-vibe-navy/20">
+                            <MapPin className="h-5 w-5 text-vibe-navy" />
                           </div>
                           <div>
-                            <p className="font-medium">{item.name}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="font-medium font-sans">{item.name}</p>
+                            <p className="text-sm text-vibe-charcoal/70">
                               {item.walk
                                 ? `${item.walk} walk`
                                 : item.drive
@@ -462,16 +462,16 @@ const PropertyDetails: React.FC = () => {
             {/* Schools */}
             {apartment.schools && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Schools</h2>
+                <h2 className="text-xl font-semibold mb-4 font-sans">Schools</h2>
 
                 {apartment.schools.public && apartment.schools.public.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="font-medium mb-2">Public Schools</h3>
+                    <h3 className="font-medium mb-2 font-sans">Public Schools</h3>
                     <div className="space-y-3">
                       {apartment.schools.public.map((school, idx) => (
                         <div key={idx} className="border rounded p-3">
-                          <p className="font-medium">{school.name}</p>
-                          <div className="flex justify-between text-sm text-muted-foreground">
+                          <p className="font-medium font-sans">{school.name}</p>
+                          <div className="flex justify-between text-sm text-vibe-charcoal/70">
                             <span>{school.type}</span>
                             <span>
                               Grades {school.grades} · {school.numberOfStudents} students
@@ -485,12 +485,12 @@ const PropertyDetails: React.FC = () => {
 
                 {apartment.schools.private && apartment.schools.private.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="font-medium mb-2">Private Schools</h3>
+                    <h3 className="font-medium mb-2 font-sans">Private Schools</h3>
                     <div className="space-y-3">
                       {apartment.schools.private.map((school, idx) => (
                         <div key={idx} className="border rounded p-3">
-                          <p className="font-medium">{school.name}</p>
-                          <div className="flex justify-between text-sm text-muted-foreground">
+                          <p className="font-medium font-sans">{school.name}</p>
+                          <div className="flex justify-between text-sm text-vibe-charcoal/70">
                             <span>{school.type}</span>
                             <span>
                               Grades {school.grades}{" "}
@@ -507,12 +507,12 @@ const PropertyDetails: React.FC = () => {
 
                 {apartment.schools.colleges && apartment.schools.colleges.length > 0 && (
                   <div>
-                    <h3 className="font-medium mb-2">Colleges & Universities</h3>
+                    <h3 className="font-medium mb-2 font-sans">Colleges & Universities</h3>
                     <div className="space-y-3">
                       {apartment.schools.colleges.map((school, idx) => (
                         <div key={idx} className="border rounded p-3">
-                          <p className="font-medium">{school.name}</p>
-                          <div className="text-sm text-muted-foreground">
+                          <p className="font-medium font-sans">{school.name}</p>
+                          <div className="text-sm text-vibe-charcoal/70">
                             <span>{school.distance} away</span>
                           </div>
                         </div>
@@ -526,11 +526,11 @@ const PropertyDetails: React.FC = () => {
             {/* Fees & Policies */}
             {apartment.fees && apartment.fees.length > 0 && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Fees & Policies</h2>
+                <h2 className="text-xl font-semibold mb-4 font-sans">Fees & Policies</h2>
 
                 {apartment.requiredFees && apartment.requiredFees.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="font-medium mb-2">Required Fees</h3>
+                    <h3 className="font-medium mb-2 font-sans">Required Fees</h3>
                     <div className="border rounded-lg overflow-hidden">
                       <table className="w-full">
                         <tbody>
@@ -538,7 +538,7 @@ const PropertyDetails: React.FC = () => {
                             (section) =>
                               section.fees?.map((fee, idx) => (
                                 <tr key={idx} className="border-b last:border-b-0">
-                                  <td className="p-3 font-medium">{fee.key}</td>
+                                  <td className="p-3 font-medium font-sans">{fee.key}</td>
                                   <td className="p-3 text-right">{fee.value}</td>
                                 </tr>
                               )) || []
@@ -551,7 +551,7 @@ const PropertyDetails: React.FC = () => {
 
                 {apartment.petFees && apartment.petFees.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="font-medium mb-2">Pet Policy</h3>
+                    <h3 className="font-medium mb-2 font-sans">Pet Policy</h3>
                     <div className="border rounded-lg overflow-hidden">
                       <table className="w-full">
                         <tbody>
@@ -559,7 +559,7 @@ const PropertyDetails: React.FC = () => {
                             (section) =>
                               section.fees?.map((fee, idx) => (
                                 <tr key={idx} className="border-b last:border-b-0">
-                                  <td className="p-3 font-medium">{fee.key}</td>
+                                  <td className="p-3 font-medium font-sans">{fee.key}</td>
                                   <td className="p-3 text-right">{fee.value}</td>
                                 </tr>
                               )) || []
@@ -572,24 +572,24 @@ const PropertyDetails: React.FC = () => {
 
                 {apartment.fees && apartment.fees.length > 0 && (
                   <div>
-                    <h3 className="font-medium mb-2">Additional Details</h3>
+                    <h3 className="font-medium mb-2 font-sans">Additional Details</h3>
                     <div className="border rounded-lg overflow-hidden">
                       {apartment.fees.map((section, sectionIdx) => (
                         <div key={sectionIdx} className="border-b last:border-b-0">
                           {section.title && (
-                            <div className="bg-gray-50 p-3 border-b font-medium">
+                            <div className="bg-white p-3 border-b font-medium font-sans">
                               {section.title}
                             </div>
                           )}
                           {section.policies &&
                             section.policies.map((policy, policyIdx) => (
                               <div key={policyIdx} className="p-3 border-b last:border-b-0">
-                                <h4 className="font-medium mb-2">{policy.header}</h4>
+                                <h4 className="font-medium mb-2 font-sans">{policy.header}</h4>
                                 <div className="space-y-1">
                                   {policy.values.map((value, valueIdx) => (
                                     <div key={valueIdx} className="flex justify-between">
-                                      <span>{value.key}</span>
-                                      <span>{value.value}</span>
+                                      <span className="font-sans">{value.key}</span>
+                                      <span className="font-sans">{value.value}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -606,8 +606,8 @@ const PropertyDetails: React.FC = () => {
             {/* Neighborhood */}
             {apartment.neighborhoodDescription && (
               <div className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">Neighborhood</h2>
-                <p className="text-gray-700 whitespace-pre-line">
+                <h2 className="text-xl font-semibold mb-4 font-sans">Neighborhood</h2>
+                <p className="text-vibe-charcoal whitespace-pre-line font-sans">
                   {apartment.neighborhoodDescription}
                 </p>
               </div>
@@ -615,50 +615,50 @@ const PropertyDetails: React.FC = () => {
           </div>
 
           <div>
-            <div className="glass p-6 rounded-xl shadow-sm sticky top-24">
-              <h3 className="text-lg font-semibold mb-4">Contact Property</h3>
+            <div className="bg-white p-6 rounded-xl shadow-sm sticky top-24">
+              <h3 className="text-lg font-semibold mb-4 font-sans">Contact Property</h3>
 
               {showContactForm ? (
                 <div className="space-y-4">
                   <button
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                    className="absolute top-4 right-4 text-vibe-charcoal/50 hover:text-vibe-charcoal"
                     onClick={() => setShowContactForm(false)}
                   >
                     <X className="h-5 w-5" />
                   </button>
 
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="name" className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans">
                       Your Name
                     </label>
                     <input
                       type="text"
                       id="name"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-vibe-navy focus:border-transparent font-sans"
                       placeholder="John Doe"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans">
                       Email
                     </label>
                     <input
                       type="email"
                       id="email"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-vibe-navy focus:border-transparent font-sans"
                       placeholder="john@example.com"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="phone" className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans">
                       Phone
                     </label>
                     <input
                       type="tel"
                       id="phone"
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-vibe-navy focus:border-transparent font-sans"
                       placeholder="(123) 456-7890"
                     />
                   </div>
@@ -666,19 +666,19 @@ const PropertyDetails: React.FC = () => {
                   <div>
                     <label
                       htmlFor="message"
-                      className="block text-sm font-medium text-gray-700 mb-1"
+                      className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans"
                     >
                       Message
                     </label>
                     <textarea
                       id="message"
                       rows={4}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-vibe-navy focus:border-transparent font-sans"
                       placeholder="I'm interested in this property and would like to schedule a viewing."
                     ></textarea>
                   </div>
 
-                  <button className="w-full bg-primary text-white rounded-md py-2 px-4 font-medium hover:bg-primary/90 transition-colors">
+                  <button className="w-full bg-vibe-navy text-white rounded-md py-2 px-4 font-medium hover:bg-vibe-navy/90 transition-colors font-sans">
                     Send Message
                   </button>
                 </div>
@@ -697,7 +697,7 @@ const PropertyDetails: React.FC = () => {
                   {apartment.contact && apartment.contact.phone && (
                     <a
                       href={`tel:${apartment.contact.phone}`}
-                      className="flex items-center justify-center gap-2 w-full bg-primary text-white rounded-md py-2 px-4 font-medium hover:bg-primary/90 transition-colors"
+                      className="flex items-center justify-center gap-2 w-full bg-vibe-navy text-white rounded-md py-2 px-4 font-medium hover:bg-vibe-navy/90 transition-colors font-sans"
                     >
                       <Phone className="h-4 w-4" />
                       <span>{apartment.contact.phone}</span>
@@ -706,7 +706,7 @@ const PropertyDetails: React.FC = () => {
 
                   <button
                     onClick={() => setShowContactForm(true)}
-                    className="flex items-center justify-center gap-2 w-full border border-primary text-primary rounded-md py-2 px-4 font-medium hover:bg-primary/5 transition-colors"
+                    className="flex items-center justify-center gap-2 w-full border border-vibe-navy text-vibe-navy rounded-md py-2 px-4 font-medium hover:bg-vibe-navy/5 transition-colors font-sans"
                   >
                     <Mail className="h-4 w-4" />
                     <span>Email Property</span>
@@ -717,7 +717,7 @@ const PropertyDetails: React.FC = () => {
                       href={apartment.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full bg-gray-100 text-gray-800 rounded-md py-2 px-4 font-medium hover:bg-gray-200 transition-colors"
+                      className="flex items-center justify-center gap-2 w-full bg-white text-vibe-charcoal border border-vibe-navy/20 rounded-md py-2 px-4 font-medium hover:bg-vibe-navy/5 transition-colors font-sans"
                     >
                       <ExternalLink className="h-4 w-4" />
                       <span>View on Apartments.com</span>
@@ -725,28 +725,28 @@ const PropertyDetails: React.FC = () => {
                   )}
 
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h4 className="font-medium mb-2">Apartment Details</h4>
+                    <h4 className="font-medium mb-2 font-sans">Apartment Details</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Property Name</span>
-                        <span className="font-medium">{apartment.propertyName}</span>
+                        <span className="text-vibe-charcoal/70 font-sans">Property Name</span>
+                        <span className="font-medium font-sans">{apartment.propertyName}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Last Updated</span>
-                        <span className="font-medium">{apartment.lastUpdated}</span>
+                        <span className="text-vibe-charcoal/70 font-sans">Last Updated</span>
+                        <span className="font-medium font-sans">{apartment.lastUpdated}</span>
                       </div>
                       {apartment.scores && (
                         <>
                           {apartment.scores.walkScore && (
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Walk Score</span>
-                              <span className="font-medium">{apartment.scores.walkScore}/100</span>
+                              <span className="text-vibe-charcoal/70 font-sans">Walk Score</span>
+                              <span className="font-medium font-sans">{apartment.scores.walkScore}/100</span>
                             </div>
                           )}
                           {apartment.scores.transitScore && (
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Transit Score</span>
-                              <span className="font-medium">
+                              <span className="text-vibe-charcoal/70 font-sans">Transit Score</span>
+                              <span className="font-medium font-sans">
                                 {apartment.scores.transitScore}/100
                               </span>
                             </div>

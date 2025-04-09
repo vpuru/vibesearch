@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;700&display=swap');
 
 @tailwind base;
@@ -119,5 +118,33 @@
 
   .vibe-button {
     @apply px-6 py-3 bg-vibe-navy text-white rounded-md shadow-md hover:shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-vibe-light-blue;
+  }
+  
+  .big-scrollbar {
+    /* Always show scrollbar */
+    -webkit-overflow-scrolling: touch;
+    
+    /* Scrollbar width */
+    scrollbar-width: 12px;
+  }
+  
+  .big-scrollbar::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .big-scrollbar::-webkit-scrollbar-track {
+    background: #FFFFFF;
+    border-radius: 8px;
+  }
+  
+  .big-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #0F4C81; /* Using vibe-navy solid color */
+    border-radius: 8px;
+    border: 2px solid #FFFFFF;
+  }
+  
+  .big-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #0D3B64;
   }
 }
