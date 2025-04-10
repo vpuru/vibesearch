@@ -22,7 +22,6 @@ interface PropertyGridProps {
   error?: string;
   showMapToggle?: boolean;
   searchTerm?: string;
-  searchType?: 'text_only' | 'image_only' | 'text_and_image';
   onLoadMore?: () => void; // Callback for loading more results
 }
 
@@ -33,12 +32,10 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   error,
   showMapToggle = true,
   searchTerm = "",
-  searchType = "text_only",
   onLoadMore,
 }) => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("q") || searchTerm;
-  const contextParam = searchParams.get("context");
 
   // Use either propertyIds or properties (for backward compatibility)
   const allItems = propertyIds.length > 0 ? propertyIds : properties;
@@ -127,39 +124,6 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
     ));
   };
 
-  // Function to render the search result message based on search type
-  const renderSearchResultMessage = () => {
-    if (searchType === "image_only") {
-      return <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">that match the images</span>;
-    } else if (searchType === "text_and_image") {
-      return <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">that match</span>;
-    } else if (searchTerm) {
-      return <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">for "{searchTerm}"</span>;
-    }
-    return null;
-  };
-
-  // Create map URL that preserves both query and context
-  const getMapUrl = () => {
-    let mapUrl = "/map";
-    const params = new URLSearchParams();
-    
-    if (searchQuery) {
-      params.set("q", searchQuery);
-    }
-    
-    if (contextParam) {
-      params.set("context", contextParam);
-    }
-    
-    const paramString = params.toString();
-    if (paramString) {
-      mapUrl += `?${paramString}`;
-    }
-    
-    return mapUrl;
-  };
-
   return (
     <div className="container mx-auto px-4 py-8 flex-grow flex flex-col">
       <div className="flex justify-between items-center mb-6">
@@ -175,7 +139,9 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
             <>
               <h2 className="text-2xl font-semibold text-vibe-navy font-sans leading-none flex items-baseline">
                 <span>{totalItemCount} results</span>
-                {renderSearchResultMessage()}
+                {searchTerm && (
+                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">for "{searchTerm}"</span>
+                )}
               </h2>
               <p className="text-vibe-charcoal/70 font-sans mt-1.5">
                 {totalItemCount > 0
@@ -188,7 +154,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
 
         {showMapToggle && totalItemCount > 0 && (
           <Link
-            to={getMapUrl()}
+            to={`/map${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ""}`}
             className="flex items-center gap-2 px-4 py-2 bg-vibe-navy text-white rounded-lg"
           >
             <Map className="h-4 w-4" />

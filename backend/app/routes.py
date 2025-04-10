@@ -14,22 +14,10 @@ def search():
         # Log all request parameters for debugging
         print(f"DEBUG: Request parameters: {dict(request.args)}")
 
-        # Get search type and image URLs if available
-        search_type = request.args.get("search_type", "text_only")
-        image_urls_param = request.args.get("image_urls", "")
-        
-        # Parse comma-separated image URLs
-        image_urls = None
-        if image_urls_param:
-            image_urls = image_urls_param.split(",")
-            print(f"DEBUG: Detected {len(image_urls)} image URLs for analysis")
-        
-        # Get query parameter - only required for text_only searches
-        query = request.args.get("query", "")
-        
-        # For image-only searches, we don't need a text query
-        if not query and (not image_urls or search_type == "text_only"):
-            return jsonify({"error": "Query parameter is required for text searches"}), 400
+        # Get mandatory query parameter
+        query = request.args.get("query")
+        if not query:
+            return jsonify({"error": "Query parameter is required"}), 400
 
         # Get optional parameters
         top_k = request.args.get(
@@ -79,14 +67,8 @@ def search():
         if not filter_dict:
             filter_dict = None
 
-        # Search for apartments with image analysis if needed
-        results = search_apartments(
-            query, 
-            filter_dict, 
-            top_k,
-            image_urls=image_urls,
-            search_type=search_type
-        )
+        # Search for apartments
+        results = search_apartments(query, filter_dict, top_k)
 
         # Log the results for debugging
         print(f"DEBUG: Search completed, returned {len(results)} results")

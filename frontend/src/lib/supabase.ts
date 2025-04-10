@@ -39,31 +39,4 @@ export const submitFeedback = async ({
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }
-};
-
-// Function to upload images to Supabase storage and return public URLs
-export const uploadImagesToSupabase = async (images: File[]): Promise<string[]> => {
-  const urls: string[] = [];
-  
-  try {
-    for (const image of images) {
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}_${image.name.replace(/\s+/g, '_')}`;
-      const { data, error } = await supabase.storage
-        .from('image-search-2')
-        .upload(fileName, image, {
-          contentType: image.type,
-          upsert: true
-        });
-      if (error) throw error;  
-      const { data: urlData } = supabase.storage
-        .from('image-search-2')
-        .getPublicUrl(fileName);
-      
-      urls.push(urlData.publicUrl);
-    }
-    return urls;
-  } catch (error) {
-    console.error('Error uploading images to Supabase:', error);
-    throw error;
-  }
 }; 
