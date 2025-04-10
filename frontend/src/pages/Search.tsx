@@ -33,7 +33,6 @@ const Search = () => {
       try {
         const parsedContext = JSON.parse(decodeURIComponent(contextParam)) as SearchContext;
         setSearchContext(parsedContext);
-        console.log(parsedContext);
       } catch (err) {
         console.error("Error parsing search context:", err);
       }
