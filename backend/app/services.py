@@ -38,7 +38,7 @@ def create_embedding(text):
         return None
 
 
-def search_apartments(query, filter_dict=None, top_k=10):
+def search_apartments(query, filter_dict=None, top_k=10, image_urls=None):
     """
     Search for apartments in the Pinecone index
 
@@ -46,15 +46,109 @@ def search_apartments(query, filter_dict=None, top_k=10):
         query (str): The search query
         filter_dict (dict, optional): Filter criteria for metadata. Defaults to None.
         top_k (int, optional): Number of results to return. Defaults to 10.
+        image_urls (list, optional): List of image URLs to analyze. Defaults to None.
 
     Returns:
         list: List of matching apartments with scores
     """
+    import os
+    import openai
+    
     # Get the index
     index = pc.Index(INDEX_NAME)
-
-    # Create embedding for the query
-    query_embedding = create_embedding(query)
+    
+    # Handle different search modes
+    search_text = query.strip()
+    
+    # If we have image URLs, we need to analyze them with GPT-4o
+    if image_urls and len(image_urls) > 0:
+        try:
+            print(f"Processing {len(image_urls)} image URLs for analysis")
+            
+            # Get OpenAI API key from environment
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            
+            if not openai_api_key:
+                print("ERROR: OPENAI_API_KEY not found in environment")
+                return []
+            
+            try:
+                # Initialize OpenAI client
+                client = openai.OpenAI(api_key=openai_api_key)
+                print("Successfully initialized OpenAI client")
+                
+                # Construct messages for the API
+                messages = [
+                    {"role": "system", "content": "You are a helpful assistant that generates semantic search descriptions for apartment listings. Provide a concise description (less than 20 words) focusing on aesthetics and design elements visible in the images."}
+                ]
+                
+                # Add image URLs to the message
+                content = []
+                
+                # Add the text content
+                if search_text:
+                    content.append(
+                        {"type": "text", 
+                         "text": f"These are images of apartment interiors/exteriors. Generate a 20-word search description that combines analyzing these images with the text query: '{search_text}'. Focus on aesthetics and design elements."}
+                    )
+                else:
+                    content.append(
+                        {"type": "text", 
+                         "text": "These are images of apartment interiors/exteriors. Generate a 20-word search description focusing on aesthetics and design elements visible in the images."}
+                    )
+                    
+                # Add the image URLs (maximum 5 images to avoid token limits)
+                for url in image_urls[:5]:
+                    print(f"Adding image URL to content: {url[:60]}...")
+                    content.append(
+                        {"type": "image_url", "image_url": {"url": url}}
+                    )
+                
+                messages.append({"role": "user", "content": content})
+                
+                print("Calling OpenAI API for image analysis")
+                # Call the OpenAI API
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=messages,
+                    max_tokens=100
+                )
+                
+                # Get the generated description
+                image_description = response.choices[0].message.content.strip()
+                print(f"Generated image description: {image_description}")
+                
+                # Combine with any existing text query
+                if search_text:
+                    combined_query = f"{search_text} {image_description}"
+                else:
+                    combined_query = image_description
+                    
+                print(f"Combined query for embedding: {combined_query}")
+                # Use the combined query for embedding
+                query_embedding = create_embedding(combined_query)
+                
+            except Exception as api_error:
+                print(f"ERROR during OpenAI API call: {api_error}")
+                # Fall back to text query if available
+                if search_text:
+                    print(f"Falling back to text-only query: {search_text}")
+                    query_embedding = create_embedding(search_text)
+                else:
+                    print("No fallback query available")
+                    return []
+        except Exception as e:
+            print(f"Error analyzing images with OpenAI: {e}")
+            
+            # Fall back to text query if available, otherwise return empty results
+            if search_text:
+                query_embedding = create_embedding(search_text)
+            else:
+                print("No fallback query available")
+                return []
+    else:
+        # Text-only search
+        query_embedding = create_embedding(search_text)
 
     if query_embedding is None:
         print("Failed to create embedding for query")

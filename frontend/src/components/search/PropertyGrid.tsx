@@ -22,6 +22,7 @@ interface PropertyGridProps {
   error?: string;
   showMapToggle?: boolean;
   searchTerm?: string;
+  searchType?: 'text' | 'image' | 'both' | 'none';
   onLoadMore?: () => void; // Callback for loading more results
 }
 
@@ -32,6 +33,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   error,
   showMapToggle = true,
   searchTerm = "",
+  searchType = 'text',
   onLoadMore,
 }) => {
   const [searchParams] = useSearchParams();
@@ -139,8 +141,14 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
             <>
               <h2 className="text-2xl font-semibold text-vibe-navy font-sans leading-none flex items-baseline">
                 <span>{totalItemCount} results</span>
-                {searchTerm && (
-                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">for "{searchTerm}"</span>
+                {searchType === 'text' && searchQuery && (
+                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">for "{decodeURIComponent(searchQuery)}"</span>
+                )}
+                {searchType === 'image' && (
+                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">that match your images</span>
+                )}
+                {searchType === 'both' && searchQuery && (
+                  <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">that match your images and "{decodeURIComponent(searchQuery)}"</span>
                 )}
               </h2>
               <p className="text-vibe-charcoal/70 font-sans mt-1.5">
@@ -197,7 +205,16 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
         </div>
       ) : visibleItems.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
+            {/* Overlay that appears during loading */}
+            {loading && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <div className="bg-white bg-opacity-70 rounded-full p-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-vibe-navy" />
+                </div>
+              </div>
+            )}
+            
             {visibleItems.map((item, index) => {
               // If item is a string (ID), pass it to PropertyCard
               // If item is a Property object, pass it as is (for backward compatibility)

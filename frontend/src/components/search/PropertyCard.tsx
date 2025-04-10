@@ -83,7 +83,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
   // Navigate to property detail page
   const handleCardClick = () => {
     if (propertyData) {
-      navigate(`/property/detail/${propertyData.id}`);
+      // Save the current URL as the returnTo parameter
+      const currentUrl = window.location.pathname + window.location.search;
+      const encodedReturnUrl = encodeURIComponent(currentUrl);
+      navigate(`/property/detail/${propertyData.id}?returnTo=${encodedReturnUrl}`);
     }
   };
 

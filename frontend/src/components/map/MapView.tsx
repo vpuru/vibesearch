@@ -86,9 +86,11 @@ interface PropertyWithLocation extends Property {
 const MapView: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  const initialImageUrls = searchParams.get("imageUrls") ? 
+    JSON.parse(searchParams.get("imageUrls") || "[]") : [];
   const navigate = useNavigate();
 
-  const { apartmentIds, searchTerm, filterValues, searchPerformed } = useSearch();
+  const { apartmentIds, searchTerm, filterValues, searchPerformed, imageUrls, searchType } = useSearch();
 
   const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
@@ -190,10 +192,14 @@ const MapView: React.FC = () => {
   // Perform search if we have searchTerm/filterValues but no results
   useEffect(() => {
     const performSearch = async () => {
-      if (searchTerm || initialQuery) {
-        // Use existing search filters or create a basic one with just the query
-        const filters = filterValues || { query: searchTerm || initialQuery };
-
+      // Use existing search filters or create a basic one with just the query
+      const filters = filterValues || { query: searchTerm || initialQuery };
+      const urls = imageUrls.length > 0 ? imageUrls : initialImageUrls;
+      
+      const hasQuery = !!(searchTerm || initialQuery);
+      const hasImages = urls.length > 0;
+      
+      if (hasQuery || hasImages) {
         try {
           setLoading(true);
           // Use the search function to get results
@@ -211,6 +217,7 @@ const MapView: React.FC = () => {
               state: filters.state,
             },
             limit: 25,
+            imageUrls: urls,
           });
 
           // Load each property's details
@@ -226,20 +233,33 @@ const MapView: React.FC = () => {
       }
     };
 
-    // Only perform a search if we don't already have properties and we have a search term
-    if (properties.length === 0 && (searchTerm || initialQuery)) {
+    // Only perform a search if we don't already have properties and we have a search term or images
+    if (properties.length === 0 && (searchTerm || initialQuery || imageUrls.length > 0 || initialImageUrls.length > 0)) {
       performSearch();
     }
-  }, [searchTerm, initialQuery, filterValues]);
+  }, [searchTerm, initialQuery, filterValues, imageUrls, initialImageUrls]);
 
   const handleMapSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const query = formData.get("mapSearch") as string;
-
+    
+    // Create search params
+    const searchParams = new URLSearchParams();
+    
+    // Add query if we have one
     if (query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+      searchParams.append('q', query.trim());
     }
+    
+    // Add image URLs if we have any
+    const urls = imageUrls.length > 0 ? imageUrls : initialImageUrls;
+    if (urls.length > 0) {
+      searchParams.append('imageUrls', JSON.stringify(urls));
+    }
+    
+    // Navigate to search with all parameters
+    navigate(`/search?${searchParams.toString()}`);
   };
 
   return (
@@ -258,7 +278,7 @@ const MapView: React.FC = () => {
             <input
               type="text"
               name="mapSearch"
-              defaultValue={searchTerm || initialQuery}
+              defaultValue={searchTerm || initialQuery ? decodeURIComponent(searchTerm || initialQuery) : ""}
               placeholder="Search location..."
               className="pl-10 w-full py-2 px-4 bg-gray-50 border border-gray-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
@@ -284,9 +304,19 @@ const MapView: React.FC = () => {
             <div className="flex justify-between items-center">
               <h2 className="font-semibold text-lg">
                 {properties.length} results{" "}
-                {searchTerm && (
+                {searchType === 'text' && (searchTerm || initialQuery) && (
                   <span className="font-normal text-sm text-muted-foreground">
-                    for "{searchTerm || initialQuery}"
+                    for "{decodeURIComponent(searchTerm || initialQuery)}"
+                  </span>
+                )}
+                {searchType === 'image' && (
+                  <span className="font-normal text-sm text-muted-foreground">
+                    that match your images
+                  </span>
+                )}
+                {searchType === 'both' && (searchTerm || initialQuery) && (
+                  <span className="font-normal text-sm text-muted-foreground">
+                    that match your images and "{decodeURIComponent(searchTerm || initialQuery)}"
                   </span>
                 )}
               </h2>

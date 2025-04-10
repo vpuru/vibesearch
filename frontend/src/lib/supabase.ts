@@ -39,4 +39,40 @@ export const submitFeedback = async ({
       error: error instanceof Error ? error.message : 'Unknown error occurred'
     };
   }
-}; 
+};
+
+// Function to upload images to Supabase storage
+export const uploadImagesToSupabase = async (files: File[]): Promise<string[]> => {
+  try {
+    const imageUrls: string[] = [];
+    
+    for (const file of files) {
+      // Create a unique file name
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${file.name}`;
+      
+      // Upload the file to Supabase storage
+      const { data, error } = await supabase
+        .storage
+        .from('image-search-2')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (error) throw error;
+      
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('image-search-2')
+        .getPublicUrl(data.path);
+      
+      imageUrls.push(publicUrl);
+    }
+    
+    return imageUrls;
+  } catch (error) {
+    console.error('Error uploading images to Supabase:', error);
+    throw error;
+  }
+};

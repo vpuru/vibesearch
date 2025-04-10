@@ -19,6 +19,8 @@ interface SearchResult {
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  const initialImageUrls = searchParams.get("imageUrls") ? 
+    JSON.parse(searchParams.get("imageUrls") || "[]") : [];
 
   // Use the search context
   const {
@@ -30,7 +32,15 @@ const Search = () => {
     setFilterValues,
     searchPerformed,
     setSearchPerformed,
+    imageUrls,
+    setImageUrls,
+    searchType,
+    setSearchType,
+    hasResults,
   } = useSearch();
+  
+  // Reference to track if we already restored from URL
+  const hasRestoredFromUrl = React.useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -38,27 +48,115 @@ const Search = () => {
   const [hasMoreResults, setHasMoreResults] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Perform search when the component mounts if there's an initial query or we have previous results
-  useEffect(() => {    
-    // If there's a new query in the URL that doesn't match our current searchTerm,
-    // we need to perform a new search
-    if (initialQuery && initialQuery !== searchTerm) {
-      console.log("New search query from URL:", initialQuery);
-      handleSearch({ query: initialQuery });
-      return;
-    }
-
-    // If we already performed a search previously and have results, don't search again
-    if (searchPerformed && apartmentIds.length > 0) {
-      console.log("Using existing search results:", apartmentIds.length, "items");
-      return;
-    }
-
-    // If there's a query in the URL and we haven't performed a search yet
-    if (initialQuery && !searchPerformed) {
-      handleSearch({ query: initialQuery });
-    }
-  }, [initialQuery, searchPerformed, apartmentIds, searchTerm]);
+  // Perform search when the component mounts if there's an initial query or image URLs
+  useEffect(() => {
+    // Only run this effect once per mount
+    if (hasRestoredFromUrl.current) return;
+    hasRestoredFromUrl.current = true;
+    
+    // Set initial state based on URL parameters
+    const setupSearch = async () => {
+      console.log("Setting up initial search with URL parameters:", {
+        query: initialQuery,
+        imageUrls: initialImageUrls.length ? `${initialImageUrls.length} URLs` : "none",
+        currentContext: { 
+          searchTerm, 
+          imageUrls: imageUrls.length, 
+          searchPerformed 
+        }
+      });
+      
+      // Check if we need to perform a search or we're returning to an existing search
+      const urlHasQuery = !!initialQuery.trim();
+      const urlHasImages = initialImageUrls.length > 0;
+      const contextHasSearch = searchPerformed && (searchTerm || imageUrls.length > 0);
+      
+      console.log("Search state on page load:", {
+        urlHasQuery,
+        urlHasImages,
+        contextHasSearch,
+        hasResults,
+        apartmentIds: apartmentIds.length
+      });
+      
+      // Case 1: URL has new search parameters - always do a fresh search
+      if ((urlHasQuery && initialQuery !== searchTerm) || 
+          (urlHasImages && JSON.stringify(initialImageUrls) !== JSON.stringify(imageUrls))) {
+        
+        // Determine search type
+        let newSearchType = 'none';
+        if (urlHasQuery && urlHasImages) {
+          newSearchType = 'both';
+        } else if (urlHasQuery) {
+          newSearchType = 'text';
+        } else if (urlHasImages) {
+          newSearchType = 'image';
+        }
+        
+        // Apply context updates
+        if (urlHasImages) {
+          setImageUrls(initialImageUrls);
+        }
+        
+        if (urlHasQuery) {
+          setSearchTerm(initialQuery);
+        }
+        
+        setSearchType(newSearchType);
+        
+        // Perform the search
+        console.log("Initiating fresh search from URL parameters");
+        setLoading(true);
+        
+        try {
+          await fetchResults({ 
+            query: initialQuery,
+          }, 1);
+          
+          console.log("Fresh search completed successfully");
+        } catch (error) {
+          console.error("Error performing fresh search:", error);
+        } finally {
+          setLoading(false);
+        }
+      } 
+      // Case 2: URL has same search params and we have results - don't re-fetch
+      else if ((urlHasQuery || urlHasImages) && hasResults) {
+        console.log("URL matches existing search with results - no need to re-fetch");
+        // Ensure UI reflects the current state
+        if (urlHasQuery) {
+          setSearchTerm(initialQuery);
+        }
+        if (urlHasImages) {
+          setImageUrls(initialImageUrls);
+        }
+      }
+      // Case 3: No URL params but we have a search with results in context
+      else if (contextHasSearch && hasResults) {
+        console.log("Using existing search results from context");
+        // The search context already has data, no need to fetch again
+      }
+      // Case 4: We have search criteria but no results - need to fetch
+      else if (contextHasSearch) {
+        console.log("Search criteria exist but no results - fetching data");
+        setLoading(true);
+        
+        try {
+          await fetchResults({ 
+            query: searchTerm,
+          }, 1);
+          
+          console.log("Search data fetch completed");
+        } catch (error) {
+          console.error("Error fetching search results:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    
+    setupSearch();
+  }, [searchParams]);
 
   const handleSearch = async (newFilterValues: SearchFilterValues) => {
     setLoading(true);
@@ -67,10 +165,35 @@ const Search = () => {
     setFilterValues(newFilterValues);
     setPage(1); // Reset to first page for new searches
     setHasMoreResults(true); // Reset pagination state
+    
+    // Determine and set the searchType based on the current search parameters
+    const hasQuery = !!newFilterValues.query.trim();
+    const hasImages = imageUrls.length > 0;
+    
+    if (hasQuery && hasImages) {
+      setSearchType('both');
+    } else if (hasQuery) {
+      setSearchType('text');
+    } else if (hasImages) {
+      setSearchType('image');
+    } else {
+      setSearchType('none');
+    }
 
     try {
-      // Update URL query parameter
-      setSearchParams({ q: newFilterValues.query });
+      // Build search params for URL
+      const newSearchParams: Record<string, string> = {
+        q: newFilterValues.query
+      };
+      
+      // Keep image URLs in the URL if they exist
+      if (initialImageUrls.length > 0) {
+        // Preserve the image URLs from the URL parameter
+        newSearchParams.imageUrls = searchParams.get("imageUrls") || "";
+      }
+      
+      // Update URL query parameters
+      setSearchParams(newSearchParams);
 
       // Perform search with first page of results
       await fetchResults(newFilterValues, 1);
@@ -106,9 +229,19 @@ const Search = () => {
 
   // Shared function to fetch results (used by both initial search and pagination)
   const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {
+    // Choose the correct image URLs (from the URL parameters or context)
+    const urls = initialImageUrls.length > 0 ? initialImageUrls : imageUrls;
+    
+    console.log("Fetching results with parameters:", {
+      query: searchFilterValues.query,
+      page: pageNum,
+      imageUrls: urls.length > 0 ? `${urls.length} URLs` : "none",
+      searchType
+    });
+    
     // Prepare filter parameters for API
     const searchParams = {
-      query: searchFilterValues.query,
+      query: searchFilterValues.query || initialQuery, // Use the query from URL if none in filters
       filters: {
         min_beds: searchFilterValues.min_beds,
         max_beds: searchFilterValues.max_beds,
@@ -122,6 +255,7 @@ const Search = () => {
       },
       limit: ITEMS_PER_PAGE, // Request smaller chunks
       page: pageNum, // Add page parameter
+      imageUrls: urls, // Add image URLs from URL parameters or context
     };
 
     try {
@@ -191,6 +325,7 @@ const Search = () => {
           onSearch={handleSearch}
           initialQuery={searchTerm || initialQuery}
           initialValues={filterValues || undefined}
+          isLoading={loading}
         />
         <main className="flex-grow bg-white flex flex-col">
           <PropertyGrid
@@ -198,6 +333,7 @@ const Search = () => {
             loading={loading}
             error={error}
             searchTerm={searchTerm || initialQuery}
+            searchType={searchType}
             onLoadMore={handleLoadMore}
           />
         </main>

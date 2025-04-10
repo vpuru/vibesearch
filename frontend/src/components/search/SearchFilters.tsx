@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
-import { Search, X, Sliders } from "lucide-react";
+import { Search, X, Sliders, Loader2 } from "lucide-react";
+import { useSearch } from "../../contexts/SearchContext";
 
 export interface SearchFilterValues {
   query: string;
@@ -19,13 +20,16 @@ interface SearchFiltersProps {
   onSearch: (filters: SearchFilterValues) => void;
   initialQuery?: string;
   initialValues?: SearchFilterValues;
+  isLoading?: boolean;
 }
 
 const SearchFilters: React.FC<SearchFiltersProps> = ({
   onSearch,
   initialQuery = "",
   initialValues,
+  isLoading = false,
 }) => {
+  const { imageUrls, searchType } = useSearch();
   const [showFilters, setShowFilters] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState(initialQuery);
   const [filters, setFilters] = React.useState({
@@ -212,10 +216,24 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     }
   }, [initialValues]);
 
-  // Set search query when initialQuery changes
+  // Use a ref to track if we should trigger a search when the query changes
+  const isInitialMount = React.useRef(true);
+  
+  // Set search query when initialQuery changes, but don't trigger a search on initial mount
   useEffect(() => {
-    if (initialQuery) {
-      setSearchQuery(initialQuery);
+    if (isInitialMount.current) {
+      // Just update the search box without triggering a search
+      if (initialQuery) {
+        // Decode the URL-encoded query before displaying it
+        setSearchQuery(decodeURIComponent(initialQuery));
+      }
+      isInitialMount.current = false;
+    } else {
+      // Only trigger search on subsequent updates if there's a query
+      if (initialQuery) {
+        // Decode the URL-encoded query before displaying it
+        setSearchQuery(decodeURIComponent(initialQuery));
+      }
     }
   }, [initialQuery]);
 
@@ -253,13 +271,37 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-4 py-3 bg-vibe-navy text-white rounded-lg"
+              disabled={isLoading}
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-vibe-navy text-white rounded-lg min-w-[100px]"
             >
-              <Search className="h-5 w-5" />
-              <span>Search</span>
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-white" />
+              ) : (
+                <>
+                  <Search className="h-5 w-5" />
+                  <span>Search</span>
+                </>
+              )}
             </button>
           </div>
         </form>
+
+        {/* Display uploaded images if available */}
+        {imageUrls.length > 0 && (
+          <div className="mt-3">
+            <div className="flex gap-2 overflow-x-auto mt-4">
+              {imageUrls.map((url, index) => (
+                <div key={index} className="relative flex-shrink-0">
+                  <img 
+                    src={url} 
+                    alt={`Search image ${index + 1}`} 
+                    className="h-16 w-16 object-cover rounded-md border border-gray-200"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {showFilters && (
           <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white animate-fade-in">

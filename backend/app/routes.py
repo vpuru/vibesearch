@@ -14,10 +14,30 @@ def search():
         # Log all request parameters for debugging
         print(f"DEBUG: Request parameters: {dict(request.args)}")
 
-        # Get mandatory query parameter
-        query = request.args.get("query")
-        if not query:
-            return jsonify({"error": "Query parameter is required"}), 400
+        # Get query parameter (can be empty if only image search)
+        query = request.args.get("query", "")
+        print(f"DEBUG: Received query: '{query}'")
+        
+        # Get image URLs if any
+        image_urls_json = request.args.get("imageUrls")
+        image_urls = []
+        if image_urls_json:
+            try:
+                import json
+                image_urls = json.loads(image_urls_json)
+                print(f"DEBUG: Received {len(image_urls)} image URLs")
+                # Log a few sample URLs for debugging
+                if len(image_urls) > 0:
+                    print(f"DEBUG: Sample image URL: {image_urls[0][:60]}...")
+            except json.JSONDecodeError as e:
+                print(f"ERROR: Failed to parse image URLs: {image_urls_json[:100]}..., error: {e}")
+            except Exception as e:
+                print(f"ERROR: Unexpected error handling image URLs: {e}")
+        
+        # Check if we have at least a query or image URLs
+        if not query.strip() and not image_urls:
+            print("ERROR: No query or image URLs provided")
+            return jsonify({"error": "Query parameter or image URLs are required"}), 400
 
         # Get optional parameters
         top_k = request.args.get(
@@ -67,8 +87,8 @@ def search():
         if not filter_dict:
             filter_dict = None
 
-        # Search for apartments
-        results = search_apartments(query, filter_dict, top_k)
+        # Search for apartments based on query and/or image URLs
+        results = search_apartments(query, filter_dict, top_k, image_urls)
 
         # Log the results for debugging
         print(f"DEBUG: Search completed, returned {len(results)} results")

@@ -19,6 +19,7 @@ interface SearchParams {
   filters?: SearchFilters;
   limit?: number;
   page?: number;
+  imageUrls?: string[];
 }
 
 interface SearchResponseMatch {
@@ -228,6 +229,12 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
     // Add pagination parameter
     if (params.page) {
       queryParams.append("page", params.page.toString());
+    }
+
+    // Add image URLs if provided
+    if (params.imageUrls && params.imageUrls.length > 0) {
+      // Join the image URLs with a delimiter that's safe for URLs
+      queryParams.append("imageUrls", JSON.stringify(params.imageUrls));
     }
 
     if (params.filters) {

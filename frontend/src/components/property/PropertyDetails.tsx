@@ -183,8 +183,15 @@ const PropertyDetails: React.FC = () => {
   const handleBackClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
 
-    // If a search was performed, navigate back to search
-    if (searchPerformed) {
+    // Get the current search parameters from URL to preserve state
+    const searchParams = new URLSearchParams(window.location.search);
+    const returnTo = searchParams.get("returnTo");
+    
+    if (returnTo) {
+      // If returnTo is specified, navigate to that URL with the preserved query
+      navigate(decodeURIComponent(returnTo));
+    } else if (searchPerformed) {
+      // If a search was performed but no returnTo, just go to search
       navigate("/search");
     } else {
       // Otherwise, navigate back in history

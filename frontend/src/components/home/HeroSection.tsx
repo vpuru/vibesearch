@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, ArrowRight, Home, Upload, X, Loader, ArrowDown, MapPin, MessageSquare } from "lucide-react";
-import OpenAI from 'openai';
-import { submitFeedback } from "../../lib/supabase";
+import { submitFeedback, uploadImagesToSupabase } from "../../lib/supabase";
+import { useSearch } from "../../contexts/SearchContext";
 
 const HeroSection = () => {
   const globeRef = useRef<HTMLDivElement>(null);
@@ -21,6 +21,9 @@ const HeroSection = () => {
   const [isFeedbackSubmitting, setIsFeedbackSubmitting] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const navigate = useNavigate();
+  
+  // Get access to search context
+  const { setImageUrls, setSearchType, setSearchTerm } = useSearch();
 
   const placeholders = [
     "Describe your ideal apartment and/or upload images...",
@@ -41,60 +44,53 @@ const HeroSection = () => {
   // Handle form submission
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (uploadedImages.length === 0) {
-      if (searchQuery.trim()) {
-        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      }
+    
+    // Check if we have images or query
+    const hasImages = uploadedImages.length > 0;
+    const hasQuery = searchQuery.trim().length > 0;
+    
+    if (!hasImages && !hasQuery) {
+      // Nothing to search for
       return;
     }
+    
     setIsLoading(true);
+    
     try {
-      const base64Images = await Promise.all(
-        uploadedImages.map(file => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        })
-      );
+      // Create URL parameters
+      const searchParams = new URLSearchParams();
       
-      type ContentPart = 
-        | { type: "text"; text: string }
-        | { type: "image_url"; image_url: { url: string } };
+      // Handle different search scenarios
+      if (hasImages) {
+        // Upload images to Supabase and get public URLs
+        console.log("Uploading images to Supabase...");
+        const uploadedImageUrls = await uploadImagesToSupabase(uploadedImages);
+        console.log("Images uploaded successfully:", uploadedImageUrls);
+        
+        if (hasQuery) {
+          // Both text and images
+          searchParams.append('q', searchQuery.trim());
+        } else {
+          // Images only
+          searchParams.append('q', ''); // Empty query
+        }
+        
+        // Add image URLs as a parameter - this is all we need to pass in URL
+        searchParams.append('imageUrls', JSON.stringify(uploadedImageUrls));
+      } else {
+        // Text-only search
+        searchParams.append('q', encodeURIComponent(searchQuery.trim()));
+      }
       
-      const textContent: ContentPart = {
-        type: "text",
-        text: "In less than 20 words, describe the attached image(s) in a way that would help refine an apartment search. Focus on aesthetics and design."
-      };
-      
-      const imageContents: ContentPart[] = base64Images.map(dataUrl => ({
-        type: "image_url",
-        image_url: { url: dataUrl as string }
-      }));
-      
-      const content: ContentPart[] = [textContent, ...imageContents];
-      
-      const client = new OpenAI({
-        apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-        dangerouslyAllowBrowser: true
-      });
-      
-      const completion = await client.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that generates semantic search descriptions for apartment listings. Follow the prompt format exactly.' },
-          { role: 'user', content }
-        ],
-      });
-      
-      const llmDescription = completion.choices[0].message.content.trim();
-      const combinedQuery = (searchQuery.trim() ? searchQuery.trim() + " " : "") + llmDescription;
-      navigate(`/search?q=${encodeURIComponent(combinedQuery)}`);
+      // Navigate to search page with parameters
+      const searchUrl = `/search?${searchParams.toString()}`;
+      console.log("Navigating to:", searchUrl);
+      navigate(searchUrl);
     } catch (err) {
-      console.error("Error processing images with OpenAI model:", err);
-      setIsLoading(false); 
+      console.error("Error during search preparation:", err);
+      alert("There was an error processing your search. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
   
