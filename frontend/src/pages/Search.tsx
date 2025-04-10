@@ -16,30 +16,9 @@ interface SearchResult {
   metadata: any;
 }
 
-// Interface for search context with image URLs
-interface SearchContext {
-  type: 'text_only' | 'image_only' | 'text_and_image';
-  imageUrls: string[];
-}
-
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
-  const contextParam = searchParams.get("context") || "";
-  const [searchContext, setSearchContext] = useState<SearchContext | null>(null);
-  
-  useEffect(() => {
-    if (contextParam) {
-      try {
-        const parsedContext = JSON.parse(decodeURIComponent(contextParam)) as SearchContext;
-        setSearchContext(parsedContext);
-      } catch (err) {
-        console.error("Error parsing search context:", err);
-      }
-    } else {
-      setSearchContext(null);
-    }
-  }, [contextParam]);
 
   // Use the search context
   const {
@@ -61,7 +40,7 @@ const Search = () => {
 
   // Perform search when the component mounts if there's an initial query or we have previous results
   useEffect(() => {
-    if (!initialQuery && !searchContext?.imageUrls?.length) {
+    if (!initialQuery) {
       setApartmentIds([]);
       setSearchPerformed(false);
       setSearchTerm("");
@@ -69,17 +48,11 @@ const Search = () => {
       return;
     }
     
-    // If there's a new query or context in the URL that doesn't match our current searchTerm,
+    // If there's a new query in the URL that doesn't match our current searchTerm,
     // we need to perform a new search
-    const shouldPerformNewSearch = 
-      (initialQuery && initialQuery !== searchTerm) || 
-      (searchContext && !searchPerformed);
-      
-    if (shouldPerformNewSearch) {
-      handleSearch({ 
-        query: initialQuery,
-        // Pass any other necessary filter values
-      });
+    if (initialQuery && initialQuery !== searchTerm) {
+      console.log("New search query from URL:", initialQuery);
+      handleSearch({ query: initialQuery });
       return;
     }
 
@@ -89,38 +62,23 @@ const Search = () => {
       return;
     }
 
-    // If there's a query/context in the URL and we haven't performed a search yet
-    if ((initialQuery || searchContext) && !searchPerformed) {
+    // If there's a query in the URL and we haven't performed a search yet
+    if (initialQuery && !searchPerformed) {
       handleSearch({ query: initialQuery });
     }
-  }, [initialQuery, searchContext, searchPerformed, apartmentIds, searchTerm]);
+  }, [initialQuery, searchPerformed, apartmentIds, searchTerm]);
 
   const handleSearch = async (newFilterValues: SearchFilterValues) => {
     setLoading(true);
     setError(undefined);
     setSearchTerm(newFilterValues.query);
     setFilterValues(newFilterValues);
-    setPage(1); 
-    setHasMoreResults(true);
+    setPage(1); // Reset to first page for new searches
+    setHasMoreResults(true); // Reset pagination state
 
     try {
-      // Update URL query parameter, preserving context if it exists
-      const updatedParams = new URLSearchParams();
-      updatedParams.set('q', newFilterValues.query);
-      if (contextParam) {
-        updatedParams.set('context', contextParam);
-        
-        // Force re-parse context if needed
-        if (!searchContext) {
-          try {
-            const parsedContext = JSON.parse(decodeURIComponent(contextParam)) as SearchContext;
-            setSearchContext(parsedContext);
-          } catch (err) {
-            console.error("Error re-parsing search context:", err);
-          }
-        }
-      }
-      setSearchParams(updatedParams);
+      // Update URL query parameter
+      setSearchParams({ q: newFilterValues.query });
 
       // Perform search with first page of results
       await fetchResults(newFilterValues, 1);
@@ -155,20 +113,10 @@ const Search = () => {
   };
 
   // Shared function to fetch results (used by both initial search and pagination)
-  const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {    
-    // Ensure we have a valid searchContext if contextParam exists
-    let effectiveSearchContext = searchContext;
-    if (contextParam && !effectiveSearchContext) {
-      try {
-        effectiveSearchContext = JSON.parse(decodeURIComponent(contextParam)) as SearchContext;
-      } catch (err) {
-        console.error("Error parsing context in fetchResults:", err);
-      }
-    }
-    
+  const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {
     // Prepare filter parameters for API
     const searchParams = {
-      query: searchFilterValues.query || "",  // Ensure query is at least an empty string
+      query: searchFilterValues.query,
       filters: {
         min_beds: searchFilterValues.min_beds,
         max_beds: searchFilterValues.max_beds,
@@ -180,10 +128,8 @@ const Search = () => {
         city: searchFilterValues.city,
         state: searchFilterValues.state,
       },
-      limit: ITEMS_PER_PAGE,
-      page: pageNum,
-      // Add context data if available
-      context: effectiveSearchContext,
+      limit: ITEMS_PER_PAGE, // Request smaller chunks
+      page: pageNum, // Add page parameter
     };
 
     try {
@@ -261,7 +207,6 @@ const Search = () => {
             loading={loading}
             error={error}
             searchTerm={searchTerm || initialQuery}
-            searchType={searchContext?.type || 'text_only'} 
             onLoadMore={handleLoadMore}
           />
         </main>

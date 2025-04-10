@@ -195,13 +195,11 @@ const PropertyDetails: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="bg-white min-h-screen w-full">
-        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-6" />
-            <h2 className="text-2xl font-semibold font-sans mb-2">Loading property details...</h2>
-            <p className="text-vibe-charcoal/70">Please wait while we fetch the information.</p>
-          </div>
+      <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-6" />
+          <h2 className="text-2xl font-semibold font-sans mb-2">Loading property details...</h2>
+          <p className="text-vibe-charcoal/70">Please wait while we fetch the information.</p>
         </div>
       </div>
     );

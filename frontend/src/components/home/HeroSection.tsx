@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Upload, X, Loader, ArrowDown, MessageSquare } from "lucide-react";
-import { submitFeedback, uploadImagesToSupabase } from "../../lib/supabase";
+import { Link, useNavigate } from "react-router-dom";
+import { Search, ArrowRight, Home, Upload, X, Loader, ArrowDown, MapPin, MessageSquare } from "lucide-react";
+import OpenAI from 'openai';
+import { submitFeedback } from "../../lib/supabase";
 
 const HeroSection = () => {
   const globeRef = useRef<HTMLDivElement>(null);
@@ -40,41 +41,60 @@ const HeroSection = () => {
   // Handle form submission
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim().length === 0 && uploadedImages.length === 0) {
+    if (uploadedImages.length === 0) {
+      if (searchQuery.trim()) {
+        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      }
       return;
     }
-
-    const hasText = searchQuery.trim().length > 0;
-    const hasImages = uploadedImages.length > 0;
-    let searchType = "text_only";
-    if (hasText && hasImages) {
-      searchType = "text_and_image";
-    } else if (!hasText && hasImages) {
-      searchType = "image_only";
-    }
-
-    if (hasText && !hasImages) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      return;
-    }
-    
     setIsLoading(true);
     try {
-      const imageUrls = await uploadImagesToSupabase(uploadedImages);
-      const searchContext = {
-        type: searchType,
-        imageUrls: imageUrls
+      const base64Images = await Promise.all(
+        uploadedImages.map(file => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        })
+      );
+      
+      type ContentPart = 
+        | { type: "text"; text: string }
+        | { type: "image_url"; image_url: { url: string } };
+      
+      const textContent: ContentPart = {
+        type: "text",
+        text: "In less than 20 words, describe the attached image(s) in a way that would help refine an apartment search. Focus on aesthetics and design."
       };
-      const contextString = encodeURIComponent(JSON.stringify(searchContext));
-      if (searchType === "image_only") {
-        navigate(`/search?context=${contextString}`);
-      } else {
-        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}&context=${contextString}`);
-      }
+      
+      const imageContents: ContentPart[] = base64Images.map(dataUrl => ({
+        type: "image_url",
+        image_url: { url: dataUrl as string }
+      }));
+      
+      const content: ContentPart[] = [textContent, ...imageContents];
+      
+      const client = new OpenAI({
+        apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+        dangerouslyAllowBrowser: true
+      });
+      
+      const completion = await client.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that generates semantic search descriptions for apartment listings. Follow the prompt format exactly.' },
+          { role: 'user', content }
+        ],
+      });
+      
+      const llmDescription = completion.choices[0].message.content.trim();
+      const combinedQuery = (searchQuery.trim() ? searchQuery.trim() + " " : "") + llmDescription;
+      navigate(`/search?q=${encodeURIComponent(combinedQuery)}`);
     } catch (err) {
-      console.error("Error uploading images:", err);
-    } finally {
-      setIsLoading(false);
+      console.error("Error processing images with OpenAI model:", err);
+      setIsLoading(false); 
     }
   };
   
@@ -334,7 +354,7 @@ const HeroSection = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in-up">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-sans font-medium text-vibe-charcoal/70">Help Us Improve!</h3>
+              <h3 className="text-xl font-sans font-medium text-vibe-charcoal/70">Help us improve!</h3>
               <button
                 onClick={() => setShowFeedbackForm(false)}
                 className="text-gray-400 hover:text-gray-600"
