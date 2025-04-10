@@ -76,7 +76,6 @@ const Search = () => {
       (searchContext && !searchPerformed);
       
     if (shouldPerformNewSearch) {
-      console.log("New search query or context from URL:", { initialQuery, searchContext });
       handleSearch({ 
         query: initialQuery,
         // Pass any other necessary filter values
@@ -115,15 +114,12 @@ const Search = () => {
         if (!searchContext) {
           try {
             const parsedContext = JSON.parse(decodeURIComponent(contextParam)) as SearchContext;
-            console.log("Re-parsed context in handleSearch:", parsedContext);
             setSearchContext(parsedContext);
           } catch (err) {
             console.error("Error re-parsing search context:", err);
           }
         }
       }
-      console.log("Search params in handleSearch:", updatedParams.toString());
-      console.log("Current search context in handleSearch:", searchContext);
       setSearchParams(updatedParams);
 
       // Perform search with first page of results
@@ -159,17 +155,12 @@ const Search = () => {
   };
 
   // Shared function to fetch results (used by both initial search and pagination)
-  const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {
-    console.log("fetchResults - Current contextParam:", contextParam);
-    console.log("fetchResults - Current searchContext:", searchContext);
-    console.log("fetchResults - searchFilterValues:", searchFilterValues);
-    
+  const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {    
     // Ensure we have a valid searchContext if contextParam exists
     let effectiveSearchContext = searchContext;
     if (contextParam && !effectiveSearchContext) {
       try {
         effectiveSearchContext = JSON.parse(decodeURIComponent(contextParam)) as SearchContext;
-        console.log("Parsed context from param in fetchResults:", effectiveSearchContext);
       } catch (err) {
         console.error("Error parsing context in fetchResults:", err);
       }

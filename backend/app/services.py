@@ -47,7 +47,6 @@ def analyze_images_with_gpt4o(image_urls, user_query=None):
             print("WARNING: OpenAI client not initialized. Using fallback description.")
             return "Modern apartment with stylish furnishings and natural light."
         
-        # Prepare messages for GPT-4o
         messages = [{"role": "system", "content": "You are a helpful assistant that describes apartment images concisely."}]
         if user_query:
             # If there's a user query, include it in the prompt
@@ -55,26 +54,17 @@ def analyze_images_with_gpt4o(image_urls, user_query=None):
         else:
             # If there are only images, ask for a general description
             user_content = "Generate a 20-word description that would help find matching apartments based on these images. Focus on aesthetics, style, and design elements visible in the images."
-        
-        # Add user content as text
         user_message = {"role": "user", "content": [{"type": "text", "text": user_content}]}
         
-        # Add image URLs
         for image_url in image_urls:
             user_message["content"].append({"type": "image_url", "image_url": {"url": image_url}})
-        
         messages.append(user_message)
-        
-        # Call GPT-4o API
         response = openai_client.chat.completions.create(
             model="gpt-4o",
             messages=messages,
             max_tokens=100
         )
-        
-        # Extract and return the description
         description = response.choices[0].message.content.strip()
-        print(f"Generated image description: {description}")
         return description
     
     except Exception as e:
