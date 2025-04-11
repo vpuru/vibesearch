@@ -24,7 +24,7 @@ model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 # Constants
-INPUT_FILE = "output/latest_output.json"
+INPUT_FILE = "scripts/output/apartment_image_descriptions.json"
 INDEX_NAME = "apartments-search"
 EMBEDDING_DIMENSION = 384  # Dimension for all-MiniLM-L6-v2
 
