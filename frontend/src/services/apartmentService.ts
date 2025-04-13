@@ -333,9 +333,15 @@ export const fetchApartmentPreview = async (id: string, query?: string): Promise
       return mockSearchResults("")[0];
     }
 
+    // Increase timeout for preview requests
+    const previewTimeout = API_TIMEOUT * 1.5; // 15 seconds instead of default 10
+    
     // Set up AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    const timeoutId = setTimeout(() => {
+      console.warn(`Timeout (${previewTimeout}ms) reached for apartment preview ${id}, aborting request`);
+      controller.abort('timeout');
+    }, previewTimeout);
 
     // Build URL with query parameter if provided
     let url = `${API_ENDPOINTS.apartmentPreview}/${id}`;
@@ -344,44 +350,56 @@ export const fetchApartmentPreview = async (id: string, query?: string): Promise
       console.log(`Including search query in preview request: ${query}`);
     }
 
-    // Make the API request
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      signal: controller.signal,
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "same-origin",
-    });
+    try {
+      // Make the API request
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        signal: controller.signal,
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+      });
 
-    // Clear the timeout
-    clearTimeout(timeoutId);
+      // Clear the timeout as soon as response is received
+      clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API error response:", errorText);
-      throw new Error(
-        `Failed to fetch apartment preview: ${response.status} ${response.statusText}`
-      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API error response:", errorText);
+        throw new Error(
+          `Failed to fetch apartment preview: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: ApartmentPreviewResponse = await response.json();
+      
+      // Map the preview data to Property type
+      if (!data.apartment) {
+        throw new Error("Invalid API response format, apartment not found");
+      }
+
+      const property = mapApartmentPreviewToProperty(data.apartment);
+      return property;
+    } catch (fetchError) {
+      // Clear the timeout if there was an error
+      clearTimeout(timeoutId);
+      throw fetchError;
     }
-
-    const data: ApartmentPreviewResponse = await response.json();
-    console.log("Apartment preview data:", data);
-
-    // Map the preview data to Property type
-    if (!data.apartment) {
-      throw new Error("Invalid API response format, apartment not found");
-    }
-
-    const property = mapApartmentPreviewToProperty(data.apartment);
-    console.log("Mapped apartment preview to property:", property);
-
-    return property;
   } catch (error) {
-    console.error(`Error fetching apartment preview for ID ${id}:`, error);
+    // Better error reporting
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.warn(`Request for apartment ${id} was aborted (likely due to timeout)`);
+      } else {
+        console.error(`Error fetching apartment preview for ID ${id}:`, error.message);
+      }
+    } else {
+      console.error(`Unknown error fetching apartment preview for ID ${id}:`, error);
+    }
     throw error;
   }
 };
@@ -394,9 +412,15 @@ export const fetchApartmentDetails = async (id: string, query?: string): Promise
       return mockSearchResults("")[0];
     }
 
+    // Increase timeout for details requests
+    const detailsTimeout = API_TIMEOUT * 2; // 20 seconds instead of default 10
+    
     // Set up AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
+    const timeoutId = setTimeout(() => {
+      console.warn(`Timeout (${detailsTimeout}ms) reached for apartment details ${id}, aborting request`);
+      controller.abort('timeout');
+    }, detailsTimeout);
 
     // Build URL with query parameter if provided
     let url = `${API_ENDPOINTS.apartmentDetails}/${id}`;
@@ -405,36 +429,49 @@ export const fetchApartmentDetails = async (id: string, query?: string): Promise
       console.log(`Including search query in details request: ${query}`);
     }
 
-    // Make the API request
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      signal: controller.signal,
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "same-origin",
-    });
+    try {
+      // Make the API request
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        signal: controller.signal,
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+      });
 
-    // Clear the timeout
-    clearTimeout(timeoutId);
+      // Clear the timeout as soon as response is received
+      clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API error response:", errorText);
-      throw new Error(
-        `Failed to fetch apartment details: ${response.status} ${response.statusText}`
-      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API error response:", errorText);
+        throw new Error(
+          `Failed to fetch apartment details: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const data: ApartmentDetailsResponse = await response.json();
+      return data.apartment;
+    } catch (fetchError) {
+      // Clear the timeout if there was an error
+      clearTimeout(timeoutId);
+      throw fetchError;
     }
-
-    const data: ApartmentDetailsResponse = await response.json();
-    console.log("Apartment details data:", data);
-
-    return data.apartment;
   } catch (error) {
-    console.error(`Error fetching apartment details for ID ${id}:`, error);
+    // Better error reporting
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        console.warn(`Details request for apartment ${id} was aborted (likely due to timeout)`);
+      } else {
+        console.error(`Error fetching apartment details for ID ${id}:`, error.message);
+      }
+    } else {
+      console.error(`Unknown error fetching apartment details for ID ${id}:`, error);
+    }
     throw error;
   }
 };
