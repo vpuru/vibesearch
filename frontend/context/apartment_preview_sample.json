@@ -1,0 +1,68 @@
+{
+  "apartment": {
+    "baths": "1 - 2 ba",
+    "beds": "Studio - 2 bd",
+    "coordinates": {
+      "latitude": 33.95597,
+      "longitude": -118.41582
+    },
+    "id": "r9jynd2",
+    "location": {
+      "city": "Los Angeles",
+      "state": "California"
+    },
+    "photos": [
+      "https://images1.apartments.com/i2/wGRgt_9esF5BIHrx0K1fheUj9Z4wlwYVpxVakGcbj6M/111/park-west-los-angeles-ca-exterior.jpg",
+      "https://images1.apartments.com/m2/rZ8rCIj1A4SQNJhT5nqkSljGj4qzYlAD5Ci0AXixdvI/H330W495/park-west-los-angeles-ca-map-image-of-the-property.jpg",
+      "https://images1.apartments.com/i2/d8dJyU7kBwqbtgKnarpQkQIgHt87GhiKqtGkDh_6CTk/117/park-west-los-angeles-ca-kitchen.jpg",
+      "https://images1.apartments.com/i2/ub0uChHtpr5HzeBfsEbkFGNzeezPh-fsW3VI8C4WQ18/117/park-west-los-angeles-ca-kitchen.jpg",
+      "https://images1.apartments.com/i2/GTMacf9Bp8Bn47FSX1peToysvpS1wEEnpgmvzmbHSsk/117/park-west-los-angeles-ca-kitchen-and-carpeted-living-room-with-ba.jpg",
+      "https://images1.apartments.com/i2/MzK9QAGKOv50i-aoWKIOi3Gfl2Rws3glgYPbSQyps3M/117/park-west-los-angeles-ca-living-room-with-hard-surface-flooring.jpg",
+      "https://images1.apartments.com/i2/zKjWDQ-MgLHKa37KTNVeECkWE05dsIoUxpfMDkncsXA/117/park-west-los-angeles-ca-carpeted-living-room-with-fireplace-and-.jpg",
+      "https://images1.apartments.com/i2/4LOu8AyfyZgOTe-i0acFUb9t8rjskkaVapR0hSdZoJ0/117/park-west-los-angeles-ca-carpeted-living-room-with-balcony.jpg",
+      "https://images1.apartments.com/i2/TVs5kfIFAHBXBk07hgNP5fem8nRFkwBjvpb-gk05Af8/117/park-west-los-angeles-ca-kitchen-and-carpeted-living-room.jpg",
+      "https://images1.apartments.com/i2/WPkkIMVYMX-6uXyQ3CEz0MKunKWK2xTk932N3nNwyeo/117/park-west-los-angeles-ca-carpeted-living-room-with-balcony.jpg",
+      "https://images1.apartments.com/i2/D-ynjgf_4w7awyzKrnRPHDF7wLmO_tw5cbIrIEr8Uyw/117/park-west-los-angeles-ca-carpeted-living-room-with-balcony.jpg",
+      "https://images1.apartments.com/i2/6INOtT7bjQdZITiuvzMtbaWZrrpDeuT0WuO6RNYNjh0/117/park-west-los-angeles-ca-bathroom.jpg",
+      "https://images1.apartments.com/i2/o9UbrkJQ0xBxepNEjKwbU0zOFhZnQz3k0QuhJI_8cJk/117/park-west-los-angeles-ca-bathroom.jpg",
+      "https://images1.apartments.com/i2/pezPvVHsl1bjUD4nseZouTnQZ1k1nIOx-Z229nhBSdI/117/park-west-los-angeles-ca-carpeted-bedroom.jpg",
+      "https://images1.apartments.com/i2/0UO4okTQanUVtfP_GCNC6NL8loMn0_-Ie0TWModfI0w/117/park-west-los-angeles-ca-carpeted-bedroom-with-balcony.jpg",
+      "https://images1.apartments.com/i2/lfrkdti8xTO8dW150zGiMKW6d0quAYEMbh9BO1XKoLA/117/park-west-los-angeles-ca-carpeted-bedroom.jpg",
+      "https://images1.apartments.com/i2/R645QVgQ9ajV_uZhVGwcabnfuFclRfUgzkmcUolh-WA/117/park-west-los-angeles-ca-bedroom-bathroom-and-closet.jpg",
+      "https://images1.apartments.com/i2/XU9GvUm9aO85OgS8kZ916GptCLYSLCifnc-BLihxeSU/117/park-west-los-angeles-ca-lobby.jpg",
+      "https://images1.apartments.com/i2/pUPCOnlcWJlpTILPhk3FLwtlYqUmRKOxYqo6X4FGyfk/117/park-west-los-angeles-ca-24-hour-fitness-center.jpg",
+      "https://images1.apartments.com/i2/CmvHkeT03Chd9OX0iRBuWEGIR0nLdtMIIPDelVXI8Tk/117/park-west-los-angeles-ca-24-hour-fitness-center.jpg",
+      "https://images1.apartments.com/i2/6yGLNfDAWaQYDYkvvmgz51WSIS3_yC02nJ71h1waFvM/117/park-west-los-angeles-ca-business-center.jpg",
+      "https://images1.apartments.com/i2/4r4t-XndWc9KVnSQBoQlMkPH10m00MFFyGOXYtsjYKM/117/park-west-los-angeles-ca-resident-lounge.jpg",
+      "https://images1.apartments.com/i2/QXCWQ07m7ZR5eZ6IiR0Z6R2eWydAMtqgcP57-8yQC_Q/117/park-west-los-angeles-ca-resident-lounge.jpg",
+      "https://images1.apartments.com/i2/kFVbq4MMVSs52ujC-WMaJ6ufmHp62uLT3LvJ_qqPHO0/117/park-west-los-angeles-ca-resident-lounge.jpg",
+      "https://images1.apartments.com/i2/bRjz9p4YgR3_VqGPRVllu6hSTtLVoFFJiOK_A_M62OA/117/park-west-los-angeles-ca-one-of-two-swimming-pools.jpg",
+      "https://images1.apartments.com/i2/u0TuA3iXkWa5YLSxsJfFadAHfywkKDZg9UOeWIPKl7Q/117/park-west-los-angeles-ca-one-of-two-swimming-pools.jpg",
+      "https://images1.apartments.com/i2/rFXGdwmGZY7arr6OexHCV7-WJ1UZ_dQnICK0jnTm02U/117/park-west-los-angeles-ca-one-of-two-swimming-pools.jpg",
+      "https://images1.apartments.com/i2/elyuaZaef5QOOpfQpxVBR7a0E0QvVk9_nLyZ6WcC_Ic/117/park-west-los-angeles-ca-conveniently-close-to-the-westfield-culv.jpg",
+      "https://images1.apartments.com/i2/0tMBclDQDjZgB6Rc7FYltQMemEt9gFKytckr65B0OdA/117/park-west-los-angeles-ca-enjoy-the-warm-sunshine-at-toes-beach.jpg",
+      "https://images1.apartments.com/i2/UFKh0BztUinWn8Ls6_k4IfvmYvJ5_W5QaDA6flFWEoM/117/park-west-los-angeles-ca-less-than-5-minutes-from-central-park-an.jpg",
+      "https://images1.apartments.com/i2/2DSgoCQX5tfWAqo0ttnr4j-_ZrrU8UYEuNghrM3PxQo/117/park-west-los-angeles-ca-enjoy-some-sunshine-at-central-park-less.jpg",
+      "https://images1.apartments.com/i2/Dn2JoAVc2Uf_4Npg2we0DqBNLEWVydqRinC0Wl9R8HU/117/park-west-los-angeles-ca-the-triangle-park-is-steps-away-from-you.jpg",
+      "https://images1.apartments.com/i2/PJmavA4Nfj71tHQI47RM1p88Y5N-GIlr8gBfQ50X2gQ/117/park-west-los-angeles-ca-take-a-stroll-through-central-parks-gorg.jpg",
+      "https://images1.apartments.com/i2/YvhvDTiz420p6Afwxy-yVHVEfCV5t3nOi0vcEEByauQ/117/park-west-los-angeles-ca-residents-are-minutes-away-from-the-sand.jpg",
+      "https://images1.apartments.com/i2/snVKElNWMk8aaf42wd0loSkzAqV8o_KKSjUmu1JCWaE/117/park-west-los-angeles-ca-a-short-journey-to-dockweiler-beach.jpg",
+      "https://images1.apartments.com/i2/y_GQVOit7kTrrfjwATgI19MToKtgU-8ioQ7F0K33gEM/117/park-west-los-angeles-ca-less-than-a-mile-from-the-shops-and-rest.jpg",
+      "https://images1.apartments.com/i2/QLuA6dqTydfpoPdRV5bf3gmlXMGpEPky98pAgJTIEDw/117/park-west-los-angeles-ca-stroll-along-culver-boulevard-and-discov.jpg",
+      "https://images1.apartments.com/i2/ERAAi91r5VIqDiVfiN2Bjn8vUx9a7JT1QgrZBAkNAOY/117/park-west-los-angeles-ca-from-our-residents.jpg",
+      "https://images1.apartments.com/i2/0kR5k3cqaPl58BUoFokzB8BX9hCvHmyFsikwxoozcVw/117/park-west-los-angeles-ca-floorplan.jpg",
+      "https://images1.apartments.com/i2/2bMo5DJPVTy2SrifbcbL8Zfk3HitRs02zFzi7iEnm4U/117/park-west-los-angeles-ca-floorplan.jpg",
+      "https://images1.apartments.com/i2/0SG13VjdRQ5GF6uZa8a0zddy92LvXzJrdkWRdLNQOIc/117/park-west-los-angeles-ca-floorplan.jpg",
+      "https://images1.apartments.com/i2/2H_YzqDtdCUTEye10LJrmMHIaY7v_alV1gyVx8jnUU8/117/park-west-los-angeles-ca-floorplan.jpg",
+      "https://images1.apartments.com/i2/FUqNmcDxpbHIXubAFpQtGiSdzR44zelovO3wJlDv0tI/117/park-west-los-angeles-ca-floorplan.jpg",
+      "https://images1.apartments.com/i2/7Qr0KfEHhMmk9vrrZjibh4zqUHsI-1Rki3ES1L1P20g/117/park-west-los-angeles-ca-floorplan.jpg",
+      "https://images1.apartments.com/i2/37Be26S2PvVBwCetGwYJ-JYVdSg_Z1v5LaGEQP8ebKo/117/park-west-los-angeles-ca-floorplan.jpg"
+    ],
+    "propertyName": "Park West",
+    "rent": {
+      "max": 2838,
+      "min": 1993
+    },
+    "sqft": "455 - 897 sq ft"
+  }
+}

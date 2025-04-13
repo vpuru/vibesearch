@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Bed, Bath, Square, Heart, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchApartmentPreview } from "../../services/apartmentService";
+import { useSearch } from "../../contexts/SearchContext";
 
 export interface Property {
   id: string;
@@ -27,14 +28,24 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false }) => {
   const navigate = useNavigate();
+  const { searchTerm } = useSearch();
+  // Always start with image index 0, which will be the most relevant image after backend sorting
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [propertyData, setPropertyData] = useState<Property | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // If property is just an ID, fetch the data
+  // Reset image index when search term changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [searchTerm]);
+  
   useEffect(() => {
     const fetchData = async () => {
+      // Reset image index when property changes
+      setCurrentImageIndex(0);
+      
       // If property is already a Property object, use it directly
       if (typeof property !== "string") {
         setPropertyData(property);
@@ -47,7 +58,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
         setError(null);
         const apartmentId = property;
         console.log(`Fetching preview data for apartment ID: ${apartmentId}`);
-        const data = await fetchApartmentPreview(apartmentId);
+        
+        // Pass the search term to order images by relevance to the query
+        const data = await fetchApartmentPreview(apartmentId, searchTerm);
+        // Reset the image index when new data is loaded to ensure we show the most relevant image
+        setCurrentImageIndex(0);
         setPropertyData(data);
       } catch (err) {
         console.error("Error fetching property data:", err);
@@ -58,7 +73,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
     };
 
     fetchData();
-  }, [property]);
+  }, [property, searchTerm]);
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();

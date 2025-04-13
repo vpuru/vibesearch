@@ -325,8 +325,8 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
   }
 };
 
-// New function to fetch apartment preview by ID
-export const fetchApartmentPreview = async (id: string): Promise<Property> => {
+// New function to fetch apartment preview by ID with optional search query
+export const fetchApartmentPreview = async (id: string, query?: string): Promise<Property> => {
   try {
     // If using test data, return mock data
     if (USE_TEST_DATA) {
@@ -337,8 +337,15 @@ export const fetchApartmentPreview = async (id: string): Promise<Property> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
+    // Build URL with query parameter if provided
+    let url = `${API_ENDPOINTS.apartmentPreview}/${id}`;
+    if (query) {
+      url += `?query=${encodeURIComponent(query)}`;
+      console.log(`Including search query in preview request: ${query}`);
+    }
+
     // Make the API request
-    const response = await fetch(`${API_ENDPOINTS.apartmentPreview}/${id}`, {
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -379,8 +386,8 @@ export const fetchApartmentPreview = async (id: string): Promise<Property> => {
   }
 };
 
-// New function to fetch detailed apartment data by ID
-export const fetchApartmentDetails = async (id: string): Promise<any> => {
+// New function to fetch detailed apartment data by ID with optional search query
+export const fetchApartmentDetails = async (id: string, query?: string): Promise<any> => {
   try {
     // If using test data, return mock data
     if (USE_TEST_DATA) {
@@ -391,8 +398,15 @@ export const fetchApartmentDetails = async (id: string): Promise<any> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
 
+    // Build URL with query parameter if provided
+    let url = `${API_ENDPOINTS.apartmentDetails}/${id}`;
+    if (query) {
+      url += `?query=${encodeURIComponent(query)}`;
+      console.log(`Including search query in details request: ${query}`);
+    }
+
     // Make the API request
-    const response = await fetch(`${API_ENDPOINTS.apartmentDetails}/${id}`, {
+    const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

@@ -168,12 +168,14 @@ def search_apartments(query, filter_dict=None, top_k=10, image_urls=None):
     return formatted_results
 
 
-def get_apartment_preview_by_id(apartment_id):
+def get_apartment_preview_by_id(apartment_id, query=None):
     """
-    Get preview data for a specific apartment by ID
+    Get preview data for a specific apartment by ID, with optional query parameter
+    to order images by relevance to the query
 
     Args:
         apartment_id (str): The ID of the apartment
+        query (str, optional): The search query to rank images by. Default is None.
 
     Returns:
         dict: Preview data for the apartment or None if not found
@@ -185,7 +187,24 @@ def get_apartment_preview_by_id(apartment_id):
         # Find the apartment with the matching ID
         for apartment in apartments:
             if apartment.get("id") == apartment_id:
+                # Get the original photos
+                photos = apartment.get("photos", [])
+                
+                # If we have a query and photos, rank them by relevance
+                if query and photos and len(photos) > 0:
+                    ranked_photos = rank_apartment_images_by_query(apartment_id, query, photos)
+                    print(query)
+                    if ranked_photos:
+                        photos = ranked_photos
+                
                 # Extract only the preview data
+                # Ensure photos are a list of string URLs
+                final_photos = photos
+                if photos and len(photos) > 0:
+                    # Convert any dict photos to string URLs
+                    if isinstance(photos[0], dict) and "url" in photos[0]:
+                        final_photos = [p["url"] for p in photos if isinstance(p, dict) and "url" in p]
+                        
                 preview = {
                     "id": apartment.get("id"),
                     "propertyName": apartment.get("propertyName"),
@@ -204,11 +223,7 @@ def get_apartment_preview_by_id(apartment_id):
                     "beds": apartment.get("beds"),
                     "baths": apartment.get("baths"),
                     "sqft": apartment.get("sqft"),
-                    "photos": (
-                        apartment.get("photos", [])
-                        if apartment.get("photos") and len(apartment.get("photos")) > 0
-                        else None
-                    ),
+                    "photos": final_photos if final_photos and len(final_photos) > 0 else None,
                 }
                 return preview
 
@@ -219,12 +234,125 @@ def get_apartment_preview_by_id(apartment_id):
         return None
 
 
-def get_apartment_details_by_id(apartment_id):
+def rank_apartment_images_by_query(apartment_id, query, original_photos):
     """
-    Get all details for a specific apartment by ID
+    Rank apartment images by relevance to a search query using Pinecone
 
     Args:
         apartment_id (str): The ID of the apartment
+        query (str): The search query to rank images by
+        original_photos (list): Original list of photo objects or URLs
+
+    Returns:
+        list: Reordered list of URLs (strings), most relevant first
+    """
+    try:
+        print(f"Ranking images for apartment {apartment_id} by query: '{query}'")
+        print(f"Original photos type: {type(original_photos)}")
+        
+        # Debug the photos list
+        if not isinstance(original_photos, list):
+            print(f"Error: original_photos is not a list but {type(original_photos)}")
+            return original_photos
+            
+        # Check if the list is empty
+        if not original_photos:
+            print("Error: original_photos is empty")
+            return original_photos
+            
+        # Check the structure of the photos list
+        print(f"First photo item type: {type(original_photos[0])}")
+        
+        # Convert photo objects to URLs if needed
+        photo_urls = []
+        for photo in original_photos:
+            if isinstance(photo, dict) and "url" in photo:
+                photo_urls.append(photo["url"])
+            elif isinstance(photo, str):
+                photo_urls.append(photo)
+            else:
+                print(f"Unknown photo format: {type(photo)}")
+                
+        if not photo_urls:
+            print("Error: Could not extract any URLs from original_photos")
+            return original_photos
+                
+        try:
+            print(f"Original photo order first 3 URLs: {[url[:50] + '...' for url in photo_urls[:3]]}")
+        except Exception as e:
+            print(f"Error printing original photo URLs: {e}")
+            return original_photos
+            
+        # Create embedding for the query
+        query_embedding = create_embedding(query)
+        if not query_embedding:
+            print("Failed to create embedding for query")
+            return original_photos
+            
+        # Connect to the apartment images index
+        image_index = pc.Index("apartment-images-search")
+        
+        # Query the image index with filtering by apartment_id
+        search_results = image_index.query(
+            vector=query_embedding,
+            filter={"apartment_id": apartment_id},
+            top_k=50,  # Get enough results to cover all apartment images
+            include_metadata=True
+        )
+        
+        if not search_results.matches:
+            print(f"No matching images found for apartment {apartment_id}")
+            return photo_urls  # Return the extracted URLs
+            
+        print(f"Found {len(search_results.matches)} matching images")
+        
+        # Create a map of URL to relevance score
+        url_score_map = {}
+        for match in search_results.matches:
+            original_url = match.metadata.get("original_url")
+            if original_url:
+                url_score_map[original_url] = match.score
+                print(f"Match score: {match.score:.4f} for URL: {original_url[:50]}...")
+                
+        if not url_score_map:
+            print("No URL mappings created from search results")
+            return photo_urls  # Return the extracted URLs
+            
+        # Create a copy of the URLs to sort
+        urls_to_sort = photo_urls.copy()
+        
+        # Sort URLs based on relevance scores
+        # For URLs not in search results (no score), put them at the end
+        def get_url_score(url):
+            score = url_score_map.get(url, -1)
+            print(f"Score for {url[:50]}...: {score:.4f if score >= 0 else score}")
+            return score
+            
+        # Sort URLs by score (highest first)
+        urls_to_sort.sort(key=get_url_score, reverse=True)
+        
+        print(f"Successfully ranked {len(urls_to_sort)} images for apartment {apartment_id}")
+        print(f"New photo order first 3 URLs: {[url[:50] + '...' for url in urls_to_sort[:3]]}")
+        
+        # Return the sorted URLs as strings (not objects)
+        return urls_to_sort
+        
+    except Exception as e:
+        print(f"Error ranking apartment images: {e}")
+        import traceback
+        print(traceback.format_exc())
+        # Return the extracted URLs if available, otherwise original photos
+        return [p["url"] if isinstance(p, dict) and "url" in p else p for p in original_photos]
+
+
+def get_apartment_details_by_id(apartment_id, query=None):
+    """
+    Get all details for a specific apartment by ID, with optional query parameter
+    to order images by relevance to the query
+
+    Args:
+        apartment_id (str): The ID of the apartment
+        query (str, optional): The search query to rank images by. Default is None.
 
     Returns:
         dict: All data for the apartment or None if not found
@@ -236,7 +364,21 @@ def get_apartment_details_by_id(apartment_id):
         # Find the apartment with the matching ID
         for apartment in apartments:
             if apartment.get("id") == apartment_id:
-                return apartment
+                # Make a deep copy to avoid modifying the original data
+                result = apartment.copy()
+                
+                # If we have a query and photos, rank them by relevance
+                photos = apartment.get("photos", [])
+                if query and photos and len(photos) > 0:
+                    ranked_photos = rank_apartment_images_by_query(apartment_id, query, photos)
+                    if ranked_photos:
+                        # Ensure we're returning a list of string URLs
+                        if ranked_photos and isinstance(ranked_photos[0], dict) and "url" in ranked_photos[0]:
+                            result["photos"] = [p["url"] for p in ranked_photos if isinstance(p, dict) and "url" in p]
+                        else:
+                            result["photos"] = ranked_photos
+                
+                return result
 
         # If no matching apartment is found
         return None

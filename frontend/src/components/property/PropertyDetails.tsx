@@ -144,7 +144,7 @@ interface ApartmentDetail {
 const PropertyDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { searchPerformed } = useSearch();
+  const { searchPerformed, searchTerm } = useSearch();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
   const [apartment, setApartment] = useState<ApartmentDetail | null>(null);
@@ -164,7 +164,8 @@ const PropertyDetails: React.FC = () => {
         setError(null);
 
         console.log(`Fetching details for apartment ID: ${id}`);
-        const data = await fetchApartmentDetails(id);
+        // Pass the search term to order images by relevance to the query
+        const data = await fetchApartmentDetails(id, searchTerm);
         setApartment(data);
 
         console.log("Apartment details loaded:", data);
@@ -177,7 +178,7 @@ const PropertyDetails: React.FC = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id, searchTerm]);
 
   // Handle back navigation
   const handleBackClick = (e: React.MouseEvent<HTMLAnchorElement>) => {

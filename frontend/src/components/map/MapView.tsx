@@ -101,16 +101,25 @@ const MapView: React.FC = () => {
 
   // Track if we've loaded property details for display
   const [loadedPropertyDetails, setLoadedPropertyDetails] = useState<Record<string, boolean>>({});
+  
+  // Reset loaded property details when search term changes
+  useEffect(() => {
+    setLoadedPropertyDetails({});
+  }, [searchTerm, initialQuery]);
 
   // Update the type of mapBounds state
   const [mapBounds, setMapBounds] = useState<LatLngBoundsExpression | null>(null);
 
   // Modify the loadPropertyDetails function
   const loadPropertyDetails = async (propertyId: string) => {
-    if (loadedPropertyDetails[propertyId]) return;
+    // Always fetch new data when searchTerm changes
+    if (loadedPropertyDetails[propertyId] && !searchTerm && !initialQuery) return;
+    
+    console.log(`Loading property details for ${propertyId} with search term: ${searchTerm || initialQuery || "none"}`);
 
     try {
-      const property = await fetchApartmentPreview(propertyId);
+      // Pass the search term to order images by relevance to the query
+      const property = await fetchApartmentPreview(propertyId, searchTerm || initialQuery);
 
       // Use actual coordinates if available from API
       const propertyWithLocation: PropertyWithLocation = {

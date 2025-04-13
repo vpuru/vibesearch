@@ -107,10 +107,14 @@ def search():
 @search_bp.route("/api/apartment/preview/<string:apartment_id>", methods=["GET"])
 def apartment_preview(apartment_id):
     """
-    Get preview data for a specific apartment by ID
+    Get preview data for a specific apartment by ID, with optional query parameter
+    to order images by relevance to the query
 
     Args:
         apartment_id (str): The ID of the apartment to retrieve preview data for
+
+    Query params:
+        query (str, optional): The search query to rank images by relevance
 
     Returns:
         JSON: Preview data for the apartment or error message
@@ -118,9 +122,14 @@ def apartment_preview(apartment_id):
     try:
         # Log the request for debugging
         print(f"DEBUG: Apartment preview request for ID: {apartment_id}")
-
-        # Get apartment preview data
-        apartment = get_apartment_preview_by_id(apartment_id)
+        
+        # Get the optional query parameter
+        query = request.args.get("query", "")
+        if query:
+            print(f"DEBUG: Ordering images by relevance to query: '{query}'")
+        
+        # Get apartment preview data with query for image ordering
+        apartment = get_apartment_preview_by_id(apartment_id, query)
 
         if apartment is None:
             return jsonify({"error": "Apartment not found"}), 404
@@ -143,15 +152,23 @@ def apartment_details(apartment_id):
     Args:
         apartment_id (str): The ID of the apartment to retrieve details for
 
+    Query params:
+        query (str, optional): The search query to rank images by relevance
+
     Returns:
         JSON: All data for the apartment or error message
     """
     try:
         # Log the request for debugging
         print(f"DEBUG: Apartment details request for ID: {apartment_id}")
+        
+        # Get the optional query parameter
+        query = request.args.get("query", "")
+        if query:
+            print(f"DEBUG: Ordering images by relevance to query: '{query}'")
 
-        # Get apartment details
-        apartment = get_apartment_details_by_id(apartment_id)
+        # Get apartment details with query for image ordering
+        apartment = get_apartment_details_by_id(apartment_id, query)
 
         if apartment is None:
             return jsonify({"error": "Apartment not found"}), 404
