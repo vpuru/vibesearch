@@ -40,49 +40,43 @@ def search():
             return jsonify({"error": "Query parameter or image URLs are required"}), 400
 
         # Get optional parameters
-        top_k = request.args.get(
-            "limit", default=50, type=int
-        )  # Increased default limit to 50
+        top_k = request.args.get("limit", default=50, type=int)
 
         # Build filter dictionary from query parameters
         filter_dict = {}
 
-        if "city" in request.args:
-            filter_dict["city"] = request.args.get("city")
+        # Get price range filters
+        min_price = request.args.get("min_price", type=float)
+        max_price = request.args.get("max_price", type=float)
+        min_bedrooms = request.args.get("min_bedrooms", type=float)
+        max_bedrooms = request.args.get("max_bedrooms", type=float)
+        min_bathrooms = request.args.get("min_bathrooms", type=float)
+        max_bathrooms = request.args.get("max_bathrooms", type=float)
 
-        if "state" in request.args:
-            filter_dict["state"] = request.args.get("state")
+        
+        if min_price is not None:
+            filter_dict["price_min"] = {
+                "$gte": min_price
+            }
 
-        if "min_rent" in request.args:
-            filter_dict["min_rent"] = {"$gte": int(request.args.get("min_rent"))}
+        if max_price is not None:
+            filter_dict["price_max"] = {
+                "$lte": max_price
+            }
 
-        if "max_rent" in request.args:
-            filter_dict["max_rent"] = {"$lte": int(request.args.get("max_rent"))}
+        if min_bedrooms is not None or max_bedrooms is not None:
+            filter_dict["bedrooms"] = {
+                "$gte": min_bedrooms if min_bedrooms is not None else 0,
+                "$lte": max_bedrooms if max_bedrooms is not None else float('9999')
+            }
 
-        if "min_beds" in request.args:
-            filter_dict["min_beds"] = {"$gte": float(request.args.get("min_beds"))}
-
-        if "max_beds" in request.args:
-            filter_dict["max_beds"] = {"$lte": float(request.args.get("max_beds"))}
-
-        if "min_baths" in request.args:
-            filter_dict["min_baths"] = {"$gte": float(request.args.get("min_baths"))}
-
-        if "max_baths" in request.args:
-            filter_dict["max_baths"] = {"$lte": float(request.args.get("max_baths"))}
-
-        if "studio" in request.args and request.args.get("studio").lower() in [
-            "true",
-            "1",
-            "yes",
-        ]:
-            filter_dict["is_studio"] = "true"
-
-        if "has_available_units" in request.args and request.args.get(
-            "has_available_units"
-        ).lower() in ["true", "1", "yes"]:
-            filter_dict["has_available_units"] = "true"
-
+        if min_bathrooms is not None or max_bathrooms is not None:
+            filter_dict["bathrooms"] = {
+                "$gte": min_bathrooms if min_bathrooms is not None else 0,
+                "$lte": max_bathrooms if max_bathrooms is not None else float('9999')
+            }
+            
+    
         # Don't pass empty filter dictionary
         if not filter_dict:
             filter_dict = None
