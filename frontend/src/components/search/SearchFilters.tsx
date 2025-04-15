@@ -37,9 +37,6 @@ export interface SearchFilterValues {
   min_rent?: number;
   max_rent?: number;
   studio?: boolean;
-  city?: string;
-  state?: string;
-  amenities?: string[];
 }
 
 interface SearchFiltersProps {
@@ -63,35 +60,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     bathroomRange: [0, 3], // [min, max]
     priceMin: "",
     priceMax: "",
-    city: "",
-    state: "",
-    amenities: [] as string[],
   });
-
-  const amenitiesList = [
-    "Air Conditioning",
-    "Balcony",
-    "Dishwasher",
-    "Elevator",
-    "Fitness Center",
-    "Furnished",
-    "Parking",
-    "Pet Friendly",
-    "Pool",
-    "Washer/Dryer",
-    "Wheelchair Access",
-    "WiFi",
-  ];
-
-  const toggleAmenity = (amenity: string) => {
-    setFilters((prev) => {
-      const newAmenities = prev.amenities.includes(amenity)
-        ? prev.amenities.filter((a) => a !== amenity)
-        : [...prev.amenities, amenity];
-
-      return { ...prev, amenities: newAmenities };
-    });
-  };
 
   const clearFilters = () => {
     setFilters({
@@ -99,9 +68,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       bathroomRange: [0, 3],
       priceMin: "",
       priceMax: "",
-      city: "",
-      state: "",
-      amenities: [],
     });
   };
 
@@ -144,20 +110,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       searchFilters.max_rent = parseInt(filters.priceMax);
     }
 
-    // Add city/state if specified
-    if (filters.city) {
-      searchFilters.city = filters.city;
-    }
-
-    if (filters.state) {
-      searchFilters.state = filters.state;
-    }
-
-    // Add amenities if selected
-    if (filters.amenities.length > 0) {
-      searchFilters.amenities = filters.amenities;
-    }
-
     onSearch(searchFilters);
   };
 
@@ -191,20 +143,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
       if (initialValues.max_rent) {
         newFilters.priceMax = String(initialValues.max_rent);
-      }
-
-      // Handle location
-      if (initialValues.city) {
-        newFilters.city = initialValues.city;
-      }
-
-      if (initialValues.state) {
-        newFilters.state = initialValues.state;
-      }
-
-      // Handle amenities
-      if (initialValues.amenities && initialValues.amenities.length > 0) {
-        newFilters.amenities = initialValues.amenities;
       }
 
       setFilters(newFilters);
@@ -414,54 +352,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                 />
               </div>
 
-              <div>
-                <label htmlFor="city" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
-                  City
-                </label>
-                <input
-                  type="text"
-                  id="city"
-                  placeholder="Any city"
-                  value={filters.city}
-                  onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="state" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
-                  State
-                </label>
-                <input
-                  type="text"
-                  id="state"
-                  placeholder="Any state"
-                  value={filters.state}
-                  onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-vibe-charcoal/70 mb-2">Amenities</label>
-              <div className="flex flex-wrap gap-2">
-                {amenitiesList.map((amenity) => (
-                  <button
-                    type="button"
-                    key={amenity}
-                    onClick={() => toggleAmenity(amenity)}
-                    className={`px-3 py-1 rounded-full text-sm flex items-center gap-1 transition-colors ${
-                      filters.amenities.includes(amenity)
-                        ? "bg-vibe-navy text-white"
-                        : "bg-gray-100 text-vibe-charcoal/70 hover:bg-gray-200"
-                    }`}
-                  >
-                    {amenity}
-                    {filters.amenities.includes(amenity) && <X className="h-3 w-3" />}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         )}

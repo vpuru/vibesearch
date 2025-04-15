@@ -2,8 +2,6 @@ import { Property } from "../components/search/PropertyCard";
 import { API_ENDPOINTS, USE_TEST_DATA, API_TIMEOUT } from "./config";
 
 interface SearchFilters {
-  city?: string;
-  state?: string;
   min_rent?: number;
   max_rent?: number;
   min_beds?: number;
@@ -12,7 +10,6 @@ interface SearchFilters {
   max_baths?: number;
   studio?: boolean;
   has_available_units?: boolean;
-  amenities?: string[];
 }
 
 interface SearchParams {
@@ -242,32 +239,30 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
       const { filters } = params;
 
       // Map frontend filter names to backend parameter names
-      if (filters.city) queryParams.append("city", filters.city);
-      if (filters.state) queryParams.append("state", filters.state);
-      if (filters.min_rent !== undefined) queryParams.append("min_price", filters.min_rent.toString());
-      if (filters.max_rent !== undefined) queryParams.append("max_price", filters.max_rent.toString());
-      if (filters.min_beds !== undefined) queryParams.append("min_bedrooms", filters.min_beds.toString());
-      if (filters.max_beds !== undefined) queryParams.append("max_bedrooms", filters.max_beds.toString());
-      if (filters.min_baths !== undefined) queryParams.append("min_bathrooms", filters.min_baths.toString());
-      if (filters.max_baths !== undefined) queryParams.append("max_bathrooms", filters.max_baths.toString());
-      
+      if (filters.min_rent !== undefined)
+        queryParams.append("min_price", filters.min_rent.toString());
+      if (filters.max_rent !== undefined)
+        queryParams.append("max_price", filters.max_rent.toString());
+      if (filters.min_beds !== undefined)
+        queryParams.append("min_bedrooms", filters.min_beds.toString());
+      if (filters.max_beds !== undefined)
+        queryParams.append("max_bedrooms", filters.max_beds.toString());
+      if (filters.min_baths !== undefined)
+        queryParams.append("min_bathrooms", filters.min_baths.toString());
+      if (filters.max_baths !== undefined)
+        queryParams.append("max_bathrooms", filters.max_baths.toString());
+
       // For studio apartments, set min and max bedrooms to 0
       if (filters.studio) {
         queryParams.append("min_bedrooms", "0");
         queryParams.append("max_bedrooms", "0");
       }
-      
-      // Handle amenities - if backend adds support in the future
-      if (filters.amenities && filters.amenities.length > 0) {
-        // Since this isn't directly supported in the backend yet,
-        // we'll handle it here by sending as a JSON string
-        queryParams.append("amenities", JSON.stringify(filters.amenities));
-      }
+
     }
 
     // Build the full API URL
     const apiUrl = `${API_ENDPOINTS.search}?${queryParams.toString()}`;
-    
+
     console.log("Making API request to:", apiUrl);
     console.log("With query params:", Object.fromEntries(queryParams.entries()));
 
@@ -351,19 +346,20 @@ export const fetchApartmentPreview = async (id: string, query?: string): Promise
 
     // Increase timeout for preview requests
     const previewTimeout = API_TIMEOUT * 1.5; // 15 seconds instead of default 10
-    
+
     // Set up AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
-      console.warn(`Timeout (${previewTimeout}ms) reached for apartment preview ${id}, aborting request`);
-      controller.abort('timeout');
+      console.warn(
+        `Timeout (${previewTimeout}ms) reached for apartment preview ${id}, aborting request`
+      );
+      controller.abort("timeout");
     }, previewTimeout);
 
     // Build URL with query parameter if provided
     let url = `${API_ENDPOINTS.apartmentPreview}/${id}`;
     if (query) {
       url += `?query=${encodeURIComponent(query)}`;
-      console.log(`Including search query in preview request: ${query}`);
     }
 
     try {
@@ -392,7 +388,7 @@ export const fetchApartmentPreview = async (id: string, query?: string): Promise
       }
 
       const data: ApartmentPreviewResponse = await response.json();
-      
+
       // Map the preview data to Property type
       if (!data.apartment) {
         throw new Error("Invalid API response format, apartment not found");
@@ -408,7 +404,7 @@ export const fetchApartmentPreview = async (id: string, query?: string): Promise
   } catch (error) {
     // Better error reporting
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         console.warn(`Request for apartment ${id} was aborted (likely due to timeout)`);
       } else {
         console.error(`Error fetching apartment preview for ID ${id}:`, error.message);
@@ -430,19 +426,20 @@ export const fetchApartmentDetails = async (id: string, query?: string): Promise
 
     // Increase timeout for details requests
     const detailsTimeout = API_TIMEOUT * 2; // 20 seconds instead of default 10
-    
+
     // Set up AbortController for timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
-      console.warn(`Timeout (${detailsTimeout}ms) reached for apartment details ${id}, aborting request`);
-      controller.abort('timeout');
+      console.warn(
+        `Timeout (${detailsTimeout}ms) reached for apartment details ${id}, aborting request`
+      );
+      controller.abort("timeout");
     }, detailsTimeout);
 
     // Build URL with query parameter if provided
     let url = `${API_ENDPOINTS.apartmentDetails}/${id}`;
     if (query) {
       url += `?query=${encodeURIComponent(query)}`;
-      console.log(`Including search query in details request: ${query}`);
     }
 
     try {
@@ -480,7 +477,7 @@ export const fetchApartmentDetails = async (id: string, query?: string): Promise
   } catch (error) {
     // Better error reporting
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
+      if (error.name === "AbortError") {
         console.warn(`Details request for apartment ${id} was aborted (likely due to timeout)`);
       } else {
         console.error(`Error fetching apartment details for ID ${id}:`, error.message);

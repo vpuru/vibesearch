@@ -9,6 +9,7 @@ import { useSearch } from "../../contexts/SearchContext";
 import { searchApartments, fetchApartmentPreview } from "../../services/apartmentService";
 import SearchFilters, { SearchFilterValues } from "../search/SearchFilters";
 import Navbar from "../shared/Navbar";
+import { cn } from "../../lib/utils";
 
 // Fix Leaflet icon issue
 // @ts-ignore - Needed to fix Leaflet icon issue
@@ -84,7 +85,36 @@ interface PropertyWithLocation extends Property {
     longitude: number;
   };
   hasError?: boolean;
+  isPlaceholder?: boolean;
 }
+
+// Shimmer loading effect
+const ShimmerEffect = ({ className }: { className?: string }) => (
+  <div className={cn("animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]", className)}></div>
+);
+
+// ShimmerPropertyCard component for loading state
+const ShimmerPropertyCard = ({ index }: { index: number }) => {
+  return (
+    <div className="p-2 mb-2 rounded-lg">
+      <div className="flex">
+        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+          <ShimmerEffect className="w-full h-full" />
+        </div>
+        <div className="ml-3 flex-grow">
+          <ShimmerEffect className="h-4 w-20 mb-2" />
+          <ShimmerEffect className="h-4 w-full mb-2" />
+          <ShimmerEffect className="h-3 w-3/4 mb-2" />
+          <div className="flex gap-2 mt-1">
+            <ShimmerEffect className="h-3 w-12" />
+            <div className="w-1"></div>
+            <ShimmerEffect className="h-3 w-12" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const MapView: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -108,6 +138,8 @@ const MapView: React.FC = () => {
   } = useSearch();
 
   const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
+  const [placeholderCount, setPlaceholderCount] = useState(0);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -129,12 +161,6 @@ const MapView: React.FC = () => {
   const loadPropertyDetails = async (propertyId: string) => {
     // Always fetch new data when searchTerm changes
     if (loadedPropertyDetails[propertyId] && !searchTerm && !initialQuery) return;
-
-    console.log(
-      `Loading property details for ${propertyId} with search term: ${
-        searchTerm || initialQuery || "none"
-      }`
-    );
 
     // Track if this is a retry
     let retryCount = 0;
@@ -294,9 +320,6 @@ const MapView: React.FC = () => {
               min_rent: filters.min_rent,
               max_rent: filters.max_rent,
               studio: filters.studio,
-              city: filters.city,
-              state: filters.state,
-              amenities: filters.amenities,
             },
             limit: 25,
             imageUrls: urls,
@@ -385,9 +408,6 @@ const MapView: React.FC = () => {
               min_rent: filters.min_rent,
               max_rent: filters.max_rent,
               studio: filters.studio,
-              city: filters.city,
-              state: filters.state,
-              amenities: filters.amenities,
             },
             limit: 25,
             imageUrls: urls,
@@ -415,22 +435,42 @@ const MapView: React.FC = () => {
           setProperties([]);
           // Also clear loaded property details
           setLoadedPropertyDetails({});
+          
+          // Create placeholder properties immediately for better UX
+          setPlaceholderCount(results.length);
+          setLoadingDetails(true);
+          
+          // Create placeholder properties with randomized coordinates for the map
+          const placeholderProperties: PropertyWithLocation[] = results.map(result => ({
+            id: result.id,
+            title: "Loading...",
+            address: "Loading...",
+            price: 0,
+            bedrooms: 0,
+            bathrooms: 0,
+            squareFeet: 0,
+            images: [],
+            description: "",
+            features: [],
+            isPlaceholder: true,
+            location: {
+              // Create slightly randomized coordinates around LA for the map
+              lat: 34.0522 + (Math.random() - 0.5) * 0.05,
+              lng: -118.2437 + (Math.random() - 0.5) * 0.05,
+            }
+          }));
+          
+          // Set placeholder properties
+          setProperties(placeholderProperties);
 
-          // Load property details for each result
+          // Load property details for each result - replacing the placeholders
           console.log(`Loading details for ${results.length} properties from search`);
-          const loadedProperties: PropertyWithLocation[] = [];
-          const processedIds = new Set<string>();
+          let errorCount = 0;
+          setLoadingDetails(true);
 
-          // Load each property one by one
+          // Load each property one by one - but update the placeholders in-place
           for (const result of results) {
             try {
-              // Skip if we've already processed this ID to avoid duplicates
-              if (processedIds.has(result.id)) {
-                console.log(`Skipping duplicate property ID: ${result.id}`);
-                continue;
-              }
-
-              processedIds.add(result.id);
               const property = await fetchApartmentPreview(result.id, trimmedQuery);
 
               const propertyWithLocation: PropertyWithLocation = {
@@ -441,23 +481,79 @@ const MapView: React.FC = () => {
                       lng: property.coordinates.longitude,
                     }
                   : {
-                      // Fallback coordinates with slight randomization to avoid overlap
-                      lat: 34.0522 + (Math.random() - 0.5) * 0.05,
-                      lng: -118.2437 + (Math.random() - 0.5) * 0.05,
+                      // Keep location consistent with placeholder if possible
+                      lat: properties.find(p => p.id === result.id)?.location?.lat || 
+                           (34.0522 + (Math.random() - 0.5) * 0.05),
+                      lng: properties.find(p => p.id === result.id)?.location?.lng || 
+                           (-118.2437 + (Math.random() - 0.5) * 0.05),
                     },
               };
 
-              loadedProperties.push(propertyWithLocation);
-
-              // Update properties state with all loaded properties so far to avoid duplicates
-              setProperties([...loadedProperties]);
+              // Replace the placeholder with the real property
+              setProperties(prevProperties => {
+                const index = prevProperties.findIndex(p => p.id === result.id);
+                if (index === -1) return [...prevProperties, propertyWithLocation];
+                
+                const updatedProperties = [...prevProperties];
+                updatedProperties[index] = propertyWithLocation;
+                return updatedProperties;
+              });
+              
               setLoadedPropertyDetails((prev) => ({ ...prev, [result.id]: true }));
             } catch (error) {
+              errorCount++;
               console.error(`Error loading property ${result.id}:`, error);
+
+              // Create a property with error state
+              const errorProperty: PropertyWithLocation = {
+                id: result.id,
+                title: "Unable to load property",
+                address: "Error retrieving property details",
+                price: 0,
+                bedrooms: 0,
+                bathrooms: 0,
+                squareFeet: 0,
+                images: [],
+                description: "",
+                features: [],
+                hasError: true,
+                location: {
+                  // Keep location consistent with placeholder if possible
+                  lat: properties.find(p => p.id === result.id)?.location?.lat || 
+                       (34.0522 + (Math.random() - 0.5) * 0.05),
+                  lng: properties.find(p => p.id === result.id)?.location?.lng || 
+                       (-118.2437 + (Math.random() - 0.5) * 0.05),
+                },
+              };
+
+              // Replace the placeholder with the error property
+              setProperties(prevProperties => {
+                const index = prevProperties.findIndex(p => p.id === result.id);
+                if (index === -1) return [...prevProperties, errorProperty];
+                
+                const updatedProperties = [...prevProperties];
+                updatedProperties[index] = errorProperty;
+                return updatedProperties;
+              });
+              
+              setLoadedPropertyDetails((prev) => ({ ...prev, [result.id]: true }));
             }
           }
+          
+          // Finished loading details
+          setLoadingDetails(false);
 
-          console.log(`Loaded ${loadedProperties.length} properties with details`);
+          console.log(
+            `Loaded ${results.length} properties with details (${errorCount} errors)`
+          );
+
+          // Only show error message if ALL properties failed to load
+          if (errorCount > 0 && errorCount === results.length) {
+            setError("Failed to load property details");
+          } else {
+            // Some or all properties loaded successfully
+            setError(null);
+          }
 
           // Update URL to reflect the search without navigation
           const searchParams = new URLSearchParams(window.location.search);
@@ -481,14 +577,21 @@ const MapView: React.FC = () => {
           );
         } catch (searchError) {
           console.error("Error performing search:", searchError);
-          setError("An error occurred while searching for properties.");
+
+          // Don't show error if we have some properties loaded
+          if (properties.length === 0) {
+            setError("An error occurred while searching for properties.");
+          }
         }
       }
 
       setLoading(false);
     } catch (err) {
       console.error("Error searching for properties:", err);
-      setError("Failed to search for properties");
+      // Only show error if we don't have any properties displayed
+      if (properties.length === 0) {
+        setError("Failed to search for properties");
+      }
       setLoading(false);
     }
   };
@@ -531,9 +634,6 @@ const MapView: React.FC = () => {
               min_rent: filters.min_rent,
               max_rent: filters.max_rent,
               studio: filters.studio,
-              city: filters.city,
-              state: filters.state,
-              amenities: filters.amenities,
             },
             limit: 25,
             imageUrls: urls,
@@ -564,6 +664,7 @@ const MapView: React.FC = () => {
           console.log(`Loading details for ${results.length} properties from filter search`);
           const loadedProperties: PropertyWithLocation[] = [];
           const processedIds = new Set<string>();
+          let errorCount = 0;
 
           // Load each property one by one
           for (const result of results) {
@@ -597,13 +698,51 @@ const MapView: React.FC = () => {
               setProperties([...loadedProperties]);
               setLoadedPropertyDetails((prev) => ({ ...prev, [result.id]: true }));
             } catch (error) {
+              errorCount++;
               console.error(`Error loading property ${result.id}:`, error);
+
+              // Create a placeholder property with error state
+              const errorProperty: PropertyWithLocation = {
+                id: result.id,
+                title: "Unable to load property",
+                address: "Error retrieving property details",
+                price: 0,
+                bedrooms: 0,
+                bathrooms: 0,
+                squareFeet: 0,
+                images: [],
+                description: "",
+                features: [],
+                hasError: true,
+                location: {
+                  lat: 34.0522 + (Math.random() - 0.5) * 0.05,
+                  lng: -118.2437 + (Math.random() - 0.5) * 0.05,
+                },
+              };
+
+              // Add error property to results
+              loadedProperties.push(errorProperty);
+              setProperties([...loadedProperties]);
+              setLoadedPropertyDetails((prev) => ({ ...prev, [result.id]: true }));
             }
           }
 
           console.log(
-            `Loaded ${loadedProperties.length} properties with details from filter search`
+            `Loaded ${loadedProperties.length} properties with details from filter search (${errorCount} errors)`
           );
+
+          // Only show error message if ALL properties failed to load or we have a high error rate
+          if (loadedProperties.length === 0) {
+            setError("Failed to load property details");
+          } else if (errorCount > 0 && errorCount === results.length) {
+            setError("Failed to load property details");
+          } else if (loadedProperties.length > 0 && errorCount > 0) {
+            // Some properties loaded successfully, some failed - clear error if we have at least some results
+            setError(null);
+          } else {
+            // All properties loaded successfully
+            setError(null);
+          }
 
           // Update URL to reflect the search
           const searchParams = new URLSearchParams(window.location.search);
@@ -619,14 +758,21 @@ const MapView: React.FC = () => {
           );
         } catch (filterError) {
           console.error("Error performing filter search:", filterError);
-          setError("An error occurred while searching for properties.");
+
+          // Don't show error if we have some properties loaded
+          if (properties.length === 0) {
+            setError("An error occurred while searching for properties.");
+          }
         }
       }
 
       setLoading(false);
     } catch (err) {
       console.error("Error searching with filters:", err);
-      setError("Failed to search with the selected filters");
+      // Only show error if we don't have any properties displayed
+      if (properties.length === 0) {
+        setError("Failed to search with the selected filters");
+      }
       setLoading(false);
     }
   };
@@ -634,8 +780,10 @@ const MapView: React.FC = () => {
   return (
     <div className="flex flex-col h-screen">
       <Navbar />
-      
-      <div className="pt-16"> {/* Space for fixed navbar */}
+
+      <div className="pt-16">
+        {" "}
+        {/* Space for fixed navbar */}
         {/* Search Filters */}
         <SearchFilters
           onSearch={handleFilterSearch}
