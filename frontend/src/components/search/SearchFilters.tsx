@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Search, X, Sliders, Loader2 } from "lucide-react";
+import { Search, X, Sliders, Loader2, Map as MapIcon, LayoutGrid } from "lucide-react";
 import { useSearch } from "../../contexts/SearchContext";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "../../lib/utils";
@@ -44,6 +44,8 @@ interface SearchFiltersProps {
   initialQuery?: string;
   initialValues?: SearchFilterValues;
   isLoading?: boolean;
+  currentView?: "map" | "list";
+  onViewToggle?: () => void;
 }
 
 const SearchFilters: React.FC<SearchFiltersProps> = ({
@@ -51,6 +53,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   initialQuery = "",
   initialValues,
   isLoading = false,
+  currentView = "list",
+  onViewToggle,
 }) => {
   const { imageUrls, searchType } = useSearch();
   const [showFilters, setShowFilters] = React.useState(false);
@@ -194,6 +198,27 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
           </div>
 
           <div className="flex gap-2">
+            {/* View Toggle Button */}
+            {onViewToggle && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 px-4 py-3 bg-gray-200 text-vibe-charcoal/70 hover:bg-gray-300 rounded-lg transition-colors"
+                onClick={onViewToggle}
+              >
+                {currentView === "list" ? (
+                  <>
+                    <MapIcon className="h-5 w-5" />
+                    <span>Map</span>
+                  </>
+                ) : (
+                  <>
+                    <LayoutGrid className="h-5 w-5" />
+                    <span>List</span>
+                  </>
+                )}
+              </button>
+            )}
+            
             <button
               type="button"
               className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${

@@ -41,12 +41,6 @@ const Navbar = () => {
             >
               Search
             </Link>
-            <Link 
-              to="/map" 
-              className="text-vibe-charcoal hover:text-vibe-navy md:text-base text-base transition-colors duration-200"
-            >
-              Map View
-            </Link>
           </div>
         </div>
         

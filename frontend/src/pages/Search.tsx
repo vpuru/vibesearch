@@ -4,23 +4,129 @@ import Navbar from "../components/shared/Navbar";
 import Footer from "../components/shared/Footer";
 import SearchFilters, { SearchFilterValues } from "../components/search/SearchFilters";
 import PropertyGrid from "../components/search/PropertyGrid";
-import { searchApartments } from "../services/apartmentService";
+import { searchApartments, fetchApartmentPreview } from "../services/apartmentService";
 import { useSearch } from "../contexts/SearchContext";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "leaflet";
+import { Map as MapIcon, List, X, Loader2, LayoutGrid } from "lucide-react";
+import { Property } from "../components/search/PropertyCard";
+import { cn } from "../lib/utils";
 
 // Number of items to fetch per page
 const ITEMS_PER_PAGE = 25;
 
-interface SearchResult {
-  id: string;
-  score: number;
-  metadata: any;
+// Fix Leaflet icon issue
+// @ts-ignore - Needed to fix Leaflet icon issue
+delete Icon.Default.prototype._getIconUrl;
+Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+});
+
+// Define custom marker icon
+const customIcon = new Icon({
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  shadowSize: [41, 41],
+});
+
+// Default center location (San Francisco coordinates)
+const DEFAULT_CENTER: LatLngExpression = [37.7749, -122.4194];
+const DEFAULT_ZOOM = 12;
+
+// Helper component to update map view when bounds change
+const MapBoundsUpdater = ({ bounds }: { bounds: LatLngBoundsExpression | null }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (bounds) {
+      map.fitBounds(bounds);
+    }
+  }, [bounds, map]);
+  return null;
+};
+
+// Calculate map bounds from property locations
+const calculateMapBounds = (properties: PropertyWithLocation[]): LatLngBoundsExpression | null => {
+  const propertiesWithLocation = properties.filter((p) => p.location);
+  if (propertiesWithLocation.length === 0) return null;
+
+  let minLat = Infinity;
+  let maxLat = -Infinity;
+  let minLng = Infinity;
+  let maxLng = -Infinity;
+
+  propertiesWithLocation.forEach((property) => {
+    if (property.location) {
+      minLat = Math.min(minLat, property.location.lat);
+      maxLat = Math.max(maxLat, property.location.lat);
+      minLng = Math.min(minLng, property.location.lng);
+      maxLng = Math.max(maxLng, property.location.lng);
+    }
+  });
+
+  // Add some padding to the bounds
+  const latPadding = (maxLat - minLat) * 0.1;
+  const lngPadding = (maxLng - minLng) * 0.1;
+
+  return [
+    [minLat - latPadding, minLng - lngPadding] as LatLngTuple,
+    [maxLat + latPadding, maxLng + lngPadding] as LatLngTuple,
+  ];
+};
+
+// Custom interface for property with location data
+interface PropertyWithLocation extends Property {
+  location?: {
+    lat: number;
+    lng: number;
+  };
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+  hasError?: boolean;
+  isPlaceholder?: boolean;
 }
 
-const Search = () => {
+// Shimmer effect component for loading state
+const ShimmerEffect = ({ className }: { className?: string }) => (
+  <div className={cn("animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]", className)}></div>
+);
+
+// ShimmerPropertyCard component for loading state
+const ShimmerPropertyCard = ({ index }: { index: number }) => {
+  return (
+    <div className="p-2 mb-2 rounded-lg">
+      <div className="flex">
+        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+          <ShimmerEffect className="w-full h-full" />
+        </div>
+        <div className="ml-3 flex-grow">
+          <ShimmerEffect className="h-4 w-20 mb-2" />
+          <ShimmerEffect className="h-4 w-full mb-2" />
+          <ShimmerEffect className="h-3 w-3/4 mb-2" />
+          <div className="flex gap-2 mt-1">
+            <ShimmerEffect className="h-3 w-12" />
+            <div className="w-1"></div>
+            <ShimmerEffect className="h-3 w-12" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const UnifiedSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
   const initialImageUrls = searchParams.get("imageUrls") ? 
     JSON.parse(searchParams.get("imageUrls") || "[]") : [];
+  const viewParam = searchParams.get("view") || "map"; // Default to map view
 
   // Use the search context
   const {
@@ -39,31 +145,82 @@ const Search = () => {
     hasResults,
   } = useSearch();
   
-  // Reference to track if we already restored from URL
-  const hasRestoredFromUrl = React.useRef(false);
-
+  // View toggle state (map or list)
+  const [currentView, setCurrentView] = useState<"map" | "list">(viewParam === "list" ? "list" : "map");
+  
+  // Properties for map view
+  const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [mapCenter, setMapCenter] = useState<LatLngExpression>(DEFAULT_CENTER);
+  const [mapBounds, setMapBounds] = useState<LatLngBoundsExpression | null>(null);
+  const [placeholderCount, setPlaceholderCount] = useState(0);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  
+  // State for both views
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
+  
+  // State for list view pagination
   const [page, setPage] = useState(1);
   const [hasMoreResults, setHasMoreResults] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  
+  // Track if we've loaded property details for display
+  const [loadedPropertyDetails, setLoadedPropertyDetails] = useState<Record<string, boolean>>({});
+  
+  // Reference to track if we already restored from URL
+  const hasRestoredFromUrl = React.useRef(false);
+  
+  // Update URL when view changes
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("view", currentView);
+    setSearchParams(newParams, { replace: true });
+  }, [currentView, setSearchParams]);
+
+  // Reset loaded property details when search term changes
+  useEffect(() => {
+    setLoadedPropertyDetails({});
+  }, [searchTerm, initialQuery]);
+
+  // Add effect to update map bounds when properties change
+  useEffect(() => {
+    if (properties.length > 0 && currentView === "map") {
+      const bounds = calculateMapBounds(properties);
+      if (bounds) {
+        setMapBounds(bounds);
+      }
+    }
+  }, [properties, currentView]);
+  
+  // Update map center when a property is selected
+  useEffect(() => {
+    if (selectedProperty?.location) {
+      setMapCenter([selectedProperty.location.lat, selectedProperty.location.lng]);
+    }
+  }, [selectedProperty]);
 
   // Perform search when the component mounts if there's an initial query or image URLs
   useEffect(() => {
-    // Only run this effect once per mount
-    if (hasRestoredFromUrl.current) return;
-    hasRestoredFromUrl.current = true;
+    // Only run this effect once per mount or when search parameters actually change
+    if (hasRestoredFromUrl.current && !searchParams.toString().includes('q=') && !searchParams.toString().includes('imageUrls=')) return;
+    
+    if (!hasRestoredFromUrl.current) {
+      hasRestoredFromUrl.current = true;
+    }
     
     // Set initial state based on URL parameters
     const setupSearch = async () => {
-      console.log("Setting up initial search with URL parameters:", {
+      console.log("Setting up search with URL parameters:", {
         query: initialQuery,
         imageUrls: initialImageUrls.length ? `${initialImageUrls.length} URLs` : "none",
         currentContext: { 
           searchTerm, 
           imageUrls: imageUrls.length, 
           searchPerformed 
-        }
+        },
+        currentView
       });
       
       // Check if we need to perform a search or we're returning to an existing search
@@ -71,12 +228,13 @@ const Search = () => {
       const urlHasImages = initialImageUrls.length > 0;
       const contextHasSearch = searchPerformed && (searchTerm || imageUrls.length > 0);
       
-      console.log("Search state on page load:", {
+      console.log("Search state:", {
         urlHasQuery,
         urlHasImages,
         contextHasSearch,
         hasResults,
-        apartmentIds: apartmentIds.length
+        apartmentIds: apartmentIds.length,
+        propertiesLoaded: properties.length
       });
       
       // Case 1: URL has new search parameters - always do a fresh search
@@ -130,11 +288,21 @@ const Search = () => {
         if (urlHasImages) {
           setImageUrls(initialImageUrls);
         }
+        
+        // For map view, we need to load property details from IDs
+        if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
+          console.log("Loading property details for map view with existing IDs");
+          loadPropertiesForMapView(apartmentIds);
+        }
       }
       // Case 3: No URL params but we have a search with results in context
       else if (contextHasSearch && hasResults) {
         console.log("Using existing search results from context");
-        // The search context already has data, no need to fetch again
+        // For map view, we need to load property details from IDs
+        if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
+          console.log("Loading property details for map view with context IDs");
+          loadPropertiesForMapView(apartmentIds);
+        }
       }
       // Case 4: We have search criteria but no results - need to fetch
       else if (contextHasSearch) {
@@ -156,18 +324,230 @@ const Search = () => {
     };
     
     setupSearch();
-  }, [searchParams]);
+  // Explicitly exclude currentView from the dependency array to prevent refetching when toggling views
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery, initialImageUrls, searchTerm, imageUrls, apartmentIds.length, hasResults, searchPerformed]);
 
-  const handleSearch = async (newFilterValues: SearchFilterValues) => {
+  // Improved loadPropertyDetails function with better error handling and state tracking
+  const loadPropertyDetails = async (propertyId: string) => {
+    // Check if property details are already loaded
+    const propertyIsAlreadyLoaded = loadedPropertyDetails[propertyId];
+    const existingProperty = properties.find(p => p.id === propertyId && !p.isPlaceholder);
+    
+    // Skip loading if property is already loaded and search term hasn't changed
+    if (propertyIsAlreadyLoaded && existingProperty && !searchTerm && !initialQuery) {
+      console.log(`Property ${propertyId} already loaded, skipping fetch`);
+      return;
+    }
+
+    console.log(
+      `Loading property details for ${propertyId} with search term: ${
+        searchTerm || initialQuery || "none"
+      }`
+    );
+
+    // Track if this is a retry
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    // Mark as loading
+    setLoadedPropertyDetails(prev => ({ ...prev, [propertyId]: false }));
+
+    const loadWithRetry = async (): Promise<void> => {
+      try {
+        // Pass the search term to order images by relevance to the query
+        const property = await fetchApartmentPreview(propertyId, searchTerm || initialQuery);
+
+        // Find existing placeholder for this property to maintain position on map
+        const placeholder = properties.find(p => p.id === propertyId);
+        
+        const propertyWithLocation: PropertyWithLocation = {
+          ...property,
+          location: property.coordinates
+            ? {
+                lat: property.coordinates.latitude,
+                lng: property.coordinates.longitude,
+              }
+            : {
+                // Use existing placeholder location if available, or generate random coordinates
+                lat: (placeholder?.location?.lat) || (37.7749 + (Math.random() - 0.5) * 0.05),
+                lng: (placeholder?.location?.lng) || (-122.4194 + (Math.random() - 0.5) * 0.05),
+              },
+        };
+
+        // Update the properties list by replacing the placeholder with the actual property
+        setProperties(prev => {
+          // Create a new array to avoid mutation
+          const updated = [...prev];
+          
+          // Find index of existing property or placeholder
+          const idx = updated.findIndex(p => p.id === propertyId);
+          
+          if (idx !== -1) {
+            // Replace existing entry
+            updated[idx] = propertyWithLocation;
+          } else {
+            // Add as new property
+            updated.push(propertyWithLocation);
+          }
+          
+          return updated;
+        });
+        
+        // Mark as successfully loaded
+        setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
+        
+        console.log(`Successfully loaded property ${propertyId}`);
+      } catch (err) {
+        // Check if it's an AbortError and we haven't exceeded max retries
+        if (err instanceof Error && err.name === "AbortError" && retryCount < maxRetries) {
+          console.warn(
+            `Retry attempt ${retryCount + 1} for property ${propertyId} after AbortError`
+          );
+          retryCount++;
+
+          // Add a small delay before retrying (increases with each retry)
+          await new Promise((resolve) => setTimeout(resolve, 300 * retryCount));
+          return loadWithRetry();
+        }
+
+        // For other errors or if max retries reached, log and continue
+        console.error(`Error loading property ${propertyId}:`, err);
+
+        // Find existing placeholder to maintain position
+        const placeholder = properties.find(p => p.id === propertyId);
+
+        // Create a property with error state
+        const errorProperty: PropertyWithLocation = {
+          id: propertyId,
+          title: "Unable to load property",
+          address: "Error retrieving property details",
+          price: 0,
+          bedrooms: 0,
+          bathrooms: 0,
+          squareFeet: 0,
+          images: [],
+          description: "",
+          features: [],
+          hasError: true,
+          location: {
+            // Use existing placeholder location if available, or generate random coordinates
+            lat: (placeholder?.location?.lat) || (37.7749 + (Math.random() - 0.5) * 0.05),
+            lng: (placeholder?.location?.lng) || (-122.4194 + (Math.random() - 0.5) * 0.05),
+          },
+        };
+        
+        // Update the properties list by replacing the placeholder with the error property
+        setProperties(prev => {
+          const updated = [...prev];
+          const idx = updated.findIndex(p => p.id === propertyId);
+          if (idx !== -1) {
+            updated[idx] = errorProperty;
+          } else {
+            updated.push(errorProperty);
+          }
+          return updated;
+        });
+        
+        // Mark as loaded (with error) to prevent endless retries
+        setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
+      }
+    };
+
+    // Start the loading process with retry capability
+    await loadWithRetry();
+  };
+
+  // Load properties for map view based on IDs
+  const loadPropertiesForMapView = async (ids: string[]) => {
+    if (!ids.length) return;
+
+    setLoadingDetails(true);
+    setError(undefined);
+
+    try {
+      // Filter out IDs that already have non-placeholder properties loaded
+      const existingPropertyIds = new Set(
+        properties
+          .filter(p => !p.isPlaceholder && !p.hasError)
+          .map(p => p.id)
+      );
+      
+      const idsToLoad = ids.filter(id => !existingPropertyIds.has(id));
+      
+      console.log(`Loading properties for map view: ${idsToLoad.length} new properties to load, ${existingPropertyIds.size} already loaded`);
+      
+      if (idsToLoad.length === 0 && existingPropertyIds.size > 0) {
+        // All properties already loaded, nothing to do
+        console.log("All properties already loaded for map view");
+        setLoadingDetails(false);
+        return;
+      }
+      
+      // Merge existing properties with placeholders for new IDs
+      const newPlaceholders: PropertyWithLocation[] = idsToLoad.map(id => ({
+        id,
+        title: "Loading...",
+        address: "Loading...",
+        price: 0,
+        bedrooms: 0,
+        bathrooms: 0,
+        squareFeet: 0,
+        images: [],
+        description: "",
+        features: [],
+        isPlaceholder: true,
+        location: {
+          // Create slightly randomized coordinates around SF for the map
+          lat: 37.7749 + (Math.random() - 0.5) * 0.05,
+          lng: -122.4194 + (Math.random() - 0.5) * 0.05,
+        }
+      }));
+      
+      // Keep existing non-placeholder properties and add placeholders for new ones
+      const existingProperties = properties.filter(p => !p.isPlaceholder && !idsToLoad.includes(p.id));
+      setProperties([...existingProperties, ...newPlaceholders]);
+      
+      // Load property details one by one for new IDs only
+      let errorCount = 0;
+      for (const id of idsToLoad.slice(0, 25)) { // Limit to 25 to avoid overwhelming the API
+        if (!loadedPropertyDetails[id]) {
+          try {
+            await loadPropertyDetails(id);
+          } catch (err) {
+            errorCount++;
+            console.error(`Error loading property details for ${id}:`, err);
+          }
+        }
+      }
+
+      // Only show error message if all new properties failed to load
+      if (errorCount > 0 && errorCount === idsToLoad.length && idsToLoad.length > 0) {
+        setError("Failed to load property details");
+      }
+    } catch (err) {
+      console.error("Error loading properties for map view:", err);
+      setError("Failed to load properties");
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  // Handler for map view search
+  const handleMapSearch = async (filters: SearchFilterValues) => {
     setLoading(true);
     setError(undefined);
-    setSearchTerm(newFilterValues.query);
-    setFilterValues(newFilterValues);
-    setPage(1); // Reset to first page for new searches
-    setHasMoreResults(true); // Reset pagination state
+    setSearchTerm(filters.query);
+    setFilterValues(filters);
+    setPage(1);
+    setHasMoreResults(true);
+    
+    // When performing a new search, clear property details to ensure we get fresh data
+    setProperties([]);
+    setLoadedPropertyDetails({});
     
     // Determine and set the searchType based on the current search parameters
-    const hasQuery = !!newFilterValues.query.trim();
+    const hasQuery = !!filters.query.trim();
     const hasImages = imageUrls.length > 0;
     
     if (hasQuery && hasImages) {
@@ -182,34 +562,52 @@ const Search = () => {
 
     try {
       // Build search params for URL
-      const newSearchParams: Record<string, string> = {
-        q: newFilterValues.query
-      };
+      const newSearchParams = new URLSearchParams(searchParams);
+      if (filters.query) {
+        newSearchParams.set("q", filters.query);
+      } else {
+        newSearchParams.delete("q");
+      }
       
       // Keep image URLs in the URL if they exist
       if (initialImageUrls.length > 0) {
-        // Preserve the image URLs from the URL parameter
-        newSearchParams.imageUrls = searchParams.get("imageUrls") || "";
+        newSearchParams.set("imageUrls", JSON.stringify(initialImageUrls));
+      } else if (imageUrls.length > 0) {
+        newSearchParams.set("imageUrls", JSON.stringify(imageUrls));
+      } else {
+        newSearchParams.delete("imageUrls");
       }
+      
+      // Keep view parameter
+      newSearchParams.set("view", currentView);
       
       // Update URL query parameters
       setSearchParams(newSearchParams);
 
-      // Perform search with first page of results
-      await fetchResults(newFilterValues, 1);
+      // Perform search to get IDs
+      console.log("Fetching search results with filters:", filters);
+      const results = await fetchResults(filters, 1);
+      
+      // If in map view, load property details
+      if (currentView === "map" && results && results.length > 0) {
+        console.log(`Search returned ${results.length} results, loading property details for map view`);
+        await loadPropertiesForMapView(results);
+      } else {
+        console.log(`Search returned ${results?.length || 0} results (in list view, not loading details)`);
+      }
     } catch (err) {
-      // Handle any other errors in the outer try/catch
       console.error("Unexpected error during search:", err);
       setError("An unexpected error occurred. Please try again.");
       setApartmentIds([]);
+      setProperties([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to load more results when scrolling
+  // Function to load more results when scrolling (only for list view)
   const handleLoadMore = async () => {
-    if (!hasMoreResults || loadingMore || loading || !filterValues) return;
+    if (!hasMoreResults || loadingMore || loading || !filterValues || currentView !== "list") return;
 
     const nextPage = page + 1;
     console.log(`Loading more results: page ${nextPage}`);
@@ -227,7 +625,7 @@ const Search = () => {
     }
   };
 
-  // Shared function to fetch results (used by both initial search and pagination)
+  // Shared function to fetch results (used by both views)
   const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {
     // Choose the correct image URLs (from the URL parameters or context)
     const urls = initialImageUrls.length > 0 ? initialImageUrls : imageUrls;
@@ -250,8 +648,6 @@ const Search = () => {
         min_rent: searchFilterValues.min_rent,
         max_rent: searchFilterValues.max_rent,
         studio: searchFilterValues.studio,
-        city: searchFilterValues.city,
-        state: searchFilterValues.state,
       },
       limit: ITEMS_PER_PAGE, // Request smaller chunks
       page: pageNum, // Add page parameter
@@ -286,7 +682,7 @@ const Search = () => {
       // Clear any previous errors if successful
       setError(undefined);
 
-      return ids.length;
+      return ids;
     } catch (apiError: any) {
       // Handle API-specific errors
       console.error("API Error:", apiError);
@@ -309,11 +705,309 @@ const Search = () => {
       // If this is the first page, clear results
       if (pageNum === 1) {
         setApartmentIds([]);
+        setProperties([]);
       }
 
       throw apiError;
     }
   };
+  
+  // Toggle between map and list views
+  const toggleView = () => {
+    const newView = currentView === "map" ? "list" : "map";
+    setCurrentView(newView);
+    
+    // If switching to map view and we have apartment IDs but no property details loaded, load them
+    if (newView === "map" && apartmentIds.length > 0) {
+      // Only load properties if we don't have them already or if there's a mismatch in counts
+      const loadedPropertyCount = properties.filter(p => !p.isPlaceholder).length;
+      const mismatchInCounts = loadedPropertyCount < apartmentIds.length;
+      
+      if (properties.length === 0 || mismatchInCounts) {
+        console.log(`Loading property details for map view: ${properties.length} properties loaded, ${apartmentIds.length} IDs available`);
+        loadPropertiesForMapView(apartmentIds);
+      } else {
+        console.log(`Reusing existing property details for map view: ${properties.length} properties already loaded`);
+      }
+    }
+  };
+
+  // Render the view toggle button - not needed anymore as it's moved to search form
+  const renderViewToggle = () => null;
+
+  // Render the map view
+  const renderMapView = () => (
+    <div className="flex-1 flex overflow-hidden">
+      {/* Sidebar */}
+      <div
+        className={`w-full md:w-96 bg-white border-r flex-shrink-0 overflow-y-auto transition-all duration-300 transform ${
+          showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        } md:static fixed inset-y-0 left-0 z-40 pt-32 md:pt-0`}
+      >
+        <div className="p-4 border-b">
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold text-lg">
+              {properties.length} results{" "}
+              {searchType === "text" && (searchTerm || initialQuery) && (
+                <span className="font-normal text-sm text-muted-foreground">
+                  for "{decodeURIComponent(searchTerm || initialQuery)}"
+                </span>
+              )}
+              {searchType === "image" && (
+                <span className="font-normal text-sm text-muted-foreground">
+                  that match your images
+                </span>
+              )}
+              {searchType === "both" && (searchTerm || initialQuery) && (
+                <span className="font-normal text-sm text-muted-foreground">
+                  that match your images and "{decodeURIComponent(searchTerm || initialQuery)}"
+                </span>
+              )}
+            </h2>
+            <button
+              className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
+              onClick={() => setShowSidebar(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-2">
+          {loading && properties.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Loading properties...</p>
+            </div>
+          ) : error ? (
+            <div className="p-4 text-center">
+              <p className="text-red-500">{error}</p>
+              <button
+                className="mt-2 text-primary hover:underline"
+                onClick={() => window.location.reload()}
+              >
+                Try again
+              </button>
+            </div>
+          ) : properties.length === 0 ? (
+            <div className="p-4 text-center">
+              <p className="text-muted-foreground">No properties found.</p>
+            </div>
+          ) : (
+            properties.map((property) => (
+              <div
+                key={property.id}
+                className={`p-2 mb-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
+                  selectedProperty?.id === property.id ? "ring-2 ring-primary" : ""
+                } ${property.hasError ? "opacity-60" : ""}`}
+                onClick={() => !property.hasError && setSelectedProperty(property)}
+              >
+                {property.isPlaceholder ? (
+                  <ShimmerPropertyCard index={Number(property.id)} />
+                ) : (
+                  <div className="flex">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                      {property.hasError ? (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <span className="text-gray-500 text-xs text-center px-1">
+                            Unable to load
+                          </span>
+                        </div>
+                      ) : (
+                        <img
+                          src={
+                            property.images && property.images.length > 0
+                              ? property.images[0]
+                              : "https://placehold.co/600x400?text=No+Image"
+                          }
+                          alt={property.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = "https://placehold.co/600x400?text=Error";
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="ml-3 flex-grow">
+                      {property.hasError ? (
+                        <>
+                          <p className="font-medium text-sm text-gray-600">
+                            Unable to load property
+                          </p>
+                          <p className="text-xs text-red-500">Retry search or try again later</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-semibold text-primary">
+                            ${property.price.toLocaleString()}
+                          </p>
+                          <h3 className="font-medium text-sm line-clamp-1">{property.title}</h3>
+                          <p className="text-muted-foreground text-xs line-clamp-1">
+                            {property.address}
+                          </p>
+                          <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
+                            <span>{property.bedrooms} bed</span>
+                            <span>•</span>
+                            <span>{property.bathrooms} bath</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Map */}
+      <div className="flex-1 relative">
+        {properties.length > 0 ? (
+          <MapContainer
+            center={mapCenter}
+            zoom={DEFAULT_ZOOM}
+            style={{ height: "100%", width: "100%" }}
+            scrollWheelZoom={true}
+            className="z-0"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+
+            {mapBounds && <MapBoundsUpdater bounds={mapBounds} />}
+
+            {properties
+              .filter((p) => p.location && !p.isPlaceholder)
+              .map(
+                (property) =>
+                  property.location && (
+                    <Marker
+                      key={property.id}
+                      position={[property.location.lat, property.location.lng]}
+                      icon={customIcon}
+                      eventHandlers={{
+                        click: () => {
+                          setSelectedProperty(property);
+                        },
+                      }}
+                    >
+                      <Popup>
+                        <div className="text-center">
+                          <h3 className="font-medium">{property.title}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            ${property.price.toLocaleString()}
+                          </p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  )
+              )}
+          </MapContainer>
+        ) : (
+          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+            {loading ? (
+              <div className="text-center">
+                <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
+                <p className="text-muted-foreground">Loading map data...</p>
+              </div>
+            ) : (
+              <div className="text-center">
+                <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  No properties to display. <br />
+                  Try refining your search.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Property popup */}
+        {selectedProperty && !selectedProperty.isPlaceholder && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-[1000]">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-up">
+              <div className="relative">
+                <img
+                  src={
+                    selectedProperty.images && selectedProperty.images.length > 0
+                      ? selectedProperty.images[0]
+                      : "https://placehold.co/600x400?text=No+Image"
+                  }
+                  alt={selectedProperty.title}
+                  className="w-full h-48 object-cover"
+                />
+                <button
+                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-sm"
+                  onClick={() => setSelectedProperty(null)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold">{selectedProperty.title}</h3>
+                  <p className="text-lg font-semibold text-primary">
+                    ${selectedProperty.price.toLocaleString()}
+                  </p>
+                </div>
+
+                <p className="text-muted-foreground text-sm mb-3">{selectedProperty.address}</p>
+
+                <div className="flex items-center justify-between py-2 border-y border-gray-100">
+                  <div className="text-center">
+                    <p className="text-muted-foreground text-xs">Beds</p>
+                    <p className="font-medium">{selectedProperty.bedrooms}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-muted-foreground text-xs">Baths</p>
+                    <p className="font-medium">{selectedProperty.bathrooms}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-muted-foreground text-xs">Sq Ft</p>
+                    <p className="font-medium">{selectedProperty.squareFeet.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <a
+                    href={`/property/${selectedProperty.id}`}
+                    className="block w-full py-2 bg-primary text-white rounded-lg text-center font-medium"
+                  >
+                    View Details
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Toggle Button */}
+        <button
+          className="md:hidden fixed bottom-4 right-4 z-20 p-3 bg-white shadow-md rounded-full"
+          onClick={() => setShowSidebar(!showSidebar)}
+        >
+          {showSidebar ? <MapIcon className="h-6 w-6" /> : <List className="h-6 w-6" />}
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render the list view
+  const renderListView = () => (
+    <main className="flex-grow bg-white flex flex-col">
+      <PropertyGrid
+        propertyIds={apartmentIds}
+        loading={loading}
+        error={error}
+        searchTerm={searchTerm || initialQuery}
+        searchType={searchType}
+        onLoadMore={handleLoadMore}
+      />
+    </main>
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -322,25 +1016,20 @@ const Search = () => {
         {" "}
         {/* Space for fixed navbar */}
         <SearchFilters
-          onSearch={handleSearch}
+          onSearch={handleMapSearch}
           initialQuery={searchTerm || initialQuery}
           initialValues={filterValues || undefined}
           isLoading={loading}
+          currentView={currentView}
+          onViewToggle={toggleView}
         />
-        <main className="flex-grow bg-white flex flex-col">
-          <PropertyGrid
-            propertyIds={apartmentIds}
-            loading={loading}
-            error={error}
-            searchTerm={searchTerm || initialQuery}
-            searchType={searchType}
-            onLoadMore={handleLoadMore}
-          />
-        </main>
+        
+        {/* Render appropriate view */}
+        {currentView === "map" ? renderMapView() : renderListView()}
       </div>
       <Footer />
     </div>
   );
 };
 
-export default Search;
+export default UnifiedSearchPage;
