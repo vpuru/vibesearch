@@ -40,12 +40,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [searchTerm]);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       // Reset image index when property changes
       setCurrentImageIndex(0);
-      
+
       // If property is already a Property object, use it directly
       if (typeof property !== "string") {
         setPropertyData(property);
@@ -58,7 +58,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
         setError(null);
         const apartmentId = property;
         console.log(`Fetching preview data for apartment ID: ${apartmentId}`);
-        
+
         // Pass the search term to order images by relevance to the query
         const data = await fetchApartmentPreview(apartmentId, searchTerm);
         // Reset the image index when new data is loaded to ensure we show the most relevant image
@@ -80,9 +80,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
     e.stopPropagation();
     if (!propertyData || !hasValidImages) return;
 
-    setCurrentImageIndex((prev) =>
-      prev === (propertyData.images.length - 1) ? 0 : prev + 1
-    );
+    setCurrentImageIndex((prev) => (prev === propertyData.images.length - 1 ? 0 : prev + 1));
   };
 
   const previousImage = (e: React.MouseEvent) => {
@@ -90,9 +88,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
     e.stopPropagation();
     if (!propertyData || !hasValidImages) return;
 
-    setCurrentImageIndex((prev) =>
-      prev === 0 ? propertyData.images.length - 1 : prev - 1
-    );
+    setCurrentImageIndex((prev) => (prev === 0 ? propertyData.images.length - 1 : prev - 1));
   };
 
   // Navigate to property detail page
@@ -160,101 +156,102 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
   };
 
   return (
-    <div
-      onClick={handleCardClick}
-      className={`group cursor-pointer rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white border border-gray-100 hover:border-gray-200 ${
-        featured ? "md:col-span-2" : ""
-      }`}
-    >
+    <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 h-full w-full">
       <div className="relative">
-        <div className="aspect-[4/3] overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={propertyData.title || "Apartment"}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-            onError={(e) => {
-              // Fallback if image fails to load
-              (e.target as HTMLImageElement).src = defaultImage;
-            }}
-          />
-        </div>
-
-        {/* Image navigation arrows - Only show if there are multiple images */}
-        {hasValidImages && propertyData.images.length > 1 && (
-          <>
-            <button
-              onClick={previousImage}
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button
-              onClick={nextImage}
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
-              aria-label="Next image"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </>
-        )}
-
-        <div className="absolute top-2 right-2">
-          {/* Favorites button removed */}
-        </div>
-
-        {/* Image counter indicator - Only show if there are multiple images */}
-        {hasValidImages && propertyData.images.length > 1 && (
-          <div className="absolute bottom-2 right-2">
-            <div className="px-2 py-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full">
-              {validImageIndex + 1}/{propertyData.images.length}
+        <div className="relative aspect-[4/3] w-full">
+          <div className="relative">
+            <div className="aspect-[4/3] overflow-hidden">
+              <img
+                src={imageUrl}
+                alt={propertyData.title || "Apartment"}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                onError={(e) => {
+                  // Fallback if image fails to load
+                  (e.target as HTMLImageElement).src = defaultImage;
+                }}
+              />
             </div>
-          </div>
-        )}
 
-        {features.length > 0 && (
-          <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
-            {features.slice(0, 2).map((feature, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-white/80 backdrop-blur-sm text-xs font-medium rounded-full"
-              >
-                {feature}
+            {/* Image navigation arrows - Only show if there are multiple images */}
+            {hasValidImages && propertyData.images.length > 1 && (
+              <>
+                <button
+                  onClick={previousImage}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
+
+            <div className="absolute top-2 right-2">{/* Favorites button removed */}</div>
+
+            {/* Image counter indicator - Only show if there are multiple images */}
+            {hasValidImages && propertyData.images.length > 1 && (
+              <div className="absolute bottom-2 right-2">
+                <div className="px-2 py-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full">
+                  {validImageIndex + 1}/{propertyData.images.length}
+                </div>
+              </div>
+            )}
+
+            {features.length > 0 && (
+              <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
+                {features.slice(0, 2).map((feature, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-white/80 backdrop-blur-sm text-xs font-medium rounded-full"
+                  >
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4">
+          <div className="flex justify-between items-start mb-2">
+            <h3 className="font-semibold text-lg font-sans text-vibe-navy">
+              {propertyData.title || "Apartment"}
+            </h3>
+            <p className="text-lg font-semibold text-vibe-charcoal/70">
+              {formatPrice(propertyData.price)}
+            </p>
+          </div>
+
+          <div className="flex items-center text-vibe-charcoal/70 text-sm mb-3">
+            <MapPin className="h-3 w-3 mr-1" />
+            <span>{propertyData.address || "Address unavailable"}</span>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center text-vibe-charcoal/70">
+              <Bed className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
+              <span className="text-sm">
+                {typeof propertyData.bedrooms === "number" ? propertyData.bedrooms : 0} bed
               </span>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
 
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg font-sans text-vibe-navy">{propertyData.title || "Apartment"}</h3>
-          <p className="text-lg font-semibold text-vibe-charcoal/70">{formatPrice(propertyData.price)}</p>
-        </div>
+            <div className="flex items-center text-vibe-charcoal/70">
+              <Bath className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
+              <span className="text-sm">
+                {typeof propertyData.bathrooms === "number" ? propertyData.bathrooms : 0} bath
+              </span>
+            </div>
 
-        <div className="flex items-center text-vibe-charcoal/70 text-sm mb-3">
-          <MapPin className="h-3 w-3 mr-1" />
-          <span>{propertyData.address || "Address unavailable"}</span>
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-          <div className="flex items-center text-vibe-charcoal/70">
-            <Bed className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
-            <span className="text-sm">
-              {typeof propertyData.bedrooms === "number" ? propertyData.bedrooms : 0} bed
-            </span>
-          </div>
-
-          <div className="flex items-center text-vibe-charcoal/70">
-            <Bath className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
-            <span className="text-sm">
-              {typeof propertyData.bathrooms === "number" ? propertyData.bathrooms : 0} bath
-            </span>
-          </div>
-
-          <div className="flex items-center text-vibe-charcoal/70">
-            <Square className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
-            <span className="text-sm">{formatSquareFeet(propertyData.squareFeet)} sq ft</span>
+            <div className="flex items-center text-vibe-charcoal/70">
+              <Square className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
+              <span className="text-sm">{formatSquareFeet(propertyData.squareFeet)} sq ft</span>
+            </div>
           </div>
         </div>
       </div>

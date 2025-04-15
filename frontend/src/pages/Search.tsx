@@ -95,7 +95,12 @@ interface PropertyWithLocation extends Property {
 
 // Shimmer effect component for loading state
 const ShimmerEffect = ({ className }: { className?: string }) => (
-  <div className={cn("animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]", className)}></div>
+  <div
+    className={cn(
+      "animate-pulse rounded bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%]",
+      className
+    )}
+  ></div>
 );
 
 // ShimmerPropertyCard component for loading state
@@ -124,8 +129,9 @@ const ShimmerPropertyCard = ({ index }: { index: number }) => {
 const UnifiedSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
-  const initialImageUrls = searchParams.get("imageUrls") ? 
-    JSON.parse(searchParams.get("imageUrls") || "[]") : [];
+  const initialImageUrls = searchParams.get("imageUrls")
+    ? JSON.parse(searchParams.get("imageUrls") || "[]")
+    : [];
   const viewParam = searchParams.get("view") || "map"; // Default to map view
 
   // Use the search context
@@ -144,10 +150,12 @@ const UnifiedSearchPage = () => {
     setSearchType,
     hasResults,
   } = useSearch();
-  
+
   // View toggle state (map or list)
-  const [currentView, setCurrentView] = useState<"map" | "list">(viewParam === "list" ? "list" : "map");
-  
+  const [currentView, setCurrentView] = useState<"map" | "list">(
+    viewParam === "list" ? "list" : "map"
+  );
+
   // Properties for map view
   const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
@@ -156,22 +164,22 @@ const UnifiedSearchPage = () => {
   const [mapBounds, setMapBounds] = useState<LatLngBoundsExpression | null>(null);
   const [placeholderCount, setPlaceholderCount] = useState(0);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  
+
   // State for both views
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-  
+
   // State for list view pagination
   const [page, setPage] = useState(1);
   const [hasMoreResults, setHasMoreResults] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  
+
   // Track if we've loaded property details for display
   const [loadedPropertyDetails, setLoadedPropertyDetails] = useState<Record<string, boolean>>({});
-  
+
   // Reference to track if we already restored from URL
   const hasRestoredFromUrl = React.useRef(false);
-  
+
   // Update URL when view changes
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams);
@@ -193,7 +201,7 @@ const UnifiedSearchPage = () => {
       }
     }
   }, [properties, currentView]);
-  
+
   // Update map center when a property is selected
   useEffect(() => {
     if (selectedProperty?.location) {
@@ -204,80 +212,89 @@ const UnifiedSearchPage = () => {
   // Perform search when the component mounts if there's an initial query or image URLs
   useEffect(() => {
     // Only run this effect once per mount or when search parameters actually change
-    if (hasRestoredFromUrl.current && !searchParams.toString().includes('q=') && !searchParams.toString().includes('imageUrls=')) return;
-    
+    if (
+      hasRestoredFromUrl.current &&
+      !searchParams.toString().includes("q=") &&
+      !searchParams.toString().includes("imageUrls=")
+    )
+      return;
+
     if (!hasRestoredFromUrl.current) {
       hasRestoredFromUrl.current = true;
     }
-    
+
     // Set initial state based on URL parameters
     const setupSearch = async () => {
       console.log("Setting up search with URL parameters:", {
         query: initialQuery,
         imageUrls: initialImageUrls.length ? `${initialImageUrls.length} URLs` : "none",
-        currentContext: { 
-          searchTerm, 
-          imageUrls: imageUrls.length, 
-          searchPerformed 
+        currentContext: {
+          searchTerm,
+          imageUrls: imageUrls.length,
+          searchPerformed,
         },
-        currentView
+        currentView,
       });
-      
+
       // Check if we need to perform a search or we're returning to an existing search
       const urlHasQuery = !!initialQuery.trim();
       const urlHasImages = initialImageUrls.length > 0;
       const contextHasSearch = searchPerformed && (searchTerm || imageUrls.length > 0);
-      
+
       console.log("Search state:", {
         urlHasQuery,
         urlHasImages,
         contextHasSearch,
         hasResults,
         apartmentIds: apartmentIds.length,
-        propertiesLoaded: properties.length
+        propertiesLoaded: properties.length,
       });
-      
+
       // Case 1: URL has new search parameters - always do a fresh search
-      if ((urlHasQuery && initialQuery !== searchTerm) || 
-          (urlHasImages && JSON.stringify(initialImageUrls) !== JSON.stringify(imageUrls))) {
-        
+      if (
+        (urlHasQuery && initialQuery !== searchTerm) ||
+        (urlHasImages && JSON.stringify(initialImageUrls) !== JSON.stringify(imageUrls))
+      ) {
         // Determine search type
-        let newSearchType = 'none';
+        let newSearchType = "none";
         if (urlHasQuery && urlHasImages) {
-          newSearchType = 'both';
+          newSearchType = "both";
         } else if (urlHasQuery) {
-          newSearchType = 'text';
+          newSearchType = "text";
         } else if (urlHasImages) {
-          newSearchType = 'image';
+          newSearchType = "image";
         }
-        
+
         // Apply context updates
         if (urlHasImages) {
           setImageUrls(initialImageUrls);
         }
-        
+
         if (urlHasQuery) {
           setSearchTerm(initialQuery);
         }
-        
+
         setSearchType(newSearchType);
-        
+
         // Perform the search
         console.log("Initiating fresh search from URL parameters");
         setLoading(true);
-        
+
         try {
-          await fetchResults({ 
-            query: initialQuery,
-          }, 1);
-          
+          await fetchResults(
+            {
+              query: initialQuery,
+            },
+            1
+          );
+
           console.log("Fresh search completed successfully");
         } catch (error) {
           console.error("Error performing fresh search:", error);
         } finally {
           setLoading(false);
         }
-      } 
+      }
       // Case 2: URL has same search params and we have results - don't re-fetch
       else if ((urlHasQuery || urlHasImages) && hasResults) {
         console.log("URL matches existing search with results - no need to re-fetch");
@@ -288,7 +305,7 @@ const UnifiedSearchPage = () => {
         if (urlHasImages) {
           setImageUrls(initialImageUrls);
         }
-        
+
         // For map view, we need to load property details from IDs
         if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
           console.log("Loading property details for map view with existing IDs");
@@ -308,12 +325,15 @@ const UnifiedSearchPage = () => {
       else if (contextHasSearch) {
         console.log("Search criteria exist but no results - fetching data");
         setLoading(true);
-        
+
         try {
-          await fetchResults({ 
-            query: searchTerm,
-          }, 1);
-          
+          await fetchResults(
+            {
+              query: searchTerm,
+            },
+            1
+          );
+
           console.log("Search data fetch completed");
         } catch (error) {
           console.error("Error fetching search results:", error);
@@ -322,18 +342,26 @@ const UnifiedSearchPage = () => {
         }
       }
     };
-    
+
     setupSearch();
-  // Explicitly exclude currentView from the dependency array to prevent refetching when toggling views
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialQuery, initialImageUrls, searchTerm, imageUrls, apartmentIds.length, hasResults, searchPerformed]);
+    // Explicitly exclude currentView from the dependency array to prevent refetching when toggling views
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    initialQuery,
+    initialImageUrls,
+    searchTerm,
+    imageUrls,
+    apartmentIds.length,
+    hasResults,
+    searchPerformed,
+  ]);
 
   // Improved loadPropertyDetails function with better error handling and state tracking
   const loadPropertyDetails = async (propertyId: string) => {
     // Check if property details are already loaded
     const propertyIsAlreadyLoaded = loadedPropertyDetails[propertyId];
-    const existingProperty = properties.find(p => p.id === propertyId && !p.isPlaceholder);
-    
+    const existingProperty = properties.find((p) => p.id === propertyId && !p.isPlaceholder);
+
     // Skip loading if property is already loaded and search term hasn't changed
     if (propertyIsAlreadyLoaded && existingProperty && !searchTerm && !initialQuery) {
       console.log(`Property ${propertyId} already loaded, skipping fetch`);
@@ -349,9 +377,9 @@ const UnifiedSearchPage = () => {
     // Track if this is a retry
     let retryCount = 0;
     const maxRetries = 2;
-    
+
     // Mark as loading
-    setLoadedPropertyDetails(prev => ({ ...prev, [propertyId]: false }));
+    setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: false }));
 
     const loadWithRetry = async (): Promise<void> => {
       try {
@@ -359,8 +387,8 @@ const UnifiedSearchPage = () => {
         const property = await fetchApartmentPreview(propertyId, searchTerm || initialQuery);
 
         // Find existing placeholder for this property to maintain position on map
-        const placeholder = properties.find(p => p.id === propertyId);
-        
+        const placeholder = properties.find((p) => p.id === propertyId);
+
         const propertyWithLocation: PropertyWithLocation = {
           ...property,
           location: property.coordinates
@@ -370,19 +398,19 @@ const UnifiedSearchPage = () => {
               }
             : {
                 // Use existing placeholder location if available, or generate random coordinates
-                lat: (placeholder?.location?.lat) || (37.7749 + (Math.random() - 0.5) * 0.05),
-                lng: (placeholder?.location?.lng) || (-122.4194 + (Math.random() - 0.5) * 0.05),
+                lat: placeholder?.location?.lat || 37.7749 + (Math.random() - 0.5) * 0.05,
+                lng: placeholder?.location?.lng || -122.4194 + (Math.random() - 0.5) * 0.05,
               },
         };
 
         // Update the properties list by replacing the placeholder with the actual property
-        setProperties(prev => {
+        setProperties((prev) => {
           // Create a new array to avoid mutation
           const updated = [...prev];
-          
+
           // Find index of existing property or placeholder
-          const idx = updated.findIndex(p => p.id === propertyId);
-          
+          const idx = updated.findIndex((p) => p.id === propertyId);
+
           if (idx !== -1) {
             // Replace existing entry
             updated[idx] = propertyWithLocation;
@@ -390,13 +418,13 @@ const UnifiedSearchPage = () => {
             // Add as new property
             updated.push(propertyWithLocation);
           }
-          
+
           return updated;
         });
-        
+
         // Mark as successfully loaded
         setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
-        
+
         console.log(`Successfully loaded property ${propertyId}`);
       } catch (err) {
         // Check if it's an AbortError and we haven't exceeded max retries
@@ -415,7 +443,7 @@ const UnifiedSearchPage = () => {
         console.error(`Error loading property ${propertyId}:`, err);
 
         // Find existing placeholder to maintain position
-        const placeholder = properties.find(p => p.id === propertyId);
+        const placeholder = properties.find((p) => p.id === propertyId);
 
         // Create a property with error state
         const errorProperty: PropertyWithLocation = {
@@ -432,15 +460,15 @@ const UnifiedSearchPage = () => {
           hasError: true,
           location: {
             // Use existing placeholder location if available, or generate random coordinates
-            lat: (placeholder?.location?.lat) || (37.7749 + (Math.random() - 0.5) * 0.05),
-            lng: (placeholder?.location?.lng) || (-122.4194 + (Math.random() - 0.5) * 0.05),
+            lat: placeholder?.location?.lat || 37.7749 + (Math.random() - 0.5) * 0.05,
+            lng: placeholder?.location?.lng || -122.4194 + (Math.random() - 0.5) * 0.05,
           },
         };
-        
+
         // Update the properties list by replacing the placeholder with the error property
-        setProperties(prev => {
+        setProperties((prev) => {
           const updated = [...prev];
-          const idx = updated.findIndex(p => p.id === propertyId);
+          const idx = updated.findIndex((p) => p.id === propertyId);
           if (idx !== -1) {
             updated[idx] = errorProperty;
           } else {
@@ -448,7 +476,7 @@ const UnifiedSearchPage = () => {
           }
           return updated;
         });
-        
+
         // Mark as loaded (with error) to prevent endless retries
         setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
       }
@@ -464,9 +492,11 @@ const UnifiedSearchPage = () => {
 
     // Make sure we're working with unique IDs
     const uniqueIds = Array.from(new Set(ids));
-    
+
     if (uniqueIds.length !== ids.length) {
-      console.log(`Removed ${ids.length - uniqueIds.length} duplicate IDs from property loading list`);
+      console.log(
+        `Removed ${ids.length - uniqueIds.length} duplicate IDs from property loading list`
+      );
     }
 
     setLoadingDetails(true);
@@ -475,24 +505,24 @@ const UnifiedSearchPage = () => {
     try {
       // Filter out IDs that already have non-placeholder properties loaded
       const existingPropertyIds = new Set(
-        properties
-          .filter(p => !p.isPlaceholder && !p.hasError)
-          .map(p => p.id)
+        properties.filter((p) => !p.isPlaceholder && !p.hasError).map((p) => p.id)
       );
-      
-      const idsToLoad = uniqueIds.filter(id => !existingPropertyIds.has(id));
-      
-      console.log(`Loading properties for map view: ${idsToLoad.length} new properties to load, ${existingPropertyIds.size} already loaded`);
-      
+
+      const idsToLoad = uniqueIds.filter((id) => !existingPropertyIds.has(id));
+
+      console.log(
+        `Loading properties for map view: ${idsToLoad.length} new properties to load, ${existingPropertyIds.size} already loaded`
+      );
+
       if (idsToLoad.length === 0 && existingPropertyIds.size > 0) {
         // All properties already loaded, nothing to do
         console.log("All properties already loaded for map view");
         setLoadingDetails(false);
         return;
       }
-      
+
       // Merge existing properties with placeholders for new IDs
-      const newPlaceholders: PropertyWithLocation[] = idsToLoad.map(id => ({
+      const newPlaceholders: PropertyWithLocation[] = idsToLoad.map((id) => ({
         id,
         title: "Loading...",
         address: "Loading...",
@@ -508,41 +538,44 @@ const UnifiedSearchPage = () => {
           // Create slightly randomized coordinates around SF for the map
           lat: 37.7749 + (Math.random() - 0.5) * 0.05,
           lng: -122.4194 + (Math.random() - 0.5) * 0.05,
-        }
+        },
       }));
-      
+
       // Make sure we have no duplicates in our properties list
       // First, get all non-placeholder properties (the ones we want to keep)
-      const existingProperties = properties.filter(p => !p.isPlaceholder);
-      
+      const existingProperties = properties.filter((p) => !p.isPlaceholder);
+
       // Create a map of existing property IDs for quick lookup
-      const existingPropertyMap = new Map(existingProperties.map(p => [p.id, p]));
-      
+      const existingPropertyMap = new Map(existingProperties.map((p) => [p.id, p]));
+
       // Create an array of unique properties (no duplicates)
       const uniqueProperties: PropertyWithLocation[] = [];
-      
+
       // Add existing properties first (no duplicates)
-      existingProperties.forEach(p => {
-        if (!uniqueProperties.some(up => up.id === p.id)) {
+      existingProperties.forEach((p) => {
+        if (!uniqueProperties.some((up) => up.id === p.id)) {
           uniqueProperties.push(p);
         }
       });
-      
+
       // Then add placeholders for properties that don't exist yet
-      newPlaceholders.forEach(p => {
-        if (!uniqueProperties.some(up => up.id === p.id)) {
+      newPlaceholders.forEach((p) => {
+        if (!uniqueProperties.some((up) => up.id === p.id)) {
           uniqueProperties.push(p);
         }
       });
-      
-      console.log(`Created properties array with ${uniqueProperties.length} items (${existingProperties.length} existing, ${newPlaceholders.length} placeholders)`);
-      
+
+      console.log(
+        `Created properties array with ${uniqueProperties.length} items (${existingProperties.length} existing, ${newPlaceholders.length} placeholders)`
+      );
+
       // Update state with the unique properties
       setProperties(uniqueProperties);
-      
+
       // Load property details one by one for new IDs only
       let errorCount = 0;
-      for (const id of idsToLoad.slice(0, 25)) { // Limit to 25 to avoid overwhelming the API
+      for (const id of idsToLoad.slice(0, 25)) {
+        // Limit to 25 to avoid overwhelming the API
         if (!loadedPropertyDetails[id]) {
           try {
             await loadPropertyDetails(id);
@@ -573,23 +606,23 @@ const UnifiedSearchPage = () => {
     setFilterValues(filters);
     setPage(1);
     setHasMoreResults(true);
-    
+
     // When performing a new search, clear property details to ensure we get fresh data
     setProperties([]);
     setLoadedPropertyDetails({});
-    
+
     // Determine and set the searchType based on the current search parameters
     const hasQuery = !!filters.query.trim();
     const hasImages = imageUrls.length > 0;
-    
+
     if (hasQuery && hasImages) {
-      setSearchType('both');
+      setSearchType("both");
     } else if (hasQuery) {
-      setSearchType('text');
+      setSearchType("text");
     } else if (hasImages) {
-      setSearchType('image');
+      setSearchType("image");
     } else {
-      setSearchType('none');
+      setSearchType("none");
     }
 
     try {
@@ -600,7 +633,7 @@ const UnifiedSearchPage = () => {
       } else {
         newSearchParams.delete("q");
       }
-      
+
       // Keep image URLs in the URL if they exist
       if (initialImageUrls.length > 0) {
         newSearchParams.set("imageUrls", JSON.stringify(initialImageUrls));
@@ -609,23 +642,27 @@ const UnifiedSearchPage = () => {
       } else {
         newSearchParams.delete("imageUrls");
       }
-      
+
       // Keep view parameter
       newSearchParams.set("view", currentView);
-      
+
       // Update URL query parameters
       setSearchParams(newSearchParams);
 
       // Perform search to get IDs
       console.log("Fetching search results with filters:", filters);
       const results = await fetchResults(filters, 1);
-      
+
       // If in map view, load property details
       if (currentView === "map" && results && results.length > 0) {
-        console.log(`Search returned ${results.length} results, loading property details for map view`);
+        console.log(
+          `Search returned ${results.length} results, loading property details for map view`
+        );
         await loadPropertiesForMapView(results);
       } else {
-        console.log(`Search returned ${results?.length || 0} results (in list view, not loading details)`);
+        console.log(
+          `Search returned ${results?.length || 0} results (in list view, not loading details)`
+        );
       }
     } catch (err) {
       console.error("Unexpected error during search:", err);
@@ -639,7 +676,8 @@ const UnifiedSearchPage = () => {
 
   // Function to load more results when scrolling (only for list view)
   const handleLoadMore = async () => {
-    if (!hasMoreResults || loadingMore || loading || !filterValues || currentView !== "list") return;
+    if (!hasMoreResults || loadingMore || loading || !filterValues || currentView !== "list")
+      return;
 
     const nextPage = page + 1;
     console.log(`Loading more results: page ${nextPage}`);
@@ -661,14 +699,14 @@ const UnifiedSearchPage = () => {
   const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {
     // Choose the correct image URLs (from the URL parameters or context)
     const urls = initialImageUrls.length > 0 ? initialImageUrls : imageUrls;
-    
+
     console.log("Fetching results with parameters:", {
       query: searchFilterValues.query,
       page: pageNum,
       imageUrls: urls.length > 0 ? `${urls.length} URLs` : "none",
-      searchType
+      searchType,
     });
-    
+
     // Prepare filter parameters for API
     const searchParams = {
       query: searchFilterValues.query || initialQuery, // Use the query from URL if none in filters
@@ -705,22 +743,24 @@ const UnifiedSearchPage = () => {
       } else {
         // Get current IDs and append new ones, removing duplicates
         const currentIds = new Set(apartmentIds);
-        
+
         // Count how many new (unique) IDs we're adding
-        const newUniqueIds = ids.filter(id => !currentIds.has(id));
-        
-        console.log(`Page ${pageNum}: Adding ${newUniqueIds.length} new unique IDs to existing ${currentIds.size} IDs`);
-        
+        const newUniqueIds = ids.filter((id) => !currentIds.has(id));
+
+        console.log(
+          `Page ${pageNum}: Adding ${newUniqueIds.length} new unique IDs to existing ${currentIds.size} IDs`
+        );
+
         // Create a merged array with no duplicates
         const allIds = [...apartmentIds];
-        
+
         // Only add IDs that don't already exist
-        ids.forEach(id => {
+        ids.forEach((id) => {
           if (!currentIds.has(id)) {
             allIds.push(id);
           }
         });
-        
+
         setApartmentIds(allIds);
       }
 
@@ -760,33 +800,39 @@ const UnifiedSearchPage = () => {
       throw apiError;
     }
   };
-  
+
   // Toggle between map and list views
   const toggleView = () => {
     const newView = currentView === "map" ? "list" : "map";
     setCurrentView(newView);
-    
-    console.log(`Toggling view from ${currentView} to ${newView}. Current apartment IDs: ${apartmentIds.length}`);
-    
+
+    console.log(
+      `Toggling view from ${currentView} to ${newView}. Current apartment IDs: ${apartmentIds.length}`
+    );
+
     // If switching to map view and we have apartment IDs but no property details loaded, load them
     if (newView === "map" && apartmentIds.length > 0) {
       // Only load properties if we don't have them already or if there's a mismatch in counts
-      const loadedPropertyCount = properties.filter(p => !p.isPlaceholder).length;
+      const loadedPropertyCount = properties.filter((p) => !p.isPlaceholder).length;
       const mismatchInCounts = loadedPropertyCount < apartmentIds.length;
-      
+
       if (properties.length === 0 || mismatchInCounts) {
-        console.log(`Loading property details for map view: ${properties.length} properties loaded, ${apartmentIds.length} IDs available`);
+        console.log(
+          `Loading property details for map view: ${properties.length} properties loaded, ${apartmentIds.length} IDs available`
+        );
         loadPropertiesForMapView(apartmentIds);
       } else {
-        console.log(`Reusing existing property details for map view: ${properties.length} properties already loaded`);
+        console.log(
+          `Reusing existing property details for map view: ${properties.length} properties already loaded`
+        );
       }
     }
-    
+
     // When switching to list view, ensure we're not creating duplicates
     // The PropertyGrid component already handles pagination from the existing apartmentIds
     if (newView === "list") {
       console.log("Switched to list view - ensuring no duplicates in apartment IDs");
-      
+
       // No need to modify the apartment IDs here - just ensure PropertyGrid uses them correctly
       // Reset pagination to show from the beginning
       setPage(1);
@@ -1064,16 +1110,18 @@ const UnifiedSearchPage = () => {
 
   // Render the list view
   const renderListView = () => (
-    <main className="flex-grow bg-white flex flex-col container mx-auto px-4">
-      <PropertyGrid
-        propertyIds={apartmentIds}
-        loading={loading}
-        error={error}
-        searchTerm={searchTerm || initialQuery}
-        searchType={searchType}
-        onLoadMore={handleLoadMore}
-      />
-    </main>
+    <div className="flex-1 flex overflow-hidden">
+      <div className="container mx-auto px-4 w-full">
+        <PropertyGrid
+          propertyIds={apartmentIds}
+          loading={loading}
+          error={error}
+          searchTerm={searchTerm || initialQuery}
+          searchType={searchType}
+          onLoadMore={handleLoadMore}
+        />
+      </div>
+    </div>
   );
 
   return (
@@ -1091,7 +1139,7 @@ const UnifiedSearchPage = () => {
             onViewToggle={toggleView}
           />
         </div>
-        
+
         {/* Render appropriate view with consistent height */}
         <div className="flex-grow">
           {currentView === "map" ? renderMapView() : renderListView()}
