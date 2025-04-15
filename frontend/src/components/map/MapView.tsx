@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ArrowLeft, Search, X, List, Map as MapIcon, Loader2 } from "lucide-react";
+import { Search, X, List, Map as MapIcon, Loader2 } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Property } from "../search/PropertyCard";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
@@ -8,6 +8,7 @@ import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "lea
 import { useSearch } from "../../contexts/SearchContext";
 import { searchApartments, fetchApartmentPreview } from "../../services/apartmentService";
 import SearchFilters, { SearchFilterValues } from "../search/SearchFilters";
+import Navbar from "../shared/Navbar";
 
 // Fix Leaflet icon issue
 // @ts-ignore - Needed to fix Leaflet icon issue
@@ -88,11 +89,23 @@ interface PropertyWithLocation extends Property {
 const MapView: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
-  const initialImageUrls = searchParams.get("imageUrls") ? 
-    JSON.parse(searchParams.get("imageUrls") || "[]") : [];
+  const initialImageUrls = searchParams.get("imageUrls")
+    ? JSON.parse(searchParams.get("imageUrls") || "[]")
+    : [];
   const navigate = useNavigate();
 
-  const { apartmentIds, searchTerm, setSearchTerm, filterValues, setFilterValues, searchPerformed, setSearchPerformed, imageUrls, searchType, setApartmentIds } = useSearch();
+  const {
+    apartmentIds,
+    searchTerm,
+    setSearchTerm,
+    filterValues,
+    setFilterValues,
+    searchPerformed,
+    setSearchPerformed,
+    imageUrls,
+    searchType,
+    setApartmentIds,
+  } = useSearch();
 
   const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
@@ -103,7 +116,7 @@ const MapView: React.FC = () => {
 
   // Track if we've loaded property details for display
   const [loadedPropertyDetails, setLoadedPropertyDetails] = useState<Record<string, boolean>>({});
-  
+
   // Reset loaded property details when search term changes
   useEffect(() => {
     setLoadedPropertyDetails({});
@@ -116,13 +129,17 @@ const MapView: React.FC = () => {
   const loadPropertyDetails = async (propertyId: string) => {
     // Always fetch new data when searchTerm changes
     if (loadedPropertyDetails[propertyId] && !searchTerm && !initialQuery) return;
-    
-    console.log(`Loading property details for ${propertyId} with search term: ${searchTerm || initialQuery || "none"}`);
+
+    console.log(
+      `Loading property details for ${propertyId} with search term: ${
+        searchTerm || initialQuery || "none"
+      }`
+    );
 
     // Track if this is a retry
     let retryCount = 0;
     const maxRetries = 2;
-    
+
     const loadWithRetry = async (): Promise<void> => {
       try {
         // Pass the search term to order images by relevance to the query
@@ -161,23 +178,23 @@ const MapView: React.FC = () => {
         setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
       } catch (err) {
         // Check if it's an AbortError and we haven't exceeded max retries
-        if (err instanceof Error && 
-            err.name === 'AbortError' && 
-            retryCount < maxRetries) {
-          console.warn(`Retry attempt ${retryCount + 1} for property ${propertyId} after AbortError`);
+        if (err instanceof Error && err.name === "AbortError" && retryCount < maxRetries) {
+          console.warn(
+            `Retry attempt ${retryCount + 1} for property ${propertyId} after AbortError`
+          );
           retryCount++;
-          
+
           // Add a small delay before retrying (increases with each retry)
-          await new Promise(resolve => setTimeout(resolve, 300 * retryCount));
+          await new Promise((resolve) => setTimeout(resolve, 300 * retryCount));
           return loadWithRetry();
         }
-        
+
         // For other errors or if max retries reached, log and continue
         console.error(`Error loading property ${propertyId}:`, err);
-        
+
         // Mark as loaded anyway to prevent endless retries
         setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
-        
+
         // For persistent errors, add a placeholder property with an error state
         const errorProperty: PropertyWithLocation = {
           id: propertyId,
@@ -194,19 +211,19 @@ const MapView: React.FC = () => {
           location: {
             lat: 34.0522 + (Math.random() - 0.5) * 0.05,
             lng: -118.2437 + (Math.random() - 0.5) * 0.05,
-          }
+          },
         };
-        
-        setProperties(prev => {
+
+        setProperties((prev) => {
           // Only add if not already in the list
-          if (!prev.some(p => p.id === propertyId)) {
+          if (!prev.some((p) => p.id === propertyId)) {
             return [...prev, errorProperty];
           }
           return prev;
         });
       }
     };
-    
+
     // Start the loading process with retry capability
     await loadWithRetry();
   };
@@ -258,10 +275,10 @@ const MapView: React.FC = () => {
       // Use existing search filters or create a basic one with just the query
       const filters = filterValues || { query: searchTerm || initialQuery };
       const urls = imageUrls.length > 0 ? imageUrls : initialImageUrls;
-      
+
       const hasQuery = !!(searchTerm || initialQuery);
       const hasImages = urls.length > 0;
-      
+
       if (hasQuery || hasImages) {
         try {
           setLoading(true);
@@ -299,7 +316,10 @@ const MapView: React.FC = () => {
     };
 
     // Only perform a search if we don't already have properties and we have a search term or images
-    if (properties.length === 0 && (searchTerm || initialQuery || imageUrls.length > 0 || initialImageUrls.length > 0)) {
+    if (
+      properties.length === 0 &&
+      (searchTerm || initialQuery || imageUrls.length > 0 || initialImageUrls.length > 0)
+    ) {
       performSearch();
     }
   }, [searchTerm, initialQuery, filterValues, imageUrls, initialImageUrls]);
@@ -310,52 +330,52 @@ const MapView: React.FC = () => {
     const formData = new FormData(e.currentTarget);
     const query = formData.get("mapSearch") as string;
     console.log("Search query:", query);
-    
+
     // Get current image URLs
     const urls = imageUrls.length > 0 ? imageUrls : initialImageUrls;
-    
+
     const trimmedQuery = query.trim();
-    
+
     // Update search state in context
     if (trimmedQuery) {
       if (setSearchTerm) {
         setSearchTerm(trimmedQuery);
       }
-      
+
       // Update filter values with the new query
       if (setFilterValues) {
         if (filterValues) {
           setFilterValues({
             ...filterValues,
-            query: trimmedQuery
+            query: trimmedQuery,
           });
         } else {
           setFilterValues({ query: trimmedQuery });
         }
       }
     }
-    
+
     // Set loading state and reset error
     setLoading(true);
     setError(null);
     setProperties([]);
-    
+
     try {
       // Build the filters with the updated query
-      const filters = filterValues ? 
-        { ...filterValues, query: trimmedQuery } : 
-        { query: trimmedQuery };
-      
+      const filters = filterValues
+        ? { ...filterValues, query: trimmedQuery }
+        : { query: trimmedQuery };
+
       // Determine the search type
       const hasQuery = !!trimmedQuery;
       const hasImages = urls.length > 0;
-      
+
       if (hasQuery || hasImages) {
         try {
-          console.log("Starting search with query:", hasQuery ? trimmedQuery : '[No query]');
+          console.log("Starting search with query:", hasQuery ? trimmedQuery : "[No query]");
           // Use the search function to get results directly from backend
           const results = await searchApartments({
-            query: hasQuery ? trimmedQuery : '',
+            query: hasQuery ? trimmedQuery : "",
             filters: {
               // Pass all filter values directly to backend
               min_beds: filters.min_beds,
@@ -372,9 +392,9 @@ const MapView: React.FC = () => {
             limit: 25,
             imageUrls: urls,
           });
-          
+
           console.log(`Search returned ${results.length} apartment results`);
-          
+
           // If results is empty, show message
           if (results.length === 0) {
             setError("No properties found matching your search criteria.");
@@ -385,22 +405,22 @@ const MapView: React.FC = () => {
             setLoading(false);
             return;
           }
-          
+
           // Update the apartment IDs in the search context
-          const resultIds = results.map(result => result.id);
+          const resultIds = results.map((result) => result.id);
           setApartmentIds(resultIds);
           setSearchPerformed(true);
-          
+
           // Clear existing properties
           setProperties([]);
           // Also clear loaded property details
           setLoadedPropertyDetails({});
-          
+
           // Load property details for each result
           console.log(`Loading details for ${results.length} properties from search`);
           const loadedProperties: PropertyWithLocation[] = [];
           const processedIds = new Set<string>();
-          
+
           // Load each property one by one
           for (const result of results) {
             try {
@@ -409,10 +429,10 @@ const MapView: React.FC = () => {
                 console.log(`Skipping duplicate property ID: ${result.id}`);
                 continue;
               }
-              
+
               processedIds.add(result.id);
               const property = await fetchApartmentPreview(result.id, trimmedQuery);
-              
+
               const propertyWithLocation: PropertyWithLocation = {
                 ...property,
                 location: property.coordinates
@@ -426,41 +446,45 @@ const MapView: React.FC = () => {
                       lng: -118.2437 + (Math.random() - 0.5) * 0.05,
                     },
               };
-              
+
               loadedProperties.push(propertyWithLocation);
-              
+
               // Update properties state with all loaded properties so far to avoid duplicates
               setProperties([...loadedProperties]);
-              setLoadedPropertyDetails(prev => ({ ...prev, [result.id]: true }));
+              setLoadedPropertyDetails((prev) => ({ ...prev, [result.id]: true }));
             } catch (error) {
               console.error(`Error loading property ${result.id}:`, error);
             }
           }
-          
+
           console.log(`Loaded ${loadedProperties.length} properties with details`);
-          
+
           // Update URL to reflect the search without navigation
           const searchParams = new URLSearchParams(window.location.search);
           if (query.trim()) {
-            searchParams.set('q', query.trim());
+            searchParams.set("q", query.trim());
           } else {
-            searchParams.delete('q');
+            searchParams.delete("q");
           }
-          
+
           if (urls.length > 0) {
-            searchParams.set('imageUrls', JSON.stringify(urls));
+            searchParams.set("imageUrls", JSON.stringify(urls));
           } else {
-            searchParams.delete('imageUrls');
+            searchParams.delete("imageUrls");
           }
-          
+
           // Update the URL without full navigation
-          window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`);
+          window.history.pushState(
+            {},
+            "",
+            `${window.location.pathname}?${searchParams.toString()}`
+          );
         } catch (searchError) {
           console.error("Error performing search:", searchError);
           setError("An error occurred while searching for properties.");
         }
       }
-      
+
       setLoading(false);
     } catch (err) {
       console.error("Error searching for properties:", err);
@@ -472,29 +496,29 @@ const MapView: React.FC = () => {
   // Handler for search filter submit - directly uses backend filtering
   const handleFilterSearch = async (filters: SearchFilterValues) => {
     console.log("Filter search triggered with:", filters);
-    
+
     // Store the filter values in context
     if (setFilterValues) {
       setFilterValues(filters);
     } else {
       console.error("setFilterValues is not available in context");
     }
-    
+
     // Clear existing properties to show loading state
     setProperties([]);
     setError(null);
     setLoading(true);
-    
+
     try {
       // Determine search type based on query and images
       const hasQuery = !!filters.query;
       const hasImages = imageUrls.length > 0 || initialImageUrls.length > 0;
       const urls = imageUrls.length > 0 ? imageUrls : initialImageUrls;
-      
+
       if (hasQuery || hasImages) {
         try {
           console.log("Starting filter search with:", filters);
-          
+
           // Use the search function to get results with all filters passed directly to backend
           const results = await searchApartments({
             query: filters.query,
@@ -514,9 +538,9 @@ const MapView: React.FC = () => {
             limit: 25,
             imageUrls: urls,
           });
-          
+
           console.log(`Filter search returned ${results.length} apartment results`);
-          
+
           // If results is empty, show message
           if (results.length === 0) {
             setError("No properties found matching your search criteria.");
@@ -525,22 +549,22 @@ const MapView: React.FC = () => {
             setLoading(false);
             return;
           }
-          
+
           // Update the apartment IDs in the search context
-          const resultIds = results.map(result => result.id);
+          const resultIds = results.map((result) => result.id);
           setApartmentIds(resultIds);
           setSearchPerformed(true);
-          
+
           // Clear existing properties
           setProperties([]);
           // Also clear loaded property details
           setLoadedPropertyDetails({});
-          
+
           // Load property details for each result
           console.log(`Loading details for ${results.length} properties from filter search`);
           const loadedProperties: PropertyWithLocation[] = [];
           const processedIds = new Set<string>();
-          
+
           // Load each property one by one
           for (const result of results) {
             try {
@@ -549,10 +573,10 @@ const MapView: React.FC = () => {
                 console.log(`Skipping duplicate property ID: ${result.id}`);
                 continue;
               }
-              
+
               processedIds.add(result.id);
               const property = await fetchApartmentPreview(result.id, filters.query);
-              
+
               const propertyWithLocation: PropertyWithLocation = {
                 ...property,
                 location: property.coordinates
@@ -566,33 +590,39 @@ const MapView: React.FC = () => {
                       lng: -118.2437 + (Math.random() - 0.5) * 0.05,
                     },
               };
-              
+
               loadedProperties.push(propertyWithLocation);
-              
+
               // Update properties state with all loaded properties so far to avoid duplicates
               setProperties([...loadedProperties]);
-              setLoadedPropertyDetails(prev => ({ ...prev, [result.id]: true }));
+              setLoadedPropertyDetails((prev) => ({ ...prev, [result.id]: true }));
             } catch (error) {
               console.error(`Error loading property ${result.id}:`, error);
             }
           }
-          
-          console.log(`Loaded ${loadedProperties.length} properties with details from filter search`);
-          
+
+          console.log(
+            `Loaded ${loadedProperties.length} properties with details from filter search`
+          );
+
           // Update URL to reflect the search
           const searchParams = new URLSearchParams(window.location.search);
           if (filters.query) {
-            searchParams.set('q', filters.query);
+            searchParams.set("q", filters.query);
             setSearchTerm(filters.query);
           }
-          
-          window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`);
+
+          window.history.pushState(
+            {},
+            "",
+            `${window.location.pathname}?${searchParams.toString()}`
+          );
         } catch (filterError) {
           console.error("Error performing filter search:", filterError);
           setError("An error occurred while searching for properties.");
         }
       }
-      
+
       setLoading(false);
     } catch (err) {
       console.error("Error searching with filters:", err);
@@ -603,73 +633,40 @@ const MapView: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <header className="bg-white shadow-sm p-4 z-10 border-b">
-        <div className="container mx-auto flex items-center justify-between">
-          <Link to="/search" className="flex items-center text-gray-700">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            <span>Back to Search</span>
-          </Link>
-
-          <form onSubmit={handleMapSearch} className="flex-1 md:relative md:w-96 mx-2 flex items-center">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              name="mapSearch"
-              defaultValue={searchTerm || initialQuery ? decodeURIComponent(searchTerm || initialQuery) : ""}
-              placeholder="Search location..."
-              className="pl-10 w-full py-2 px-4 bg-gray-50 border border-gray-200 text-gray-900 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-            />
-            <button 
-              type="submit"
-              aria-label="Search"
-              id="map-search-button"
-              className="bg-vibe-navy text-white py-2 px-3 border border-vibe-navy rounded-r-lg hover:bg-vibe-navy/90 transition-colors"
-            >
-              <Search className="h-4 w-4" />
-            </button>
-          </form>
-
-          <button
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-            onClick={() => setShowSidebar(!showSidebar)}
-          >
-            {showSidebar ? <MapIcon className="h-5 w-5" /> : <List className="h-5 w-5" />}
-          </button>
-        </div>
-      </header>
+      <Navbar />
       
-      {/* Search Filters */}
-      <SearchFilters 
-        onSearch={handleFilterSearch}
-        initialQuery={searchTerm || initialQuery}
-        initialValues={filterValues || undefined}
-        isLoading={loading}
-      />
+      <div className="pt-16"> {/* Space for fixed navbar */}
+        {/* Search Filters */}
+        <SearchFilters
+          onSearch={handleFilterSearch}
+          initialQuery={searchTerm || initialQuery}
+          initialValues={filterValues || undefined}
+          isLoading={loading}
+        />
+      </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div
           className={`w-full md:w-96 bg-white border-r flex-shrink-0 overflow-y-auto transition-all duration-300 transform ${
             showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          } md:static fixed inset-y-0 left-0 z-20 pt-16 md:pt-0`}
+          } md:static fixed inset-y-0 left-0 z-50 pt-32 md:pt-0`}
         >
           <div className="p-4 border-b">
             <div className="flex justify-between items-center">
               <h2 className="font-semibold text-lg">
                 {properties.length} results{" "}
-                {searchType === 'text' && (searchTerm || initialQuery) && (
+                {searchType === "text" && (searchTerm || initialQuery) && (
                   <span className="font-normal text-sm text-muted-foreground">
                     for "{decodeURIComponent(searchTerm || initialQuery)}"
                   </span>
                 )}
-                {searchType === 'image' && (
+                {searchType === "image" && (
                   <span className="font-normal text-sm text-muted-foreground">
                     that match your images
                   </span>
                 )}
-                {searchType === 'both' && (searchTerm || initialQuery) && (
+                {searchType === "both" && (searchTerm || initialQuery) && (
                   <span className="font-normal text-sm text-muted-foreground">
                     that match your images and "{decodeURIComponent(searchTerm || initialQuery)}"
                   </span>
@@ -720,7 +717,9 @@ const MapView: React.FC = () => {
                     <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                       {property.hasError ? (
                         <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <span className="text-gray-500 text-xs text-center px-1">Unable to load</span>
+                          <span className="text-gray-500 text-xs text-center px-1">
+                            Unable to load
+                          </span>
                         </div>
                       ) : (
                         <img
@@ -740,7 +739,9 @@ const MapView: React.FC = () => {
                     <div className="ml-3 flex-grow">
                       {property.hasError ? (
                         <>
-                          <p className="font-medium text-sm text-gray-600">Unable to load property</p>
+                          <p className="font-medium text-sm text-gray-600">
+                            Unable to load property
+                          </p>
                           <p className="text-xs text-red-500">Retry search or try again later</p>
                         </>
                       ) : (
