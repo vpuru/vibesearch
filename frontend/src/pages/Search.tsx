@@ -462,6 +462,13 @@ const UnifiedSearchPage = () => {
   const loadPropertiesForMapView = async (ids: string[]) => {
     if (!ids.length) return;
 
+    // Make sure we're working with unique IDs
+    const uniqueIds = Array.from(new Set(ids));
+    
+    if (uniqueIds.length !== ids.length) {
+      console.log(`Removed ${ids.length - uniqueIds.length} duplicate IDs from property loading list`);
+    }
+
     setLoadingDetails(true);
     setError(undefined);
 
@@ -473,7 +480,7 @@ const UnifiedSearchPage = () => {
           .map(p => p.id)
       );
       
-      const idsToLoad = ids.filter(id => !existingPropertyIds.has(id));
+      const idsToLoad = uniqueIds.filter(id => !existingPropertyIds.has(id));
       
       console.log(`Loading properties for map view: ${idsToLoad.length} new properties to load, ${existingPropertyIds.size} already loaded`);
       
@@ -504,9 +511,34 @@ const UnifiedSearchPage = () => {
         }
       }));
       
-      // Keep existing non-placeholder properties and add placeholders for new ones
-      const existingProperties = properties.filter(p => !p.isPlaceholder && !idsToLoad.includes(p.id));
-      setProperties([...existingProperties, ...newPlaceholders]);
+      // Make sure we have no duplicates in our properties list
+      // First, get all non-placeholder properties (the ones we want to keep)
+      const existingProperties = properties.filter(p => !p.isPlaceholder);
+      
+      // Create a map of existing property IDs for quick lookup
+      const existingPropertyMap = new Map(existingProperties.map(p => [p.id, p]));
+      
+      // Create an array of unique properties (no duplicates)
+      const uniqueProperties: PropertyWithLocation[] = [];
+      
+      // Add existing properties first (no duplicates)
+      existingProperties.forEach(p => {
+        if (!uniqueProperties.some(up => up.id === p.id)) {
+          uniqueProperties.push(p);
+        }
+      });
+      
+      // Then add placeholders for properties that don't exist yet
+      newPlaceholders.forEach(p => {
+        if (!uniqueProperties.some(up => up.id === p.id)) {
+          uniqueProperties.push(p);
+        }
+      });
+      
+      console.log(`Created properties array with ${uniqueProperties.length} items (${existingProperties.length} existing, ${newPlaceholders.length} placeholders)`);
+      
+      // Update state with the unique properties
+      setProperties(uniqueProperties);
       
       // Load property details one by one for new IDs only
       let errorCount = 0;
@@ -668,11 +700,28 @@ const UnifiedSearchPage = () => {
 
       // For the first page, replace results; otherwise append
       if (pageNum === 1) {
+        console.log(`Page 1: Replacing all apartment IDs with ${ids.length} new IDs`);
         setApartmentIds(ids);
       } else {
-        // Get current IDs and append new ones
-        const updatedIds = [...apartmentIds, ...ids];
-        setApartmentIds(updatedIds);
+        // Get current IDs and append new ones, removing duplicates
+        const currentIds = new Set(apartmentIds);
+        
+        // Count how many new (unique) IDs we're adding
+        const newUniqueIds = ids.filter(id => !currentIds.has(id));
+        
+        console.log(`Page ${pageNum}: Adding ${newUniqueIds.length} new unique IDs to existing ${currentIds.size} IDs`);
+        
+        // Create a merged array with no duplicates
+        const allIds = [...apartmentIds];
+        
+        // Only add IDs that don't already exist
+        ids.forEach(id => {
+          if (!currentIds.has(id)) {
+            allIds.push(id);
+          }
+        });
+        
+        setApartmentIds(allIds);
       }
 
       setSearchPerformed(true);
@@ -717,6 +766,8 @@ const UnifiedSearchPage = () => {
     const newView = currentView === "map" ? "list" : "map";
     setCurrentView(newView);
     
+    console.log(`Toggling view from ${currentView} to ${newView}. Current apartment IDs: ${apartmentIds.length}`);
+    
     // If switching to map view and we have apartment IDs but no property details loaded, load them
     if (newView === "map" && apartmentIds.length > 0) {
       // Only load properties if we don't have them already or if there's a mismatch in counts
@@ -729,6 +780,16 @@ const UnifiedSearchPage = () => {
       } else {
         console.log(`Reusing existing property details for map view: ${properties.length} properties already loaded`);
       }
+    }
+    
+    // When switching to list view, ensure we're not creating duplicates
+    // The PropertyGrid component already handles pagination from the existing apartmentIds
+    if (newView === "list") {
+      console.log("Switched to list view - ensuring no duplicates in apartment IDs");
+      
+      // No need to modify the apartment IDs here - just ensure PropertyGrid uses them correctly
+      // Reset pagination to show from the beginning
+      setPage(1);
     }
   };
 
