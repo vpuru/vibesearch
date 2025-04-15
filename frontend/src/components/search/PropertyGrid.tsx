@@ -137,7 +137,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 flex-grow flex flex-col">
+    <div className="py-6 flex-grow flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <div>
           {loading && visibleItems.length === 0 ? (
@@ -170,15 +170,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
           )}
         </div>
 
-        {showMapToggle && totalItemCount > 0 && (
-          <Link
-            to={`/map${searchQuery ? `?q=${encodeURIComponent(searchQuery)}` : ""}`}
-            className="flex items-center gap-2 px-4 py-2 bg-vibe-navy text-white rounded-lg"
-          >
-            <Map className="h-4 w-4" />
-            <span>View Map</span>
-          </Link>
-        )}
+        {/* Map toggle button removed as it's now in the search filters */}
       </div>
 
       {/* Initial loading state */}
