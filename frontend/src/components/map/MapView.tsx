@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "leaflet";
 import { useSearch } from "../../contexts/SearchContext";
 import { searchApartments, fetchApartmentPreview } from "../../services/apartmentService";
+import SearchFilters, { SearchFilterValues } from "../search/SearchFilters";
 
 // Fix Leaflet icon issue
 // @ts-ignore - Needed to fix Leaflet icon issue
@@ -91,7 +92,7 @@ const MapView: React.FC = () => {
     JSON.parse(searchParams.get("imageUrls") || "[]") : [];
   const navigate = useNavigate();
 
-  const { apartmentIds, searchTerm, setSearchTerm, filterValues, searchPerformed, setSearchPerformed, imageUrls, searchType, setApartmentIds } = useSearch();
+  const { apartmentIds, searchTerm, setSearchTerm, filterValues, setFilterValues, searchPerformed, setSearchPerformed, imageUrls, searchType, setApartmentIds } = useSearch();
 
   const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
@@ -264,10 +265,11 @@ const MapView: React.FC = () => {
       if (hasQuery || hasImages) {
         try {
           setLoading(true);
-          // Use the search function to get results
+          // Use the search function to get results from backend
           const results = await searchApartments({
             query: filters.query,
             filters: {
+              // Pass all filter values for backend filtering
               min_beds: filters.min_beds,
               max_beds: filters.max_beds,
               min_baths: filters.min_baths,
@@ -277,6 +279,7 @@ const MapView: React.FC = () => {
               studio: filters.studio,
               city: filters.city,
               state: filters.state,
+              amenities: filters.amenities,
             },
             limit: 25,
             imageUrls: urls,
@@ -303,15 +306,33 @@ const MapView: React.FC = () => {
 
   const handleMapSearch = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log("Map Search Form Submitted");
     const formData = new FormData(e.currentTarget);
     const query = formData.get("mapSearch") as string;
+    console.log("Search query:", query);
     
     // Get current image URLs
     const urls = imageUrls.length > 0 ? imageUrls : initialImageUrls;
     
-    // Update search state in context instead of navigating
-    if (query.trim()) {
-      setSearchTerm(query.trim());
+    const trimmedQuery = query.trim();
+    
+    // Update search state in context
+    if (trimmedQuery) {
+      if (setSearchTerm) {
+        setSearchTerm(trimmedQuery);
+      }
+      
+      // Update filter values with the new query
+      if (setFilterValues) {
+        if (filterValues) {
+          setFilterValues({
+            ...filterValues,
+            query: trimmedQuery
+          });
+        } else {
+          setFilterValues({ query: trimmedQuery });
+        }
+      }
     }
     
     // Set loading state and reset error
@@ -320,63 +341,262 @@ const MapView: React.FC = () => {
     setProperties([]);
     
     try {
-      // Build the filters from current context or create new ones
-      const filters = filterValues || { query: query.trim() };
+      // Build the filters with the updated query
+      const filters = filterValues ? 
+        { ...filterValues, query: trimmedQuery } : 
+        { query: trimmedQuery };
       
       // Determine the search type
-      const hasQuery = !!query.trim();
+      const hasQuery = !!trimmedQuery;
       const hasImages = urls.length > 0;
       
       if (hasQuery || hasImages) {
-        // Use the search function to get results directly
-        const results = await searchApartments({
-          query: hasQuery ? query.trim() : '',
-          filters: {
-            min_beds: filters.min_beds,
-            max_beds: filters.max_beds,
-            min_baths: filters.min_baths,
-            max_baths: filters.max_baths,
-            min_rent: filters.min_rent,
-            max_rent: filters.max_rent,
-            studio: filters.studio,
-            city: filters.city,
-            state: filters.state,
-          },
-          limit: 25,
-          imageUrls: urls,
-        });
-        
-        // Update the apartment IDs in the search context
-        const resultIds = results.map(result => result.id);
-        setApartmentIds(resultIds);
-        setSearchPerformed(true);
-        
-        // Load property details for each result
-        const propertyPromises = results.map((result) => loadPropertyDetails(result.id));
-        await Promise.all(propertyPromises);
-        
-        // Update URL to reflect the search without navigation
-        const searchParams = new URLSearchParams(window.location.search);
-        if (query.trim()) {
-          searchParams.set('q', query.trim());
-        } else {
-          searchParams.delete('q');
+        try {
+          console.log("Starting search with query:", hasQuery ? trimmedQuery : '[No query]');
+          // Use the search function to get results directly from backend
+          const results = await searchApartments({
+            query: hasQuery ? trimmedQuery : '',
+            filters: {
+              // Pass all filter values directly to backend
+              min_beds: filters.min_beds,
+              max_beds: filters.max_beds,
+              min_baths: filters.min_baths,
+              max_baths: filters.max_baths,
+              min_rent: filters.min_rent,
+              max_rent: filters.max_rent,
+              studio: filters.studio,
+              city: filters.city,
+              state: filters.state,
+              amenities: filters.amenities,
+            },
+            limit: 25,
+            imageUrls: urls,
+          });
+          
+          console.log(`Search returned ${results.length} apartment results`);
+          
+          // If results is empty, show message
+          if (results.length === 0) {
+            setError("No properties found matching your search criteria.");
+            if (setApartmentIds) {
+              setApartmentIds([]);
+            }
+            setProperties([]);
+            setLoading(false);
+            return;
+          }
+          
+          // Update the apartment IDs in the search context
+          const resultIds = results.map(result => result.id);
+          setApartmentIds(resultIds);
+          setSearchPerformed(true);
+          
+          // Clear existing properties
+          setProperties([]);
+          // Also clear loaded property details
+          setLoadedPropertyDetails({});
+          
+          // Load property details for each result
+          console.log(`Loading details for ${results.length} properties from search`);
+          const loadedProperties: PropertyWithLocation[] = [];
+          const processedIds = new Set<string>();
+          
+          // Load each property one by one
+          for (const result of results) {
+            try {
+              // Skip if we've already processed this ID to avoid duplicates
+              if (processedIds.has(result.id)) {
+                console.log(`Skipping duplicate property ID: ${result.id}`);
+                continue;
+              }
+              
+              processedIds.add(result.id);
+              const property = await fetchApartmentPreview(result.id, trimmedQuery);
+              
+              const propertyWithLocation: PropertyWithLocation = {
+                ...property,
+                location: property.coordinates
+                  ? {
+                      lat: property.coordinates.latitude,
+                      lng: property.coordinates.longitude,
+                    }
+                  : {
+                      // Fallback coordinates with slight randomization to avoid overlap
+                      lat: 34.0522 + (Math.random() - 0.5) * 0.05,
+                      lng: -118.2437 + (Math.random() - 0.5) * 0.05,
+                    },
+              };
+              
+              loadedProperties.push(propertyWithLocation);
+              
+              // Update properties state with all loaded properties so far to avoid duplicates
+              setProperties([...loadedProperties]);
+              setLoadedPropertyDetails(prev => ({ ...prev, [result.id]: true }));
+            } catch (error) {
+              console.error(`Error loading property ${result.id}:`, error);
+            }
+          }
+          
+          console.log(`Loaded ${loadedProperties.length} properties with details`);
+          
+          // Update URL to reflect the search without navigation
+          const searchParams = new URLSearchParams(window.location.search);
+          if (query.trim()) {
+            searchParams.set('q', query.trim());
+          } else {
+            searchParams.delete('q');
+          }
+          
+          if (urls.length > 0) {
+            searchParams.set('imageUrls', JSON.stringify(urls));
+          } else {
+            searchParams.delete('imageUrls');
+          }
+          
+          // Update the URL without full navigation
+          window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`);
+        } catch (searchError) {
+          console.error("Error performing search:", searchError);
+          setError("An error occurred while searching for properties.");
         }
-        
-        if (urls.length > 0) {
-          searchParams.set('imageUrls', JSON.stringify(urls));
-        } else {
-          searchParams.delete('imageUrls');
-        }
-        
-        // Update the URL without full navigation
-        window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`);
       }
       
       setLoading(false);
     } catch (err) {
       console.error("Error searching for properties:", err);
       setError("Failed to search for properties");
+      setLoading(false);
+    }
+  };
+
+  // Handler for search filter submit - directly uses backend filtering
+  const handleFilterSearch = async (filters: SearchFilterValues) => {
+    console.log("Filter search triggered with:", filters);
+    
+    // Store the filter values in context
+    if (setFilterValues) {
+      setFilterValues(filters);
+    } else {
+      console.error("setFilterValues is not available in context");
+    }
+    
+    // Clear existing properties to show loading state
+    setProperties([]);
+    setError(null);
+    setLoading(true);
+    
+    try {
+      // Determine search type based on query and images
+      const hasQuery = !!filters.query;
+      const hasImages = imageUrls.length > 0 || initialImageUrls.length > 0;
+      const urls = imageUrls.length > 0 ? imageUrls : initialImageUrls;
+      
+      if (hasQuery || hasImages) {
+        try {
+          console.log("Starting filter search with:", filters);
+          
+          // Use the search function to get results with all filters passed directly to backend
+          const results = await searchApartments({
+            query: filters.query,
+            filters: {
+              // Pass all filter values directly, let backend handle the filtering
+              min_beds: filters.min_beds,
+              max_beds: filters.max_beds,
+              min_baths: filters.min_baths,
+              max_baths: filters.max_baths,
+              min_rent: filters.min_rent,
+              max_rent: filters.max_rent,
+              studio: filters.studio,
+              city: filters.city,
+              state: filters.state,
+              amenities: filters.amenities,
+            },
+            limit: 25,
+            imageUrls: urls,
+          });
+          
+          console.log(`Filter search returned ${results.length} apartment results`);
+          
+          // If results is empty, show message
+          if (results.length === 0) {
+            setError("No properties found matching your search criteria.");
+            setApartmentIds([]);
+            setProperties([]);
+            setLoading(false);
+            return;
+          }
+          
+          // Update the apartment IDs in the search context
+          const resultIds = results.map(result => result.id);
+          setApartmentIds(resultIds);
+          setSearchPerformed(true);
+          
+          // Clear existing properties
+          setProperties([]);
+          // Also clear loaded property details
+          setLoadedPropertyDetails({});
+          
+          // Load property details for each result
+          console.log(`Loading details for ${results.length} properties from filter search`);
+          const loadedProperties: PropertyWithLocation[] = [];
+          const processedIds = new Set<string>();
+          
+          // Load each property one by one
+          for (const result of results) {
+            try {
+              // Skip if we've already processed this ID to avoid duplicates
+              if (processedIds.has(result.id)) {
+                console.log(`Skipping duplicate property ID: ${result.id}`);
+                continue;
+              }
+              
+              processedIds.add(result.id);
+              const property = await fetchApartmentPreview(result.id, filters.query);
+              
+              const propertyWithLocation: PropertyWithLocation = {
+                ...property,
+                location: property.coordinates
+                  ? {
+                      lat: property.coordinates.latitude,
+                      lng: property.coordinates.longitude,
+                    }
+                  : {
+                      // Fallback coordinates with slight randomization to avoid overlap
+                      lat: 34.0522 + (Math.random() - 0.5) * 0.05,
+                      lng: -118.2437 + (Math.random() - 0.5) * 0.05,
+                    },
+              };
+              
+              loadedProperties.push(propertyWithLocation);
+              
+              // Update properties state with all loaded properties so far to avoid duplicates
+              setProperties([...loadedProperties]);
+              setLoadedPropertyDetails(prev => ({ ...prev, [result.id]: true }));
+            } catch (error) {
+              console.error(`Error loading property ${result.id}:`, error);
+            }
+          }
+          
+          console.log(`Loaded ${loadedProperties.length} properties with details from filter search`);
+          
+          // Update URL to reflect the search
+          const searchParams = new URLSearchParams(window.location.search);
+          if (filters.query) {
+            searchParams.set('q', filters.query);
+            setSearchTerm(filters.query);
+          }
+          
+          window.history.pushState({}, '', `${window.location.pathname}?${searchParams.toString()}`);
+        } catch (filterError) {
+          console.error("Error performing filter search:", filterError);
+          setError("An error occurred while searching for properties.");
+        }
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      console.error("Error searching with filters:", err);
+      setError("Failed to search with the selected filters");
       setLoading(false);
     }
   };
@@ -390,7 +610,7 @@ const MapView: React.FC = () => {
             <span>Back to Search</span>
           </Link>
 
-          <form onSubmit={handleMapSearch} className="hidden md:block relative w-96">
+          <form onSubmit={handleMapSearch} className="flex-1 md:relative md:w-96 mx-2 flex items-center">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-4 w-4 text-gray-400" />
             </div>
@@ -399,18 +619,34 @@ const MapView: React.FC = () => {
               name="mapSearch"
               defaultValue={searchTerm || initialQuery ? decodeURIComponent(searchTerm || initialQuery) : ""}
               placeholder="Search location..."
-              className="pl-10 w-full py-2 px-4 bg-gray-50 border border-gray-200 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              className="pl-10 w-full py-2 px-4 bg-gray-50 border border-gray-200 text-gray-900 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
             />
+            <button 
+              type="submit"
+              aria-label="Search"
+              id="map-search-button"
+              className="bg-vibe-navy text-white py-2 px-3 border border-vibe-navy rounded-r-lg hover:bg-vibe-navy/90 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+            </button>
           </form>
 
           <button
-            className="md:hidden p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             onClick={() => setShowSidebar(!showSidebar)}
           >
             {showSidebar ? <MapIcon className="h-5 w-5" /> : <List className="h-5 w-5" />}
           </button>
         </div>
       </header>
+      
+      {/* Search Filters */}
+      <SearchFilters 
+        onSearch={handleFilterSearch}
+        initialQuery={searchTerm || initialQuery}
+        initialValues={filterValues || undefined}
+        isLoading={loading}
+      />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
@@ -539,6 +775,7 @@ const MapView: React.FC = () => {
               zoom={DEFAULT_ZOOM}
               style={{ height: "100%", width: "100%" }}
               scrollWheelZoom={true}
+              className="z-0" // Ensure map is below the filter component
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

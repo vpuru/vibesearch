@@ -1,6 +1,32 @@
 import React, { useEffect } from "react";
 import { Search, X, Sliders, Loader2 } from "lucide-react";
 import { useSearch } from "../../contexts/SearchContext";
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { cn } from "../../lib/utils";
+
+const RangeSlider = React.forwardRef<
+  React.ElementRef<typeof SliderPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <SliderPrimitive.Root
+    ref={ref}
+    className={cn(
+      "relative flex w-full touch-none select-none items-center",
+      className
+    )}
+    {...props}
+  >
+    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-gray-200">
+      <SliderPrimitive.Range className="absolute h-full bg-vibe-navy" />
+    </SliderPrimitive.Track>
+    {props.defaultValue?.map((_, i) => (
+      <SliderPrimitive.Thumb
+        key={i}
+        className="block h-5 w-5 rounded-full border-2 border-white bg-vibe-navy ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vibe-navy focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+      />
+    ))}
+  </SliderPrimitive.Root>
+));
 
 export interface SearchFilterValues {
   query: string;
@@ -33,8 +59,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   const [showFilters, setShowFilters] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState(initialQuery);
   const [filters, setFilters] = React.useState({
-    bedrooms: "",
-    bathrooms: "",
+    bedroomRange: [0, 5], // [min, max]
+    bathroomRange: [0, 3], // [min, max]
     priceMin: "",
     priceMax: "",
     city: "",
@@ -69,8 +95,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
   const clearFilters = () => {
     setFilters({
-      bedrooms: "",
-      bathrooms: "",
+      bedroomRange: [0, 5],
+      bathroomRange: [0, 3],
       priceMin: "",
       priceMax: "",
       city: "",
@@ -89,32 +115,24 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       query: searchQuery,
     };
 
-    // Add min/max beds based on dropdown selection
-    if (filters.bedrooms) {
-      if (filters.bedrooms === "studio") {
-        searchFilters.studio = true;
-      } else if (filters.bedrooms.includes("+")) {
-        // Handle "4+" case
-        searchFilters.min_beds = parseFloat(filters.bedrooms.replace("+", ""));
-      } else {
-        // Handle exact bedroom count
-        const bedroomValue = parseFloat(filters.bedrooms);
-        searchFilters.min_beds = bedroomValue;
-        searchFilters.max_beds = bedroomValue;
-      }
+    // Add min/max bedrooms from range slider
+    const [minBeds, maxBeds] = filters.bedroomRange;
+    if (minBeds > 0) {
+      searchFilters.min_beds = minBeds;
     }
-
-    // Add min/max baths based on dropdown selection
-    if (filters.bathrooms) {
-      if (filters.bathrooms.includes("+")) {
-        // Handle "3+" case
-        searchFilters.min_baths = parseFloat(filters.bathrooms.replace("+", ""));
-      } else {
-        // Handle exact bathroom count
-        const bathroomValue = parseFloat(filters.bathrooms);
-        searchFilters.min_baths = bathroomValue;
-        searchFilters.max_baths = bathroomValue;
-      }
+    
+    if (maxBeds < 5) {
+      searchFilters.max_beds = maxBeds;
+    }
+    
+    // Add min/max bathrooms from range slider
+    const [minBaths, maxBaths] = filters.bathroomRange;
+    if (minBaths > 0) {
+      searchFilters.min_baths = minBaths;
+    }
+    
+    if (maxBaths < 3) {
+      searchFilters.max_baths = maxBaths;
     }
 
     // Add price range if specified
@@ -156,32 +174,14 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       console.log("Restoring filter values:", initialValues);
       const newFilters = { ...filters };
 
-      // Handle bedrooms
-      if (initialValues.studio) {
-        newFilters.bedrooms = "studio";
-      } else if (
-        initialValues.min_beds &&
-        initialValues.max_beds &&
-        initialValues.min_beds === initialValues.max_beds
-      ) {
-        newFilters.bedrooms = String(initialValues.min_beds);
-      } else if (initialValues.min_beds && initialValues.min_beds >= 4) {
-        newFilters.bedrooms = "4+";
-      } else if (initialValues.min_beds) {
-        newFilters.bedrooms = String(initialValues.min_beds);
+      // Handle bedrooms range - use min_beds for the slider value
+      if (initialValues.min_beds !== undefined) {
+        newFilters.bedroomRange = [initialValues.min_beds, initialValues.min_beds];
       }
 
-      // Handle bathrooms
-      if (
-        initialValues.min_baths &&
-        initialValues.max_baths &&
-        initialValues.min_baths === initialValues.max_baths
-      ) {
-        newFilters.bathrooms = String(initialValues.min_baths);
-      } else if (initialValues.min_baths && initialValues.min_baths >= 3) {
-        newFilters.bathrooms = "3+";
-      } else if (initialValues.min_baths) {
-        newFilters.bathrooms = String(initialValues.min_baths);
+      // Handle bathrooms range - use min_baths for the slider value
+      if (initialValues.min_baths !== undefined) {
+        newFilters.bathroomRange = [initialValues.min_baths, initialValues.min_baths];
       }
 
       // Handle price range
@@ -315,43 +315,75 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-              <div>
-                <label htmlFor="bedrooms" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
-                  Bedrooms
-                </label>
-                <select
-                  id="bedrooms"
-                  value={filters.bedrooms}
-                  onChange={(e) => setFilters({ ...filters, bedrooms: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
-                >
-                  <option value="">Any</option>
-                  <option value="studio">Studio</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4+">4+</option>
-                </select>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div className="md:col-span-2">
+                <div className="mb-2 flex justify-between items-center">
+                  <label htmlFor="bedroom-range" className="block text-sm font-medium text-vibe-charcoal/70">
+                    Bedrooms: {filters.bedroomRange[0]} - {filters.bedroomRange[1] === 5 ? '5+' : filters.bedroomRange[1]}
+                  </label>
+                  <span className="text-xs text-vibe-charcoal/50">
+                    {filters.bedroomRange[0] === 0 && filters.bedroomRange[1] === 5 ? 'Any' : ''}
+                  </span>
+                </div>
+                <div className="px-2 pt-4 pb-1">
+                  <RangeSlider
+                    id="bedroom-range"
+                    min={0}
+                    max={5}
+                    step={1}
+                    value={filters.bedroomRange}
+                    onValueChange={(value) => {
+                      setFilters({
+                        ...filters,
+                        bedroomRange: value as [number, number]
+                      });
+                    }}
+                    defaultValue={[0, 5]}
+                    className="mb-4"
+                  />
+                  <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
+                    <span>0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>5+</span>
+                  </div>
+                </div>
               </div>
-
-              <div>
-                <label htmlFor="bathrooms" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
-                  Bathrooms
-                </label>
-                <select
-                  id="bathrooms"
-                  value={filters.bathrooms}
-                  onChange={(e) => setFilters({ ...filters, bathrooms: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
-                >
-                  <option value="">Any</option>
-                  <option value="1">1</option>
-                  <option value="1.5">1.5</option>
-                  <option value="2">2</option>
-                  <option value="2.5">2.5</option>
-                  <option value="3+">3+</option>
-                </select>
+              
+              <div className="md:col-span-2">
+                <div className="mb-2 flex justify-between items-center">
+                  <label htmlFor="bathroom-range" className="block text-sm font-medium text-vibe-charcoal/70">
+                    Bathrooms: {filters.bathroomRange[0]} - {filters.bathroomRange[1] === 3 ? '3+' : filters.bathroomRange[1]}
+                  </label>
+                  <span className="text-xs text-vibe-charcoal/50">
+                    {filters.bathroomRange[0] === 0 && filters.bathroomRange[1] === 3 ? 'Any' : ''}
+                  </span>
+                </div>
+                <div className="px-2 pt-4 pb-1">
+                  <RangeSlider
+                    id="bathroom-range"
+                    min={0}
+                    max={3}
+                    step={0.5}
+                    value={filters.bathroomRange}
+                    onValueChange={(value) => {
+                      setFilters({
+                        ...filters,
+                        bathroomRange: value as [number, number]
+                      });
+                    }}
+                    defaultValue={[0, 3]}
+                    className="mb-4"
+                  />
+                  <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
+                    <span>0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3+</span>
+                  </div>
+                </div>
               </div>
 
               <div>

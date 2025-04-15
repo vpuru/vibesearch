@@ -10,6 +10,30 @@ search_bp = Blueprint("search", __name__)
 
 @search_bp.route("/api/search", methods=["GET"])
 def search():
+    """
+    Search for apartments based on text query, image URLs, and optional filters.
+    
+    Query Parameters:
+        query (str, optional): Text search query to match against apartment descriptions
+        imageUrls (str, optional): JSON string containing array of image URLs for visual search
+        limit (int, optional): Maximum number of results to return (default: 50)
+        
+    Filter Parameters:
+        min_price (float, optional): Minimum price filter
+        max_price (float, optional): Maximum price filter
+        min_bedrooms (float, optional): Minimum number of bedrooms
+        max_bedrooms (float, optional): Maximum number of bedrooms
+        min_bathrooms (float, optional): Minimum number of bathrooms
+        max_bathrooms (float, optional): Maximum number of bathrooms
+        
+    Returns:
+        JSON response containing:
+            - results: Array of matching apartment objects
+            - error: Error message if something went wrong
+            
+    Example:
+        GET /api/search?query=modern&min_price=1000&max_price=3000&min_bedrooms=2
+    """
     try:
         # Log all request parameters for debugging
         print(f"DEBUG: Request parameters: {dict(request.args)}")
@@ -52,6 +76,19 @@ def search():
         max_bedrooms = request.args.get("max_bedrooms", type=float)
         min_bathrooms = request.args.get("min_bathrooms", type=float)
         max_bathrooms = request.args.get("max_bathrooms", type=float)
+        
+        # Get amenities filter if passed
+        amenities_json = request.args.get("amenities")
+        amenities = []
+        if amenities_json:
+            try:
+                import json
+                amenities = json.loads(amenities_json)
+                print(f"DEBUG: Received amenities filter: {amenities}")
+            except json.JSONDecodeError as e:
+                print(f"ERROR: Failed to parse amenities filter: {amenities_json[:100]}..., error: {e}")
+            except Exception as e:
+                print(f"ERROR: Unexpected error handling amenities filter: {e}")
 
         
         if min_price is not None:
@@ -76,6 +113,19 @@ def search():
                 "$lte": max_bathrooms if max_bathrooms is not None else float('9999')
             }
             
+        # Add amenities filter if provided
+        if amenities and len(amenities) > 0:
+            # Create a filter for amenities - looking for properties where any of the
+            # requested amenities are present
+            amenity_conditions = []
+            for amenity in amenities:
+                # Convert from display name (e.g. "Pet Friendly") to DB field name (e.g. "pet_friendly")
+                amenity_field = amenity.lower().replace(" ", "_").replace("/", "_")
+                amenity_conditions.append({f"amenities.{amenity_field}": "true"})
+            
+            if amenity_conditions:
+                filter_dict["$or"] = amenity_conditions
+                print(f"DEBUG: Applied amenities filter: {filter_dict['$or']}")
     
         # Don't pass empty filter dictionary
         if not filter_dict:

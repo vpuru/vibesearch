@@ -12,6 +12,7 @@ interface SearchFilters {
   max_baths?: number;
   studio?: boolean;
   has_available_units?: boolean;
+  amenities?: string[];
 }
 
 interface SearchParams {
@@ -240,20 +241,35 @@ export const searchApartments = async (params: SearchParams): Promise<Property[]
     if (params.filters) {
       const { filters } = params;
 
+      // Map frontend filter names to backend parameter names
       if (filters.city) queryParams.append("city", filters.city);
       if (filters.state) queryParams.append("state", filters.state);
-      if (filters.min_rent) queryParams.append("min_rent", filters.min_rent.toString());
-      if (filters.max_rent) queryParams.append("max_rent", filters.max_rent.toString());
-      if (filters.min_beds) queryParams.append("min_beds", filters.min_beds.toString());
-      if (filters.max_beds) queryParams.append("max_beds", filters.max_beds.toString());
-      if (filters.min_baths) queryParams.append("min_baths", filters.min_baths.toString());
-      if (filters.max_baths) queryParams.append("max_baths", filters.max_baths.toString());
-      if (filters.studio) queryParams.append("studio", "true");
-      if (filters.has_available_units) queryParams.append("has_available_units", "true");
+      if (filters.min_rent !== undefined) queryParams.append("min_price", filters.min_rent.toString());
+      if (filters.max_rent !== undefined) queryParams.append("max_price", filters.max_rent.toString());
+      if (filters.min_beds !== undefined) queryParams.append("min_bedrooms", filters.min_beds.toString());
+      if (filters.max_beds !== undefined) queryParams.append("max_bedrooms", filters.max_beds.toString());
+      if (filters.min_baths !== undefined) queryParams.append("min_bathrooms", filters.min_baths.toString());
+      if (filters.max_baths !== undefined) queryParams.append("max_bathrooms", filters.max_baths.toString());
+      
+      // For studio apartments, set min and max bedrooms to 0
+      if (filters.studio) {
+        queryParams.append("min_bedrooms", "0");
+        queryParams.append("max_bedrooms", "0");
+      }
+      
+      // Handle amenities - if backend adds support in the future
+      if (filters.amenities && filters.amenities.length > 0) {
+        // Since this isn't directly supported in the backend yet,
+        // we'll handle it here by sending as a JSON string
+        queryParams.append("amenities", JSON.stringify(filters.amenities));
+      }
     }
 
     // Build the full API URL
     const apiUrl = `${API_ENDPOINTS.search}?${queryParams.toString()}`;
+    
+    console.log("Making API request to:", apiUrl);
+    console.log("With query params:", Object.fromEntries(queryParams.entries()));
 
     // Set up AbortController for timeout
     const controller = new AbortController();
