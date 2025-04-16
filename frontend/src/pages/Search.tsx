@@ -835,22 +835,31 @@ const UnifiedSearchPage = () => {
         {/* Fixed header */}
         <div className="p-4 border-b bg-white sticky top-0 z-10">
           <div className="flex justify-between items-center">
-            <h2 className="text-md font-semibold text-vibe-navy font-sans leading-none flex items-baseline">
-              <span>{properties.length} results</span>
+            <h2 className="text-md font-semibold font-sans">
               {searchType === "text" && (searchTerm || initialQuery) && (
-                <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">
-                  for "{decodeURIComponent(searchTerm || initialQuery)}"
+                <span>
+                  <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
+                  <span className="ml-1 font-normal text-vibe-charcoal/70">for "</span>
+                  <span className="font-normal text-vibe-charcoal/70 break-all">{decodeURIComponent(searchTerm || initialQuery)}</span>
+                  <span className="font-normal text-vibe-charcoal/70">"</span>
                 </span>
               )}
               {searchType === "image" && (
-                <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">
-                  that match your images
+                <span>
+                  <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
+                  <span className="ml-1 font-normal text-vibe-charcoal/70">that match your images</span>
                 </span>
               )}
               {searchType === "both" && (searchTerm || initialQuery) && (
-                <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">
-                  that match your images and "{decodeURIComponent(searchTerm || initialQuery)}"
+                <span>
+                  <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
+                  <span className="ml-1 font-normal text-vibe-charcoal/70"> that match your images and "</span>
+                  <span className="font-normal text-vibe-charcoal/70 break-all">{decodeURIComponent(searchTerm || initialQuery)}</span>
+                  <span className="font-normal text-vibe-charcoal/70">"</span>
                 </span>
+              )}
+              {(!searchType || searchType === "none" || (searchType !== "image" && !searchTerm && !initialQuery)) && (
+                <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
               )}
             </h2>
             <button
