@@ -825,11 +825,138 @@ const UnifiedSearchPage = () => {
 
   // Render the map view
   const renderMapView = () => (
-    <div className="relative w-full h-full">
-      {/* Map container - full width and height */}
-      <div className="absolute inset-0">
-        {properties.length > 0 ? (
-          <div className="h-full w-full">
+    <div className="flex w-full h-full">
+      {/* Left sidebar for property listings */}
+      <div
+        className={`w-96 h-full bg-white border-r transition-all duration-300 transform ${
+          showSidebar ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        {/* Fixed header */}
+        <div className="p-4 border-b bg-white sticky top-0 z-10">
+          <div className="flex justify-between items-center">
+            <h2 className="font-semibold text-lg">
+              {properties.length} results{" "}
+              {searchType === "text" && (searchTerm || initialQuery) && (
+                <span className="font-normal text-sm text-muted-foreground">
+                  for "{decodeURIComponent(searchTerm || initialQuery)}"
+                </span>
+              )}
+              {searchType === "image" && (
+                <span className="font-normal text-sm text-muted-foreground">
+                  that match your images
+                </span>
+              )}
+              {searchType === "both" && (searchTerm || initialQuery) && (
+                <span className="font-normal text-sm text-muted-foreground">
+                  that match your images and "{decodeURIComponent(searchTerm || initialQuery)}"
+                </span>
+              )}
+            </h2>
+            <button
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors md:hidden"
+              onClick={() => setShowSidebar(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="overflow-y-auto h-[calc(100%-64px)]">
+          <div className="p-2">
+            {loading && properties.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">Loading properties...</p>
+              </div>
+            ) : error ? (
+              <div className="p-4 text-center">
+                <p className="text-red-500">{error}</p>
+                <button
+                  className="mt-2 text-primary hover:underline"
+                  onClick={() => window.location.reload()}
+                >
+                  Try again
+                </button>
+              </div>
+            ) : properties.length === 0 ? (
+              <div className="p-4 text-center">
+                <p className="text-muted-foreground">No properties found.</p>
+              </div>
+            ) : (
+              properties.map((property) => (
+                <div
+                  key={property.id}
+                  className={`p-2 mb-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
+                    selectedProperty?.id === property.id ? "ring-2 ring-primary" : ""
+                  } ${property.hasError ? "opacity-60" : ""}`}
+                  onClick={() => !property.hasError && setSelectedProperty(property)}
+                >
+                  {property.isPlaceholder ? (
+                    <ShimmerPropertyCard index={Number(property.id)} />
+                  ) : (
+                    <div className="flex">
+                      <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                        {property.hasError ? (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                            <span className="text-gray-500 text-xs text-center px-1">
+                              Unable to load
+                            </span>
+                          </div>
+                        ) : (
+                          <img
+                            src={
+                              property.images && property.images.length > 0
+                                ? property.images[0]
+                                : "https://placehold.co/600x400?text=No+Image"
+                            }
+                            alt={property.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://placehold.co/600x400?text=Error";
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div className="ml-3 flex-grow">
+                        {property.hasError ? (
+                          <>
+                            <p className="font-medium text-sm text-gray-600">
+                              Unable to load property
+                            </p>
+                            <p className="text-xs text-red-500">Retry search or try again later</p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="font-semibold text-primary">
+                              ${property.price.toLocaleString()}
+                            </p>
+                            <h3 className="font-medium text-sm line-clamp-1">{property.title}</h3>
+                            <p className="text-muted-foreground text-xs line-clamp-1">
+                              {property.address}
+                            </p>
+                            <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
+                              <span>{property.bedrooms} bed</span>
+                              <span>•</span>
+                              <span>{property.bathrooms} bath</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Map container */}
+      <div className="flex-1 relative">
+        <div className="absolute inset-0">
+          {properties.length > 0 ? (
             <MapContainer
               center={mapCenter}
               zoom={DEFAULT_ZOOM}
@@ -871,211 +998,86 @@ const UnifiedSearchPage = () => {
                     )
                 )}
             </MapContainer>
-          </div>
-        ) : (
-          <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-            {loading ? (
-              <div className="text-center">
-                <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
-                <p className="text-muted-foreground">Loading map data...</p>
+          ) : (
+            <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+              {loading ? (
+                <div className="text-center">
+                  <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
+                  <p className="text-muted-foreground">Loading map data...</p>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    No properties to display. <br />
+                    Try refining your search.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Property popup */}
+        {selectedProperty && !selectedProperty.isPlaceholder && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-[1000]">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-up">
+              <div className="relative">
+                <img
+                  src={
+                    selectedProperty.images && selectedProperty.images.length > 0
+                      ? selectedProperty.images[0]
+                      : "https://placehold.co/600x400?text=No+Image"
+                  }
+                  alt={selectedProperty.title}
+                  className="w-full h-48 object-cover"
+                />
+                <button
+                  className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-sm"
+                  onClick={() => setSelectedProperty(null)}
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-            ) : (
-              <div className="text-center">
-                <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  No properties to display. <br />
-                  Try refining your search.
-                </p>
+
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold">{selectedProperty.title}</h3>
+                  <p className="text-lg font-semibold text-primary">
+                    ${selectedProperty.price.toLocaleString()}
+                  </p>
+                </div>
+
+                <p className="text-muted-foreground text-sm mb-3">{selectedProperty.address}</p>
+
+                <div className="flex items-center justify-between py-2 border-y border-gray-100">
+                  <div className="text-center">
+                    <p className="text-muted-foreground text-xs">Beds</p>
+                    <p className="font-medium">{selectedProperty.bedrooms}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-muted-foreground text-xs">Baths</p>
+                    <p className="font-medium">{selectedProperty.bathrooms}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-muted-foreground text-xs">Sq Ft</p>
+                    <p className="font-medium">{selectedProperty.squareFeet.toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <a
+                    href={`/property/${selectedProperty.id}`}
+                    className="block w-full py-2 bg-primary text-white rounded-lg text-center font-medium"
+                  >
+                    View Details
+                  </a>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>
-
-      {/* Sidebar - overlayed on top of map */}
-      <div
-        className={`absolute top-20 left-0 h-[calc(100vh-5rem)] w-96 bg-white shadow-lg transition-all duration-300 transform ${
-          showSidebar ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Fixed header */}
-        <div className="p-4 border-b bg-white sticky top-0 z-10">
-          <div className="flex justify-between items-center">
-            <h2 className="font-semibold text-lg">
-              {properties.length} results{" "}
-              {searchType === "text" && (searchTerm || initialQuery) && (
-                <span className="font-normal text-sm text-muted-foreground">
-                  for "{decodeURIComponent(searchTerm || initialQuery)}"
-                </span>
-              )}
-              {searchType === "image" && (
-                <span className="font-normal text-sm text-muted-foreground">
-                  that match your images
-                </span>
-              )}
-              {searchType === "both" && (searchTerm || initialQuery) && (
-                <span className="font-normal text-sm text-muted-foreground">
-                  that match your images and "{decodeURIComponent(searchTerm || initialQuery)}"
-                </span>
-              )}
-            </h2>
-            <button
-              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              onClick={() => setShowSidebar(false)}
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable content */}
-        <div className="p-2 overflow-y-auto h-[calc(100%-64px)]">
-          {loading && properties.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Loading properties...</p>
-            </div>
-          ) : error ? (
-            <div className="p-4 text-center">
-              <p className="text-red-500">{error}</p>
-              <button
-                className="mt-2 text-primary hover:underline"
-                onClick={() => window.location.reload()}
-              >
-                Try again
-              </button>
-            </div>
-          ) : properties.length === 0 ? (
-            <div className="p-4 text-center">
-              <p className="text-muted-foreground">No properties found.</p>
-            </div>
-          ) : (
-            properties.map((property) => (
-              <div
-                key={property.id}
-                className={`p-2 mb-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
-                  selectedProperty?.id === property.id ? "ring-2 ring-primary" : ""
-                } ${property.hasError ? "opacity-60" : ""}`}
-                onClick={() => !property.hasError && setSelectedProperty(property)}
-              >
-                {property.isPlaceholder ? (
-                  <ShimmerPropertyCard index={Number(property.id)} />
-                ) : (
-                  <div className="flex">
-                    <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                      {property.hasError ? (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                          <span className="text-gray-500 text-xs text-center px-1">
-                            Unable to load
-                          </span>
-                        </div>
-                      ) : (
-                        <img
-                          src={
-                            property.images && property.images.length > 0
-                              ? property.images[0]
-                              : "https://placehold.co/600x400?text=No+Image"
-                          }
-                          alt={property.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = "https://placehold.co/600x400?text=Error";
-                          }}
-                        />
-                      )}
-                    </div>
-                    <div className="ml-3 flex-grow">
-                      {property.hasError ? (
-                        <>
-                          <p className="font-medium text-sm text-gray-600">
-                            Unable to load property
-                          </p>
-                          <p className="text-xs text-red-500">Retry search or try again later</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="font-semibold text-primary">
-                            ${property.price.toLocaleString()}
-                          </p>
-                          <h3 className="font-medium text-sm line-clamp-1">{property.title}</h3>
-                          <p className="text-muted-foreground text-xs line-clamp-1">
-                            {property.address}
-                          </p>
-                          <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
-                            <span>{property.bedrooms} bed</span>
-                            <span>•</span>
-                            <span>{property.bathrooms} bath</span>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Property popup */}
-      {selectedProperty && !selectedProperty.isPlaceholder && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-[1000]">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-up">
-            <div className="relative">
-              <img
-                src={
-                  selectedProperty.images && selectedProperty.images.length > 0
-                    ? selectedProperty.images[0]
-                    : "https://placehold.co/600x400?text=No+Image"
-                }
-                alt={selectedProperty.title}
-                className="w-full h-48 object-cover"
-              />
-              <button
-                className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-sm"
-                onClick={() => setSelectedProperty(null)}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold">{selectedProperty.title}</h3>
-                <p className="text-lg font-semibold text-primary">
-                  ${selectedProperty.price.toLocaleString()}
-                </p>
-              </div>
-
-              <p className="text-muted-foreground text-sm mb-3">{selectedProperty.address}</p>
-
-              <div className="flex items-center justify-between py-2 border-y border-gray-100">
-                <div className="text-center">
-                  <p className="text-muted-foreground text-xs">Beds</p>
-                  <p className="font-medium">{selectedProperty.bedrooms}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-muted-foreground text-xs">Baths</p>
-                  <p className="font-medium">{selectedProperty.bathrooms}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-muted-foreground text-xs">Sq Ft</p>
-                  <p className="font-medium">{selectedProperty.squareFeet.toLocaleString()}</p>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <a
-                  href={`/property/${selectedProperty.id}`}
-                  className="block w-full py-2 bg-primary text-white rounded-lg text-center font-medium"
-                >
-                  View Details
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Mobile Toggle Button */}
       <button
@@ -1089,8 +1091,8 @@ const UnifiedSearchPage = () => {
 
   // Render the list view
   const renderListView = () => (
-    <div className="flex-1 flex overflow-hidden">
-      <div className="container mx-auto px-4 w-full">
+    <div className="flex-1 h-full overflow-y-auto">
+      <div className="container mx-auto px-4 w-full h-full py-2">
         <PropertyGrid
           propertyIds={apartmentIds}
           loading={loading}
@@ -1104,12 +1106,15 @@ const UnifiedSearchPage = () => {
   );
 
   return (
-    <div className={`h-screen flex flex-col ${currentView === "map" ? "overflow-hidden" : ""}`}>
+    <div className="flex flex-col min-h-screen">
+      {/* Fixed navbar at the top - rendered but creates space */}
       <Navbar />
-      <div className="flex-1 flex flex-col relative">
-        {/* Search bar overlay */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-sm pt-16">
-          <div className="container mx-auto px-4 py-2">
+      
+      {/* Main content container */}
+      <div className="flex flex-col mt-16"> {/* Fixed top margin to account for navbar */}
+        {/* Search filters section with border */}
+        <div className="sticky top-16 bg-white border-b border-gray-200 z-20">
+          <div className="container mx-auto px-4 py-4">
             <SearchFilters
               onSearch={handleMapSearch}
               initialQuery={searchTerm || initialQuery}
@@ -1121,8 +1126,10 @@ const UnifiedSearchPage = () => {
           </div>
         </div>
 
-        {/* Render appropriate view with consistent height */}
-        <div className="flex-1">{currentView === "map" ? renderMapView() : renderListView()}</div>
+        {/* Main content area - with fixed height calculation */}
+        <div className="h-[calc(100vh-10.5rem)]"> {/* Accounts for navbar + search bar */}
+          {currentView === "map" ? renderMapView() : renderListView()}
+        </div>
       </div>
     </div>
   );
