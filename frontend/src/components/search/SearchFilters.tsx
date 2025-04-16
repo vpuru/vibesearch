@@ -10,10 +10,7 @@ const RangeSlider = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
-    className={cn(
-      "relative flex w-full touch-none select-none items-center",
-      className
-    )}
+    className={cn("relative flex w-full touch-none select-none items-center", className)}
     {...props}
   >
     <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-gray-200">
@@ -90,17 +87,17 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     if (minBeds > 0) {
       searchFilters.min_beds = minBeds;
     }
-    
+
     if (maxBeds < 5) {
       searchFilters.max_beds = maxBeds;
     }
-    
+
     // Add min/max bathrooms from range slider
     const [minBaths, maxBaths] = filters.bathroomRange;
     if (minBaths > 0) {
       searchFilters.min_baths = minBaths;
     }
-    
+
     if (maxBaths < 3) {
       searchFilters.max_baths = maxBaths;
     }
@@ -160,7 +157,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
   // Use a ref to track if we should trigger a search when the query changes
   const isInitialMount = React.useRef(true);
-  
+
   // Set search query when initialQuery changes, but don't trigger a search on initial mount
   useEffect(() => {
     if (isInitialMount.current) {
@@ -180,7 +177,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   }, [initialQuery]);
 
   return (
-    <div className="w-full bg-white shadow-sm border-b">
+    <div className="w-full bg-white">
       <div className="container mx-auto px-4 py-4">
         <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
@@ -218,7 +215,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                 )}
               </button>
             )}
-            
+
             <button
               type="button"
               className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${
@@ -255,9 +252,9 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             <div className="flex gap-2 overflow-x-auto mt-4">
               {imageUrls.map((url, index) => (
                 <div key={index} className="relative flex-shrink-0">
-                  <img 
-                    src={url} 
-                    alt={`Search image ${index + 1}`} 
+                  <img
+                    src={url}
+                    alt={`Search image ${index + 1}`}
                     className="h-16 w-16 object-cover rounded-md border border-gray-200"
                   />
                 </div>
@@ -281,11 +278,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
               <div className="md:col-span-2">
                 <div className="mb-2 flex justify-between items-center">
-                  <label htmlFor="bedroom-range" className="block text-sm font-medium text-vibe-charcoal/70">
-                    Bedrooms: {filters.bedroomRange[0]} - {filters.bedroomRange[1] === 5 ? '5+' : filters.bedroomRange[1]}
+                  <label
+                    htmlFor="bedroom-range"
+                    className="block text-sm font-medium text-vibe-charcoal/70"
+                  >
+                    Bedrooms: {filters.bedroomRange[0]} -{" "}
+                    {filters.bedroomRange[1] === 5 ? "5+" : filters.bedroomRange[1]}
                   </label>
                   <span className="text-xs text-vibe-charcoal/50">
-                    {filters.bedroomRange[0] === 0 && filters.bedroomRange[1] === 5 ? 'Any' : ''}
+                    {filters.bedroomRange[0] === 0 && filters.bedroomRange[1] === 5 ? "Any" : ""}
                   </span>
                 </div>
                 <div className="px-2 pt-4 pb-1">
@@ -298,7 +299,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     onValueChange={(value) => {
                       setFilters({
                         ...filters,
-                        bedroomRange: value as [number, number]
+                        bedroomRange: value as [number, number],
                       });
                     }}
                     defaultValue={[0, 5]}
@@ -314,14 +315,18 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                   </div>
                 </div>
               </div>
-              
+
               <div className="md:col-span-2">
                 <div className="mb-2 flex justify-between items-center">
-                  <label htmlFor="bathroom-range" className="block text-sm font-medium text-vibe-charcoal/70">
-                    Bathrooms: {filters.bathroomRange[0]} - {filters.bathroomRange[1] === 3 ? '3+' : filters.bathroomRange[1]}
+                  <label
+                    htmlFor="bathroom-range"
+                    className="block text-sm font-medium text-vibe-charcoal/70"
+                  >
+                    Bathrooms: {filters.bathroomRange[0]} -{" "}
+                    {filters.bathroomRange[1] === 3 ? "3+" : filters.bathroomRange[1]}
                   </label>
                   <span className="text-xs text-vibe-charcoal/50">
-                    {filters.bathroomRange[0] === 0 && filters.bathroomRange[1] === 3 ? 'Any' : ''}
+                    {filters.bathroomRange[0] === 0 && filters.bathroomRange[1] === 3 ? "Any" : ""}
                   </span>
                 </div>
                 <div className="px-2 pt-4 pb-1">
@@ -334,7 +339,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     onValueChange={(value) => {
                       setFilters({
                         ...filters,
-                        bathroomRange: value as [number, number]
+                        bathroomRange: value as [number, number],
                       });
                     }}
                     defaultValue={[0, 3]}
@@ -350,7 +355,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               </div>
 
               <div>
-                <label htmlFor="price-min" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
+                <label
+                  htmlFor="price-min"
+                  className="block text-sm font-medium text-vibe-charcoal/70 mb-1"
+                >
                   Min Price
                 </label>
                 <input
@@ -364,7 +372,10 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               </div>
 
               <div>
-                <label htmlFor="price-max" className="block text-sm font-medium text-vibe-charcoal/70 mb-1">
+                <label
+                  htmlFor="price-max"
+                  className="block text-sm font-medium text-vibe-charcoal/70 mb-1"
+                >
                   Max Price
                 </label>
                 <input
@@ -376,7 +387,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                   className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
                 />
               </div>
-
             </div>
           </div>
         )}
