@@ -894,7 +894,7 @@ const UnifiedSearchPage = () => {
 
       {/* Sidebar - overlayed on top of map */}
       <div
-        className={`absolute top-20 left-0 h-[calc(100%-5rem)] w-96 bg-white shadow-lg transition-all duration-300 transform ${
+        className={`absolute top-20 left-0 h-[calc(100vh-5rem)] w-96 bg-white shadow-lg transition-all duration-300 transform ${
           showSidebar ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -1104,11 +1104,11 @@ const UnifiedSearchPage = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col overflow-hidden">
       <Navbar />
       <div className="flex-1 flex flex-col relative">
         {/* Search bar overlay */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-sm pt-16 border-b">
+        <div className="absolute top-0 left-0 right-0 z-10 bg-white/95 backdrop-blur-sm pt-16">
           <div className="container mx-auto px-4 py-2">
             <SearchFilters
               onSearch={handleMapSearch}
@@ -1122,9 +1122,7 @@ const UnifiedSearchPage = () => {
         </div>
 
         {/* Render appropriate view with consistent height */}
-        <div className="flex-1 pt-16">
-          {currentView === "map" ? renderMapView() : renderListView()}
-        </div>
+        <div className="flex-1">{currentView === "map" ? renderMapView() : renderListView()}</div>
       </div>
     </div>
   );
