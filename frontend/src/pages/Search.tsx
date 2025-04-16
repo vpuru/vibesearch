@@ -1104,7 +1104,7 @@ const UnifiedSearchPage = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className={`h-screen flex flex-col ${currentView === "map" ? "overflow-hidden" : ""}`}>
       <Navbar />
       <div className="flex-1 flex flex-col relative">
         {/* Search bar overlay */}
