@@ -888,7 +888,7 @@ const UnifiedSearchPage = () => {
               properties.map((property) => (
                 <div
                   key={property.id}
-                  className={`p-2 mb-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
+                  className={`p-2 mb-2 mr-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
                     selectedProperty?.id === property.id ? "ring-2 ring-primary" : ""
                   } ${property.hasError ? "opacity-60" : ""}`}
                   onClick={() => !property.hasError && setSelectedProperty(property)}
