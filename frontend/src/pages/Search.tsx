@@ -256,7 +256,7 @@ const UnifiedSearchPage = () => {
         (urlHasImages && JSON.stringify(initialImageUrls) !== JSON.stringify(imageUrls))
       ) {
         // Determine search type
-        let newSearchType = "none";
+        let newSearchType: "text" | "image" | "both" | "none" = "none";
         if (urlHasQuery && urlHasImages) {
           newSearchType = "both";
         } else if (urlHasQuery) {
@@ -521,7 +521,7 @@ const UnifiedSearchPage = () => {
         return;
       }
 
-      // Merge existing properties with placeholders for new IDs
+      // Create placeholders for all properties to load
       const newPlaceholders: PropertyWithLocation[] = idsToLoad.map((id) => ({
         id,
         title: "Loading...",
@@ -535,64 +535,49 @@ const UnifiedSearchPage = () => {
         features: [],
         isPlaceholder: true,
         location: {
-          // Create slightly randomized coordinates around SF for the map
           lat: 37.7749 + (Math.random() - 0.5) * 0.05,
           lng: -122.4194 + (Math.random() - 0.5) * 0.05,
         },
       }));
 
-      // Make sure we have no duplicates in our properties list
-      // First, get all non-placeholder properties (the ones we want to keep)
-      const existingProperties = properties.filter((p) => !p.isPlaceholder);
+      // Add all placeholders at once
+      setProperties((prev) => [...prev, ...newPlaceholders]);
 
-      // Create a map of existing property IDs for quick lookup
-      const existingPropertyMap = new Map(existingProperties.map((p) => [p.id, p]));
-
-      // Create an array of unique properties (no duplicates)
-      const uniqueProperties: PropertyWithLocation[] = [];
-
-      // Add existing properties first (no duplicates)
-      existingProperties.forEach((p) => {
-        if (!uniqueProperties.some((up) => up.id === p.id)) {
-          uniqueProperties.push(p);
-        }
-      });
-
-      // Then add placeholders for properties that don't exist yet
-      newPlaceholders.forEach((p) => {
-        if (!uniqueProperties.some((up) => up.id === p.id)) {
-          uniqueProperties.push(p);
-        }
-      });
-
-      console.log(
-        `Created properties array with ${uniqueProperties.length} items (${existingProperties.length} existing, ${newPlaceholders.length} placeholders)`
-      );
-
-      // Update state with the unique properties
-      setProperties(uniqueProperties);
-
-      // Load property details one by one for new IDs only
+      // Process in batches of 10
+      const batchSize = 10;
       let errorCount = 0;
-      for (const id of idsToLoad.slice(0, 25)) {
-        // Limit to 25 to avoid overwhelming the API
-        if (!loadedPropertyDetails[id]) {
+
+      for (let i = 0; i < idsToLoad.length; i += batchSize) {
+        const batch = idsToLoad.slice(i, i + batchSize);
+        console.log(`Loading batch ${i / batchSize + 1}: ${batch.length} properties`);
+
+        // Load all properties in the current batch in parallel
+        const batchPromises = batch.map(async (id) => {
           try {
             await loadPropertyDetails(id);
           } catch (err) {
             errorCount++;
             console.error(`Error loading property details for ${id}:`, err);
           }
+        });
+
+        // Wait for the current batch to complete before moving to the next
+        await Promise.all(batchPromises);
+
+        // Add a small delay between batches to prevent overwhelming the API
+        if (i + batchSize < idsToLoad.length) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
-      // Only show error message if all new properties failed to load
-      if (errorCount > 0 && errorCount === idsToLoad.length && idsToLoad.length > 0) {
-        setError("Failed to load property details");
+      console.log(`Completed loading ${idsToLoad.length} properties with ${errorCount} errors`);
+
+      if (errorCount > 0) {
+        console.warn(`Encountered ${errorCount} errors while loading properties`);
       }
     } catch (err) {
-      console.error("Error loading properties for map view:", err);
-      setError("Failed to load properties");
+      console.error("Error in loadPropertiesForMapView:", err);
+      setError("Failed to load some property details");
     } finally {
       setLoadingDetails(false);
     }
@@ -838,9 +823,6 @@ const UnifiedSearchPage = () => {
       setPage(1);
     }
   };
-
-  // Render the view toggle button - not needed anymore as it's moved to search form
-  const renderViewToggle = () => null;
 
   // Render the map view
   const renderMapView = () => (
