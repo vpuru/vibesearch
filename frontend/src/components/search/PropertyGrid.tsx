@@ -72,8 +72,18 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   useEffect(() => {
     if (allItems.length > 0) {
       console.log(`PropertyGrid: Initializing with ${allItems.length} items`);
-      // Get unique items to prevent duplicates
-      const uniqueItems = Array.from(new Set(allItems));
+      // Get unique items to prevent duplicates using ID or the item itself
+      const uniqueItems: Array<string | Property> = [];
+      const seenIds = new Set<string>();
+      
+      allItems.forEach(item => {
+        const id = typeof item === 'string' ? item : item.id;
+        if (id && !seenIds.has(id)) {
+          seenIds.add(id);
+          uniqueItems.push(item);
+        }
+      });
+      
       const initialItems = uniqueItems.slice(0, ITEMS_PER_PAGE);
       setVisibleItems(initialItems);
       setHasMoreItems(uniqueItems.length > ITEMS_PER_PAGE);
@@ -97,8 +107,18 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
       const startIndex = (nextPage - 1) * ITEMS_PER_PAGE;
       const endIndex = startIndex + ITEMS_PER_PAGE;
 
-      // Ensure we're working with unique items to prevent duplicates
-      const uniqueItems = Array.from(new Set(allItems));
+      // Get unique items using the same approach as above
+      const uniqueItems: Array<string | Property> = [];
+      const seenIds = new Set<string>();
+      
+      allItems.forEach(item => {
+        const id = typeof item === 'string' ? item : item.id;
+        if (id && !seenIds.has(id)) {
+          seenIds.add(id);
+          uniqueItems.push(item);
+        }
+      });
+
       const newItems = uniqueItems.slice(0, endIndex);
 
       console.log(

@@ -325,7 +325,11 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
         # For URLs not in search results (no score), put them at the end
         def get_url_score(url):
             score = url_score_map.get(url, -1)
-            print(f"Score for {url[:50]}...: {score:.4f if score >= 0 else score}")
+            if score >= 0:
+                score_display = f"{score:.4f}"
+            else:
+                score_display = str(score)
+            print(f"Score for {url[:50]}...: {score_display}")
             return score
             
         # Sort URLs by score (highest first)

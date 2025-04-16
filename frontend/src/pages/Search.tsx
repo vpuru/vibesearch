@@ -835,20 +835,20 @@ const UnifiedSearchPage = () => {
         {/* Fixed header */}
         <div className="p-4 border-b bg-white sticky top-0 z-10">
           <div className="flex justify-between items-center">
-            <h2 className="font-semibold text-lg">
-              {properties.length} results{" "}
+            <h2 className="text-md font-semibold text-vibe-navy font-sans leading-none flex items-baseline">
+              <span>{properties.length} results</span>
               {searchType === "text" && (searchTerm || initialQuery) && (
-                <span className="font-normal text-sm text-muted-foreground">
+                <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">
                   for "{decodeURIComponent(searchTerm || initialQuery)}"
                 </span>
               )}
               {searchType === "image" && (
-                <span className="font-normal text-sm text-muted-foreground">
+                <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">
                   that match your images
                 </span>
               )}
               {searchType === "both" && (searchTerm || initialQuery) && (
-                <span className="font-normal text-sm text-muted-foreground">
+                <span className="ml-1 font-normal text-vibe-charcoal/70 inline-flex">
                   that match your images and "{decodeURIComponent(searchTerm || initialQuery)}"
                 </span>
               )}
