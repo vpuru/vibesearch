@@ -1106,14 +1106,14 @@ const UnifiedSearchPage = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Fixed navbar at the top - rendered but creates space */}
+    <div className="h-screen overflow-hidden">
+      {/* Fixed navbar at the top */}
       <Navbar />
       
-      {/* Main content container */}
-      <div className="flex flex-col mt-16"> {/* Fixed top margin to account for navbar */}
+      {/* Main content container - starts after navbar height */}
+      <div className="flex flex-col h-screen pt-16"> {/* pt-16 accounts for navbar height */}
         {/* Search filters section with border */}
-        <div className="sticky top-16 bg-white border-b border-gray-200 z-20">
+        <div className="bg-white border-b border-gray-200 z-20">
           <div className="container mx-auto px-4 py-4">
             <SearchFilters
               onSearch={handleMapSearch}
@@ -1126,8 +1126,8 @@ const UnifiedSearchPage = () => {
           </div>
         </div>
 
-        {/* Main content area - with fixed height calculation */}
-        <div className="h-[calc(100vh-10.5rem)]"> {/* Accounts for navbar + search bar */}
+        {/* Map/List content area - takes remaining height */}
+        <div className="flex-1 overflow-hidden"> 
           {currentView === "map" ? renderMapView() : renderListView()}
         </div>
       </div>
