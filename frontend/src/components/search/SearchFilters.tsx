@@ -53,7 +53,9 @@ const ViewToggle: React.FC<{ currentView: "map" | "list"; onToggle: () => void }
     <button
       type="button"
       onClick={onToggle}
-      className="relative inline-flex items-center h-10 rounded-full bg-gray-200 px-1 transition-colors duration-200"
+      className={`relative inline-flex items-center h-10 rounded-full px-1 transition-colors duration-200 ${
+        currentView === "map" ? "bg-vibe-navy" : "bg-gray-200"
+      }`}
     >
       <div
         className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-sm transition-transform duration-200 ${
@@ -68,7 +70,7 @@ const ViewToggle: React.FC<{ currentView: "map" | "list"; onToggle: () => void }
         />
         <MapIcon
           className={`h-5 w-5 transition-colors duration-200 ${
-            currentView === "map" ? "text-vibe-navy" : "text-gray-400"
+            currentView === "map" ? "text-white" : "text-gray-400"
           }`}
         />
       </div>
@@ -227,7 +229,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
           <div className="flex gap-2">
             {/* View Toggle Button */}
-            {onViewToggle && <ViewToggle currentView={currentView} onToggle={onViewToggle} />}
+            {onViewToggle && (
+              <div className="flex items-center">
+                <ViewToggle currentView={currentView} onToggle={onViewToggle} />
+              </div>
+            )}
 
             <button
               type="button"
@@ -239,7 +245,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               onClick={() => setShowFilters(!showFilters)}
             >
               <Sliders className="h-5 w-5" />
-              <span>{showFilters ? "Hide Filters" : "Filters"}</span>
+              <span>{"Filters"}</span>
             </button>
 
             <button
