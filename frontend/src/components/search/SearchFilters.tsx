@@ -45,6 +45,37 @@ interface SearchFiltersProps {
   onViewToggle?: () => void;
 }
 
+const ViewToggle: React.FC<{ currentView: "map" | "list"; onToggle: () => void }> = ({
+  currentView,
+  onToggle,
+}) => {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="relative inline-flex items-center h-10 rounded-full bg-gray-200 px-1 transition-colors duration-200"
+    >
+      <div
+        className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+          currentView === "map" ? "translate-x-8" : "translate-x-0"
+        }`}
+      />
+      <div className="flex items-center space-x-2 px-2">
+        <LayoutGrid
+          className={`h-5 w-5 transition-colors duration-200 ${
+            currentView === "list" ? "text-vibe-navy" : "text-gray-400"
+          }`}
+        />
+        <MapIcon
+          className={`h-5 w-5 transition-colors duration-200 ${
+            currentView === "map" ? "text-vibe-navy" : "text-gray-400"
+          }`}
+        />
+      </div>
+    </button>
+  );
+};
+
 const SearchFilters: React.FC<SearchFiltersProps> = ({
   onSearch,
   initialQuery = "",
@@ -196,25 +227,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
           <div className="flex gap-2">
             {/* View Toggle Button */}
-            {onViewToggle && (
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 px-4 py-3 bg-gray-200 text-vibe-charcoal/70 hover:bg-gray-300 rounded-lg transition-colors"
-                onClick={onViewToggle}
-              >
-                {currentView === "list" ? (
-                  <>
-                    <MapIcon className="h-5 w-5" />
-                    <span>Map</span>
-                  </>
-                ) : (
-                  <>
-                    <LayoutGrid className="h-5 w-5" />
-                    <span>List</span>
-                  </>
-                )}
-              </button>
-            )}
+            {onViewToggle && <ViewToggle currentView={currentView} onToggle={onViewToggle} />}
 
             <button
               type="button"
