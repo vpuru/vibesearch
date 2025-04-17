@@ -8,7 +8,7 @@ import { useSearch } from "../contexts/SearchContext";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "leaflet";
-import { Map as MapIcon, List, X, Loader2, LayoutGrid } from "lucide-react";
+import { Map as MapIcon, List, X, Loader2, LayoutGrid, MapPin, Bed, Bath, Square } from "lucide-react";
 import { Property } from "../components/search/PropertyCard";
 import { cn } from "../lib/utils";
 
@@ -178,6 +178,11 @@ const UnifiedSearchPage = () => {
 
   // Reference to track if we already restored from URL
   const hasRestoredFromUrl = React.useRef(false);
+
+  const formatSquareFeet = (sqft: number | undefined): string => {
+    if (typeof sqft !== "number" || isNaN(sqft)) return "0";
+    return sqft.toLocaleString();
+  };
 
   // Update URL when view changes
   useEffect(() => {
@@ -828,7 +833,7 @@ const UnifiedSearchPage = () => {
     <div className="flex w-full h-full">
       {/* Left sidebar for property listings */}
       <div
-        className={`w-96 h-full bg-white border-r transition-all duration-300 transform ${
+        className={`w-[500px] h-full bg-white border-r transition-all duration-300 transform ${
           showSidebar ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -891,7 +896,7 @@ const UnifiedSearchPage = () => {
               </div>
             ) : properties.length === 0 ? (
               <div className="p-4 text-center">
-                <p className="text-muted-foreground">No properties found.</p>
+                <p className="text-muted-foreground">No Properties Found</p>
               </div>
             ) : (
               properties.map((property) => (
@@ -906,7 +911,7 @@ const UnifiedSearchPage = () => {
                     <ShimmerPropertyCard index={Number(property.id)} />
                   ) : (
                     <div className="flex">
-                      <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                      <div className="w-40 h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                         {property.hasError ? (
                           <div className="w-full h-full flex items-center justify-center bg-gray-200">
                             <span className="text-gray-500 text-xs text-center px-1">
@@ -928,7 +933,7 @@ const UnifiedSearchPage = () => {
                           />
                         )}
                       </div>
-                      <div className="ml-3 flex-grow">
+                      <div className="ml-3 flex-grow flex flex-col h-40">
                         {property.hasError ? (
                           <>
                             <p className="font-medium text-sm text-gray-600">
@@ -938,17 +943,36 @@ const UnifiedSearchPage = () => {
                           </>
                         ) : (
                           <>
-                            <p className="font-semibold text-primary">
-                              ${property.price.toLocaleString()}
-                            </p>
-                            <h3 className="font-medium text-sm line-clamp-1">{property.title}</h3>
-                            <p className="text-muted-foreground text-xs line-clamp-1">
-                              {property.address}
-                            </p>
-                            <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
-                              <span>{property.bedrooms} bed</span>
-                              <span>•</span>
-                              <span>{property.bathrooms} bath</span>
+                            <div className="flex justify-between items-center mb-3">
+                              <h3 className="font-semibold text-vibe-navy font-sans line-clamp-1">{property.title}</h3>
+                              <p className="font-semibold text-vibe-charcoal/70 font-sans">
+                                ${property.price.toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="flex items-center text-vibe-charcoal/70 text-sm mb-4">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              <span>{property.address || "Address unavailable"}</span>
+                            </div>
+                            <div className="flex-grow"></div>
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                              <div className="flex items-center text-vibe-charcoal/70">
+                                <Bed className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
+                                <span className="text-sm">
+                                  {typeof property.bedrooms === "number" ? property.bedrooms : 0} bed
+                                </span>
+                              </div>
+
+                              <div className="flex items-center text-vibe-charcoal/70">
+                                <Bath className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
+                                <span className="text-sm">
+                                  {typeof property.bathrooms === "number" ? property.bathrooms : 0} bath
+                                </span>
+                              </div>
+
+                              <div className="flex items-center text-vibe-charcoal/70">
+                                <Square className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
+                                <span className="text-sm">{formatSquareFeet(property.squareFeet)} sq ft</span>
+                              </div>
                             </div>
                           </>
                         )}
@@ -1018,8 +1042,8 @@ const UnifiedSearchPage = () => {
                 <div className="text-center">
                   <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <p className="text-muted-foreground">
-                    No properties to display. <br />
-                    Try refining your search.
+                    No Properties to Display<br />
+                    Try Refining Your Search!
                   </p>
                 </div>
               )}
