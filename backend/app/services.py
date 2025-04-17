@@ -247,8 +247,8 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
         list: Reordered list of URLs (strings), most relevant first
     """
     try:
-        print(f"Ranking images for apartment {apartment_id} by query: '{query}'")
-        print(f"Original photos type: {type(original_photos)}")
+        # print(f"Ranking images for apartment {apartment_id} by query: '{query}'")
+        # print(f"Original photos type: {type(original_photos)}")
         
         # Debug the photos list
         if not isinstance(original_photos, list):
@@ -261,7 +261,7 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
             return original_photos
             
         # Check the structure of the photos list
-        print(f"First photo item type: {type(original_photos[0])}")
+        # print(f"First photo item type: {type(original_photos[0])}")
         
         # Convert photo objects to URLs if needed
         photo_urls = []
@@ -278,7 +278,8 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
             return original_photos
                 
         try:
-            print(f"Original photo order first 3 URLs: {[url[:50] + '...' for url in photo_urls[:3]]}")
+            pass
+            # print(f"Original photo order first 3 URLs: {[url[:50] + '...' for url in photo_urls[:3]]}")
         except Exception as e:
             print(f"Error printing original photo URLs: {e}")
             return original_photos
@@ -304,7 +305,7 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
             print(f"No matching images found for apartment {apartment_id}")
             return photo_urls  # Return the extracted URLs
             
-        print(f"Found {len(search_results.matches)} matching images")
+        # print(f"Found {len(search_results.matches)} matching images")
         
         # Create a map of URL to relevance score
         url_score_map = {}
@@ -312,7 +313,7 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
             original_url = match.metadata.get("original_url")
             if original_url:
                 url_score_map[original_url] = match.score
-                print(f"Match score: {match.score:.4f} for URL: {original_url[:50]}...")
+                # print(f"Match score: {match.score:.4f} for URL: {original_url[:50]}...")
                 
         if not url_score_map:
             print("No URL mappings created from search results")
@@ -329,14 +330,14 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
                 score_display = f"{score:.4f}"
             else:
                 score_display = str(score)
-            print(f"Score for {url[:50]}...: {score_display}")
+            # print(f"Score for {url[:50]}...: {score_display}")
             return score
             
         # Sort URLs by score (highest first)
         urls_to_sort.sort(key=get_url_score, reverse=True)
         
-        print(f"Successfully ranked {len(urls_to_sort)} images for apartment {apartment_id}")
-        print(f"New photo order first 3 URLs: {[url[:50] + '...' for url in urls_to_sort[:3]]}")
+        # print(f"Successfully ranked {len(urls_to_sort)} images for apartment {apartment_id}")
+        # print(f"New photo order first 3 URLs: {[url[:50] + '...' for url in urls_to_sort[:3]]}")
         
         # Return the sorted URLs as strings (not objects)
         return urls_to_sort

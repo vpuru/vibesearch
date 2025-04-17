@@ -229,30 +229,30 @@ const UnifiedSearchPage = () => {
 
     // Set initial state based on URL parameters
     const setupSearch = async () => {
-      console.log("Setting up search with URL parameters:", {
-        query: initialQuery,
-        imageUrls: initialImageUrls.length ? `${initialImageUrls.length} URLs` : "none",
-        currentContext: {
-          searchTerm,
-          imageUrls: imageUrls.length,
-          searchPerformed,
-        },
-        currentView,
-      });
+      // console.log("Setting up search with URL parameters:", {
+      //   query: initialQuery,
+      //   imageUrls: initialImageUrls.length ? `${initialImageUrls.length} URLs` : "none",
+      //   currentContext: {
+      //     searchTerm,
+      //     imageUrls: imageUrls.length,
+      //     searchPerformed,
+      //   },
+      //   currentView,
+      // });
 
       // Check if we need to perform a search or we're returning to an existing search
       const urlHasQuery = !!initialQuery.trim();
       const urlHasImages = initialImageUrls.length > 0;
       const contextHasSearch = searchPerformed && (searchTerm || imageUrls.length > 0);
 
-      console.log("Search state:", {
-        urlHasQuery,
-        urlHasImages,
-        contextHasSearch,
-        hasResults,
-        apartmentIds: apartmentIds.length,
-        propertiesLoaded: properties.length,
-      });
+      // console.log("Search state:", {
+      //   urlHasQuery,
+      //   urlHasImages,
+      //   contextHasSearch,
+      //   hasResults,
+      //   apartmentIds: apartmentIds.length,
+      //   propertiesLoaded: properties.length,
+      // });
 
       // Case 1: URL has new search parameters - always do a fresh search
       if (
@@ -301,7 +301,7 @@ const UnifiedSearchPage = () => {
       }
       // Case 2: URL has same search params and we have results - don't re-fetch
       else if ((urlHasQuery || urlHasImages) && hasResults) {
-        console.log("URL matches existing search with results - no need to re-fetch");
+        // console.log("URL matches existing search with results - no need to re-fetch");
         // Ensure UI reflects the current state
         if (urlHasQuery) {
           setSearchTerm(initialQuery);

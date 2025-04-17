@@ -170,7 +170,8 @@ def apartment_preview(apartment_id):
         # Get the optional query parameter
         query = request.args.get("query", "")
         if query:
-            print(f"DEBUG: Ordering images by relevance to query: '{query}'")
+            # print(f"DEBUG: Ordering images by relevance to query: '{query}'")
+            pass
         
         # Get apartment preview data with query for image ordering
         apartment = get_apartment_preview_by_id(apartment_id, query)
