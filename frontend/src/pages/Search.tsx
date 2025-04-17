@@ -107,7 +107,7 @@ const ShimmerPropertyCard = ({ index }: { index: number }) => {
   return (
     <div className="p-2 mb-2 rounded-lg">
       <div className="flex">
-        <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+        <div className="w-40 h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
           <ShimmerEffect className="w-full h-full" />
         </div>
         <div className="ml-3 flex-grow">
@@ -903,7 +903,7 @@ const UnifiedSearchPage = () => {
                 <div
                   key={property.id}
                   className={`p-2 mb-2 mr-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
-                    selectedProperty?.id === property.id ? "ring-2 ring-primary" : ""
+                    selectedProperty?.id === property.id ? "ring-2 ring-[#0F4C81]" : ""
                   } ${property.hasError ? "opacity-60" : ""}`}
                   onClick={() => !property.hasError && setSelectedProperty(property)}
                 >
@@ -1124,8 +1124,8 @@ const UnifiedSearchPage = () => {
 
   // Render the list view
   const renderListView = () => (
-    <div className="flex-1 h-full overflow-y-auto">
-      <div className="container mx-auto px-4 w-full h-full py-2">
+    <div className="flex-1 h-full overflow-y-auto bg-white">
+      <div className="container mx-auto px-4 w-full h-full py-2 bg-white">
         <PropertyGrid
           propertyIds={apartmentIds}
           loading={loading}

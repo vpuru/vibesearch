@@ -203,11 +203,10 @@ const PropertyDetails: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+      <div className="w-full h-[calc(100vh-64px)] flex items-center justify-center bg-white">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-6" />
-          <h2 className="text-2xl font-semibold font-sans mb-2">Loading property details...</h2>
-          <p className="text-vibe-charcoal/70">Please wait while we fetch the information.</p>
+          <Loader2 className="h-12 w-12 animate-spin text-vibe-navy mx-auto mb-6" />
+          <h2 className="text-2xl font-semibold font-sans mb-2 text-vibe-navy">Loading...</h2>
         </div>
       </div>
     );
@@ -249,7 +248,7 @@ const PropertyDetails: React.FC = () => {
       {/* Top Navigation - removed sticky positioning */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/search" className="flex items-center text-vibe-charcoal/70" onClick={handleBackClick}>
+          <a href="/search" className="flex items-center text-vibe-charcoal hover:text-vibe-navy" onClick={handleBackClick}>
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span>Back</span>
           </a>

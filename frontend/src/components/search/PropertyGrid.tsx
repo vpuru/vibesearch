@@ -192,7 +192,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
               <p className="text-vibe-charcoal/70 font-sans mt-1.5">
                 {totalItemCount > 0
                   ? `Showing ${visibleItems.length} of ${totalItemCount} available properties`
-                  : "No properties found matching your criteria"}
+                  : "No Properties Found"}
               </p>
             </>
           )}
@@ -288,7 +288,8 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
             <Map className="h-12 w-12 text-gray-400" />
           </div>
           <p className="text-muted-foreground max-w-md">
-            Try adjusting your search criteria or try a different combination to find more options.
+              No Properties to Display <br/>
+              Try Refining Your Search!
           </p>
         </div>
       )}

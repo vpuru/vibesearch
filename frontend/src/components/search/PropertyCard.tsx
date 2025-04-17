@@ -180,22 +180,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
               <>
                 <button
                   onClick={previousImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-75"
                   aria-label="Previous image"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
                   onClick={nextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-0 group-hover:opacity-100"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/70 backdrop-blur-sm shadow-sm flex items-center justify-center text-gray-800 hover:bg-white transition-colors opacity-75"
                   aria-label="Next image"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>
               </>
             )}
-
-            <div className="absolute top-2 right-2">{/* Favorites button removed */}</div>
 
             {/* Image counter indicator - Only show if there are multiple images */}
             {hasValidImages && propertyData.images.length > 1 && (
