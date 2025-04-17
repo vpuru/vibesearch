@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Search, X, Sliders, Loader2, Map as MapIcon, LayoutGrid } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
+import { Search, X, Sliders, Loader2, Map as MapIcon, LayoutGrid, DollarSign, Bed, Bath } from "lucide-react";
 import { useSearch } from "../../contexts/SearchContext";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "../../lib/utils";
@@ -87,14 +87,28 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   onViewToggle,
 }) => {
   const { imageUrls, searchType } = useSearch();
-  const [showFilters, setShowFilters] = React.useState(false);
-  const [searchQuery, setSearchQuery] = React.useState(initialQuery);
-  const [filters, setFilters] = React.useState({
+  // Set initial state to false to ensure filters are closed by default
+  const [showFilters, setShowFilters] = useState(false);
+  const afterSearchRef = useRef(false);
+  
+  // If we're trying to show filters after a search was performed, force them closed
+  useEffect(() => {
+    if (showFilters && afterSearchRef.current) {
+      setShowFilters(false);
+    }
+  }, [showFilters]);
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [filters, setFilters] = useState({
     bedroomRange: [0, 5], // [min, max]
     bathroomRange: [0, 3], // [min, max]
     priceMin: "",
     priceMax: "",
   });
+  
+  // Reference to the filter dropdown
+  const filtersRef = useRef<HTMLDivElement>(null);
+  // Reference to the filter button
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
 
   const clearFilters = () => {
     setFilters({
@@ -144,30 +158,63 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       searchFilters.max_rent = parseInt(filters.priceMax);
     }
 
+    // Close filters dropdown after search
+    setShowFilters(false);
+    
+    // Mark that we're performing a search, so we can prevent filters from re-opening
+    // when initialValues updates as a result of this search
+    afterSearchRef.current = true;
+    
     onSearch(searchFilters);
   };
 
   // Handle Enter key in search box
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
+      // Set afterSearchRef.current directly here since handleSearch will be called
+      afterSearchRef.current = true;
       handleSearch();
     }
   };
 
-  // Initialize filters from initialValues if provided
+  // Add click outside handler to close filters dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showFilters &&
+        filtersRef.current && 
+        !filtersRef.current.contains(event.target as Node) &&
+        filterButtonRef.current && 
+        !filterButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowFilters(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilters]);
+
+  
+  // Initialize filters from initialValues if provided, without showing the filter panel
   useEffect(() => {
     if (initialValues) {
-      console.log("Restoring filter values:", initialValues);
       const newFilters = { ...filters };
 
-      // Handle bedrooms range - use min_beds for the slider value
-      if (initialValues.min_beds !== undefined) {
-        newFilters.bedroomRange = [initialValues.min_beds, initialValues.min_beds];
+      // Handle bedrooms range
+      if (initialValues.min_beds !== undefined || initialValues.max_beds !== undefined) {
+        const minBeds = initialValues.min_beds ?? 0;
+        const maxBeds = initialValues.max_beds ?? 5;
+        newFilters.bedroomRange = [minBeds, maxBeds];
       }
 
-      // Handle bathrooms range - use min_baths for the slider value
-      if (initialValues.min_baths !== undefined) {
-        newFilters.bathroomRange = [initialValues.min_baths, initialValues.min_baths];
+      // Handle bathrooms range
+      if (initialValues.min_baths !== undefined || initialValues.max_baths !== undefined) {
+        const minBaths = initialValues.min_baths ?? 0;
+        const maxBaths = initialValues.max_baths ?? 3;
+        newFilters.bathroomRange = [minBaths, maxBaths];
       }
 
       // Handle price range
@@ -180,16 +227,18 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       }
 
       setFilters(newFilters);
-
-      // If filters are specified, show the filters panel
-      if (Object.values(newFilters).some((v) => v !== "" && (!Array.isArray(v) || v.length > 0))) {
-        setShowFilters(true);
+      
+      // IMPORTANT: We need to force the filter panel to remain closed when 
+      // initialValues are updated as a result of a search
+      if (afterSearchRef.current) {
+        setShowFilters(false);
+        afterSearchRef.current = false;
       }
     }
   }, [initialValues]);
 
   // Use a ref to track if we should trigger a search when the query changes
-  const isInitialMount = React.useRef(true);
+  const isInitialMount = useRef(true);
 
   // Set search query when initialQuery changes, but don't trigger a search on initial mount
   useEffect(() => {
@@ -212,7 +261,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   return (
     <div className="w-full bg-white">
       <div className="container mx-auto px-4 py-4">
-        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+        <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 relative">
           <div className="relative flex-grow">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
@@ -227,7 +276,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 relative">
             {/* View Toggle Button */}
             {onViewToggle && (
               <div className="flex items-center">
@@ -236,6 +285,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             )}
 
             <button
+              ref={filterButtonRef}
               type="button"
               className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${
                 showFilters
@@ -245,7 +295,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               onClick={() => setShowFilters(!showFilters)}
             >
               <Sliders className="h-5 w-5" />
-              <span>{"Filters"}</span>
+              <span>Filters</span>
             </button>
 
             <button
@@ -262,6 +312,161 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                 </>
               )}
             </button>
+            
+            {/* Filters dropdown popup */}
+            {showFilters && (
+              <div 
+                ref={filtersRef}
+                className="absolute right-0 top-full mt-2 w-[350px] md:w-[450px] bg-white shadow-lg rounded-lg z-50 animate-in slide-in-from-top-2 duration-200"
+                style={{ 
+                  transformOrigin: 'top right',
+                }}
+              >
+                <div className="p-4">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-semibold text-vibe-charcoal">Filters</h3>
+                    <button
+                      type="button"
+                      className="text-sm text-vibe-charcoal/70 hover:text-vibe-charcoal flex items-center gap-1"
+                      onClick={clearFilters}
+                    >
+                      <span>Clear all</span>
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Bedrooms */}
+                    <div>
+                      <div className="mb-2 flex justify-between items-center">
+                        <label
+                          htmlFor="bedroom-range"
+                          className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal"
+                        >
+                          <Bed className="h-4 w-4 text-vibe-navy" />
+                          <span>Bedrooms: {filters.bedroomRange[0]} - {filters.bedroomRange[1] === 5 ? "5+" : filters.bedroomRange[1]}</span>
+                        </label>
+                        <span className="text-xs text-vibe-charcoal/50">
+                          {filters.bedroomRange[0] === 0 && filters.bedroomRange[1] === 5 ? "Any" : ""}
+                        </span>
+                      </div>
+                      <div className="px-2 pt-4 pb-1">
+                        <RangeSlider
+                          id="bedroom-range"
+                          min={0}
+                          max={5}
+                          step={1}
+                          value={filters.bedroomRange}
+                          onValueChange={(value) => {
+                            setFilters({
+                              ...filters,
+                              bedroomRange: value as [number, number],
+                            });
+                          }}
+                          defaultValue={[0, 5]}
+                          className="mb-4"
+                        />
+                        <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
+                          <span>0</span>
+                          <span>1</span>
+                          <span>2</span>
+                          <span>3</span>
+                          <span>4</span>
+                          <span>5+</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bathrooms */}
+                    <div>
+                      <div className="mb-2 flex justify-between items-center">
+                        <label
+                          htmlFor="bathroom-range"
+                          className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal"
+                        >
+                          <Bath className="h-4 w-4 text-vibe-navy" />
+                          <span>Bathrooms: {filters.bathroomRange[0]} - {filters.bathroomRange[1] === 3 ? "3+" : filters.bathroomRange[1]}</span>
+                        </label>
+                        <span className="text-xs text-vibe-charcoal/50">
+                          {filters.bathroomRange[0] === 0 && filters.bathroomRange[1] === 3 ? "Any" : ""}
+                        </span>
+                      </div>
+                      <div className="px-2 pt-4 pb-1">
+                        <RangeSlider
+                          id="bathroom-range"
+                          min={0}
+                          max={3}
+                          step={0.5}
+                          value={filters.bathroomRange}
+                          onValueChange={(value) => {
+                            setFilters({
+                              ...filters,
+                              bathroomRange: value as [number, number],
+                            });
+                          }}
+                          defaultValue={[0, 3]}
+                          className="mb-4"
+                        />
+                        <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
+                          <span>0</span>
+                          <span>1</span>
+                          <span>2</span>
+                          <span>3+</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Price Range */}
+                    <div>
+                      <div className="mb-3 flex items-center gap-2">
+                        <DollarSign className="h-4 w-4 text-vibe-navy" />
+                        <span className="text-sm font-medium text-vibe-charcoal">Price Range</span>
+                      </div>
+                      <div className="flex gap-4">
+                        <div className="flex-1">
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <span className="text-vibe-charcoal/70">$</span>
+                            </div>
+                            <input
+                              type="number"
+                              id="price-min"
+                              placeholder="Min"
+                              value={filters.priceMin}
+                              onChange={(e) => setFilters({ ...filters, priceMin: e.target.value })}
+                              className="pl-8 w-full p-3 border border-gray-300 rounded-lg text-vibe-charcoal/70 focus:outline-none focus:ring-2 focus:ring-vibe-navy/30"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <span className="text-vibe-charcoal/70">$</span>
+                            </div>
+                            <input
+                              type="number"
+                              id="price-max"
+                              placeholder="Max"
+                              value={filters.priceMax}
+                              onChange={(e) => setFilters({ ...filters, priceMax: e.target.value })}
+                              className="pl-8 w-full p-3 border border-gray-300 rounded-lg text-vibe-charcoal/70 focus:outline-none focus:ring-2 focus:ring-vibe-navy/30"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Apply Filters Button */}
+                    <button
+                      type="submit"
+                      className="w-full py-3 bg-vibe-navy text-white rounded-lg font-medium transition-colors hover:bg-vibe-navy/90"
+                    >
+                      Apply Filters
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </form>
 
@@ -278,134 +483,6 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                   />
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {showFilters && (
-          <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-medium font-sans text-vibe-charcoal/70">Refine Search</h3>
-              <button
-                className="text-sm text-vibe-charcoal/70 hover:text-vibe-charcoal"
-                onClick={clearFilters}
-              >
-                Clear all
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              <div className="md:col-span-2">
-                <div className="mb-2 flex justify-between items-center">
-                  <label
-                    htmlFor="bedroom-range"
-                    className="block text-sm font-medium text-vibe-charcoal/70"
-                  >
-                    Bedrooms: {filters.bedroomRange[0]} -{" "}
-                    {filters.bedroomRange[1] === 5 ? "5+" : filters.bedroomRange[1]}
-                  </label>
-                  <span className="text-xs text-vibe-charcoal/50">
-                    {filters.bedroomRange[0] === 0 && filters.bedroomRange[1] === 5 ? "Any" : ""}
-                  </span>
-                </div>
-                <div className="px-2 pt-4 pb-1">
-                  <RangeSlider
-                    id="bedroom-range"
-                    min={0}
-                    max={5}
-                    step={1}
-                    value={filters.bedroomRange}
-                    onValueChange={(value) => {
-                      setFilters({
-                        ...filters,
-                        bedroomRange: value as [number, number],
-                      });
-                    }}
-                    defaultValue={[0, 5]}
-                    className="mb-4"
-                  />
-                  <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
-                    <span>0</span>
-                    <span>1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                    <span>5+</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="mb-2 flex justify-between items-center">
-                  <label
-                    htmlFor="bathroom-range"
-                    className="block text-sm font-medium text-vibe-charcoal/70"
-                  >
-                    Bathrooms: {filters.bathroomRange[0]} -{" "}
-                    {filters.bathroomRange[1] === 3 ? "3+" : filters.bathroomRange[1]}
-                  </label>
-                  <span className="text-xs text-vibe-charcoal/50">
-                    {filters.bathroomRange[0] === 0 && filters.bathroomRange[1] === 3 ? "Any" : ""}
-                  </span>
-                </div>
-                <div className="px-2 pt-4 pb-1">
-                  <RangeSlider
-                    id="bathroom-range"
-                    min={0}
-                    max={3}
-                    step={0.5}
-                    value={filters.bathroomRange}
-                    onValueChange={(value) => {
-                      setFilters({
-                        ...filters,
-                        bathroomRange: value as [number, number],
-                      });
-                    }}
-                    defaultValue={[0, 3]}
-                    className="mb-4"
-                  />
-                  <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
-                    <span>0</span>
-                    <span>1</span>
-                    <span>2</span>
-                    <span>3+</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="price-min"
-                  className="block text-sm font-medium text-vibe-charcoal/70 mb-1"
-                >
-                  Min Price
-                </label>
-                <input
-                  type="number"
-                  id="price-min"
-                  placeholder="$0"
-                  value={filters.priceMin}
-                  onChange={(e) => setFilters({ ...filters, priceMin: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="price-max"
-                  className="block text-sm font-medium text-vibe-charcoal/70 mb-1"
-                >
-                  Max Price
-                </label>
-                <input
-                  type="number"
-                  id="price-max"
-                  placeholder="No max"
-                  value={filters.priceMax}
-                  onChange={(e) => setFilters({ ...filters, priceMax: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md text-vibe-charcoal/70"
-                />
-              </div>
             </div>
           </div>
         )}

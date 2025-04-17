@@ -589,10 +589,11 @@ const UnifiedSearchPage = () => {
 
   // Handler for map view search
   const handleMapSearch = async (filters: SearchFilterValues) => {
+    console.log('Search initiated with filters:', filters);
     setLoading(true);
     setError(undefined);
     setSearchTerm(filters.query);
-    setFilterValues(filters);
+    setFilterValues(filters);  // This updates initialValues in SearchFilters
     setPage(1);
     setHasMoreResults(true);
 
@@ -1151,10 +1152,11 @@ const UnifiedSearchPage = () => {
             <SearchFilters
               onSearch={handleMapSearch}
               initialQuery={searchTerm || initialQuery}
-              initialValues={filterValues || undefined}
+              initialValues={filterValues || undefined} 
               isLoading={loading}
               currentView={currentView}
               onViewToggle={toggleView}
+              key="search-filters" // Force re-creation of component on searches to reset filter state
             />
           </div>
         </div>
