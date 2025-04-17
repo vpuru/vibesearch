@@ -156,7 +156,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
   };
 
   return (
-    <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 h-full w-full">
+    <div
+      className="rounded-xl overflow-hidden shadow-sm border border-gray-100 h-full w-full cursor-pointer hover:shadow-md transition-shadow"
+      onClick={handleCardClick}
+    >
       <div className="relative">
         <div className="relative aspect-[4/3] w-full">
           <div className="relative">
