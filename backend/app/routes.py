@@ -144,8 +144,8 @@ def apartment_details(apartment_id):
         JSON: All data for the apartment or error message
     """
     try:
+        query = request.args.get("query", "")
         apartment = get_apartment_details_by_id(apartment_id, query)
-
         if apartment is None:
             return jsonify({"error": "Apartment not found"}), 404
 
