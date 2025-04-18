@@ -231,7 +231,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
 
     // Add min/max bedrooms from range slider
     const [minBeds, maxBeds] = filters.bedroomRange;
-    if (minBeds > 0) {
+    
+    // Always include minBeds when it's 0 (studio) to properly filter for studio apartments
+    if (minBeds === 0) {
+      searchFilters.min_beds = 0;
+    } else if (minBeds > 0) {
       searchFilters.min_beds = minBeds;
     }
 

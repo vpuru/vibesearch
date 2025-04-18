@@ -180,6 +180,22 @@ const PropertyDetails: React.FC = () => {
     fetchData();
   }, [id, searchTerm]);
 
+  // Set a flag when the component mounts to indicate we're on a property details page
+  useEffect(() => {
+    // Set a flag for the search page to know we're coming from a property detail
+    sessionStorage.setItem('returnedFromPropertyDetail', 'true');
+    sessionStorage.setItem('lastSearchState', JSON.stringify({
+      searchTerm,
+      searchPerformed
+    }));
+    
+    // Cleanup function will only run when component unmounts, 
+    // right before the navigation to the Search page occurs
+    return () => {
+      // Keep the flag, Search page will handle its removal after reading it
+    };
+  }, [searchTerm, searchPerformed]);
+  
   // Handle back navigation
   const handleBackClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -203,7 +219,7 @@ const PropertyDetails: React.FC = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="w-full h-[calc(100vh-64px)] flex items-center justify-center bg-white">
+      <div className="w-full h-[calc(100vh-142px)] flex items-center justify-center bg-white">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-vibe-navy mx-auto mb-6" />
           <h2 className="text-2xl font-semibold font-sans mb-2 text-vibe-navy">Loading...</h2>

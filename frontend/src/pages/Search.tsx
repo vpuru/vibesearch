@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import Navbar from "../components/shared/Navbar";
 import SearchFilters, { SearchFilterValues } from "../components/search/SearchFilters";
 import PropertyGrid from "../components/search/PropertyGrid";
 import { searchApartments, fetchApartmentPreview } from "../services/apartmentService";
 import { useSearch } from "../contexts/SearchContext";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "leaflet";
 import {
@@ -13,7 +13,6 @@ import {
   List,
   X,
   Loader2,
-  LayoutGrid,
   MapPin,
   Bed,
   Bath,
@@ -23,10 +22,14 @@ import {
 } from "lucide-react";
 import { Property } from "../components/search/PropertyCard";
 import { cn } from "../lib/utils";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
-// Number of items to fetch per page
+// Constants
 const ITEMS_PER_PAGE = 25;
+const DEFAULT_CENTER: LatLngExpression = [39.8283, -98.5795];
+const DEFAULT_ZOOM = 4;
+const MIN_ZOOM = 2;
+const MAX_ZOOM = 18;
 
 // Fix Leaflet icon issue
 // @ts-ignore - Needed to fix Leaflet icon issue
@@ -37,61 +40,18 @@ Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Define custom marker icon
+// Better visually contrasting custom marker icon
 const customIcon = new Icon({
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  iconUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/images/marker-icon.png",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  shadowUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.7.1/dist/images/marker-shadow.png",
   shadowSize: [41, 41],
+  className: 'map-marker-icon' // For potential CSS styling
 });
 
-// Default center location (San Francisco coordinates)
-const DEFAULT_CENTER: LatLngExpression = [37.7749, -122.4194];
-const DEFAULT_ZOOM = 12;
-
-// Helper component to update map view when bounds change
-const MapBoundsUpdater = ({ bounds }: { bounds: LatLngBoundsExpression | null }) => {
-  const map = useMap();
-  useEffect(() => {
-    if (bounds) {
-      map.fitBounds(bounds);
-    }
-  }, [bounds, map]);
-  return null;
-};
-
-// Calculate map bounds from property locations
-const calculateMapBounds = (properties: PropertyWithLocation[]): LatLngBoundsExpression | null => {
-  const propertiesWithLocation = properties.filter((p) => p.location);
-  if (propertiesWithLocation.length === 0) return null;
-
-  let minLat = Infinity;
-  let maxLat = -Infinity;
-  let minLng = Infinity;
-  let maxLng = -Infinity;
-
-  propertiesWithLocation.forEach((property) => {
-    if (property.location) {
-      minLat = Math.min(minLat, property.location.lat);
-      maxLat = Math.max(maxLat, property.location.lat);
-      minLng = Math.min(minLng, property.location.lng);
-      maxLng = Math.max(maxLng, property.location.lng);
-    }
-  });
-
-  // Add some padding to the bounds
-  const latPadding = (maxLat - minLat) * 0.1;
-  const lngPadding = (maxLng - minLng) * 0.1;
-
-  return [
-    [minLat - latPadding, minLng - lngPadding] as LatLngTuple,
-    [maxLat + latPadding, maxLng + lngPadding] as LatLngTuple,
-  ];
-};
-
-// Custom interface for property with location data
+// Interfaces
 interface PropertyWithLocation extends Property {
   location: {
     lat: number;
@@ -101,7 +61,58 @@ interface PropertyWithLocation extends Property {
   hasError?: boolean;
 }
 
-// Shimmer effect component for loading state
+// Helper Components
+const MapBoundsUpdater = ({ bounds, isSwitchingViews }: { bounds: LatLngBoundsExpression | null, isSwitchingViews?: boolean }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (bounds) {
+      // Add a slight delay when switching views to ensure the container is fully rendered
+      if (isSwitchingViews) {
+        setTimeout(() => {
+          map.invalidateSize(); // Force recalculation of map size
+          map.fitBounds(bounds, { 
+            padding: [50, 50], // Add consistent padding
+            maxZoom: 15 // Prevent excessive zoom on small areas
+          });
+        }, 100);
+      } else {
+        map.fitBounds(bounds, { 
+          padding: [50, 50],
+          maxZoom: 15
+        });
+      }
+    }
+  }, [bounds, map, isSwitchingViews]);
+  
+  return null;
+};
+
+// Improved Map Resize Handler
+const MapResizeHandler = () => {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Handle window resize
+    const handleResize = () => {
+      map.invalidateSize();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Initial invalidation after component mounts
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+  
+  return null;
+};
+
 const ShimmerEffect = ({ className }: { className?: string }) => (
   <div
     className={cn(
@@ -111,111 +122,115 @@ const ShimmerEffect = ({ className }: { className?: string }) => (
   ></div>
 );
 
-// ShimmerPropertyCard component for loading state
-const ShimmerPropertyCard = ({ index }: { index: number }) => {
-  return (
-    <div className="p-2 mb-2 rounded-lg">
-      <div className="flex">
-        <div className="w-40 h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-          <ShimmerEffect className="w-full h-full" />
-        </div>
-        <div className="ml-3 flex-grow">
-          <ShimmerEffect className="h-4 w-20 mb-2" />
-          <ShimmerEffect className="h-4 w-full mb-2" />
-          <ShimmerEffect className="h-3 w-3/4 mb-2" />
-          <div className="flex gap-2 mt-1">
-            <ShimmerEffect className="h-3 w-12" />
-            <div className="w-1"></div>
-            <ShimmerEffect className="h-3 w-12" />
-          </div>
+const ShimmerPropertyCard = () => (
+  <div className="p-2 mb-2 rounded-lg">
+    <div className="flex">
+      <div className="w-40 h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+        <ShimmerEffect className="w-full h-full" />
+      </div>
+      <div className="ml-3 flex-grow">
+        <ShimmerEffect className="h-4 w-20 mb-2" />
+        <ShimmerEffect className="h-4 w-full mb-2" />
+        <ShimmerEffect className="h-3 w-3/4 mb-2" />
+        <div className="flex gap-2 mt-1">
+          <ShimmerEffect className="h-3 w-12" />
+          <div className="w-1"></div>
+          <ShimmerEffect className="h-3 w-12" />
         </div>
       </div>
     </div>
-  );
+  </div>
+);
+
+// Helper Functions
+const calculateMapBounds = (properties: PropertyWithLocation[]): LatLngBoundsExpression | null => {
+  const propertiesWithLocation = properties.filter((p) => p.location && !p.isPlaceholder);
+  if (propertiesWithLocation.length === 0) return null;
+
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+
+  propertiesWithLocation.forEach(property => {
+    minLat = Math.min(minLat, property.location.lat);
+    maxLat = Math.max(maxLat, property.location.lat);
+    minLng = Math.min(minLng, property.location.lng);
+    maxLng = Math.max(maxLng, property.location.lng);
+  });
+
+  // Add padding based on the geographical size
+  // Smaller areas get more padding for better visibility
+  const latDiff = maxLat - minLat;
+  const lngDiff = maxLng - minLng;
+  
+  // Use dynamic padding based on the area size
+  const latPadding = Math.max(latDiff * 0.2, 0.01); // Minimum padding of 0.01 degrees
+  const lngPadding = Math.max(lngDiff * 0.2, 0.01);
+
+  return [
+    [minLat - latPadding, minLng - lngPadding] as LatLngTuple,
+    [maxLat + latPadding, maxLng + lngPadding] as LatLngTuple,
+  ];
 };
 
+const formatSquareFeet = (sqft: number | undefined): string => {
+  return (typeof sqft === "number" && !isNaN(sqft)) ? sqft.toLocaleString() : "0";
+};
+
+// Main Component
 const UnifiedSearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
   const initialImageUrls = searchParams.get("imageUrls")
     ? JSON.parse(searchParams.get("imageUrls") || "[]")
     : [];
-  const viewParam = searchParams.get("view") || "map"; // Default to map view
+  const viewParam = searchParams.get("view") || "map";
 
-  // Use the search context
+  // Use the search context with batch update capability
   const {
     apartmentIds,
-    setApartmentIds,
     searchTerm,
-    setSearchTerm,
     filterValues,
-    setFilterValues,
     searchPerformed,
-    setSearchPerformed,
     imageUrls,
-    setImageUrls,
     searchType,
-    setSearchType,
     hasResults,
+    updateSearchState,
+    setApartmentIds,
   } = useSearch();
-
-  // View toggle state (map or list)
-  const [currentView, setCurrentView] = useState<"map" | "list">(
-    viewParam === "list" ? "list" : "map"
-  );
-
-  // Properties for map view
+  
+  // Local state
+  const [currentView, setCurrentView] = useState<"map" | "list">(viewParam === "list" ? "list" : "map");
   const [properties, setProperties] = useState<PropertyWithLocation[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<PropertyWithLocation | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   const [mapCenter, setMapCenter] = useState<LatLngExpression>(DEFAULT_CENTER);
   const [mapBounds, setMapBounds] = useState<LatLngBoundsExpression | null>(null);
-  const [placeholderCount, setPlaceholderCount] = useState(0);
+  const [isSwitchingViews, setIsSwitchingViews] = useState<boolean>(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
-
-  // State for both views
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
-
-  // State for list view pagination
   const [page, setPage] = useState(1);
   const [hasMoreResults, setHasMoreResults] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-
-  // Track if we've loaded property details for display
-  const [loadedPropertyDetails, setLoadedPropertyDetails] = useState<Record<string, boolean>>({});
-
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
   // Reference to track if we already restored from URL
   const hasRestoredFromUrl = React.useRef(false);
-
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const formatSquareFeet = (sqft: number | undefined): string => {
-    if (typeof sqft !== "number" || isNaN(sqft)) return "0";
-    return sqft.toLocaleString();
-  };
-
+  
   const queryClient = useQueryClient();
 
+  // Effects
   // Update URL when view changes
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams);
     newParams.set("view", currentView);
     setSearchParams(newParams, { replace: true });
-  }, [currentView, setSearchParams]);
+  }, [currentView, setSearchParams, searchParams]);
 
-  // Reset loaded property details when search term changes
-  useEffect(() => {
-    setLoadedPropertyDetails({});
-  }, [searchTerm, initialQuery]);
-
-  // Add effect to update map bounds when properties change
+  // Update map bounds when properties change
   useEffect(() => {
     if (properties.length > 0 && currentView === "map") {
       const bounds = calculateMapBounds(properties);
-      if (bounds) {
-        setMapBounds(bounds);
-      }
+      if (bounds) setMapBounds(bounds);
     }
   }, [properties, currentView]);
 
@@ -230,198 +245,135 @@ const UnifiedSearchPage = () => {
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [selectedProperty]);
+  
+  // Define fetchResults function before the effects
+  const fetchResults = useCallback(async (searchFilterValues: SearchFilterValues, pageNum: number) => {
+    // Use URL or context image URLs, whichever is available
+    const urls = initialImageUrls.length > 0 ? initialImageUrls : imageUrls;
 
-  // Navigation functions for property images
-  const showNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (selectedProperty && selectedProperty.images && selectedProperty.images.length > 0) {
-      setCurrentImageIndex((prev) => (prev === selectedProperty.images.length - 1 ? 0 : prev + 1));
-    }
-  };
-
-  const showPrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (selectedProperty && selectedProperty.images && selectedProperty.images.length > 0) {
-      setCurrentImageIndex((prev) => (prev === 0 ? selectedProperty.images.length - 1 : prev - 1));
-    }
-  };
-
-  // Perform search when the component mounts if there's an initial query or image URLs
-  useEffect(() => {
-    // Only run this effect once per mount or when search parameters actually change
-    if (
-      hasRestoredFromUrl.current &&
-      !searchParams.toString().includes("q=") &&
-      !searchParams.toString().includes("imageUrls=")
-    )
-      return;
-
-    if (!hasRestoredFromUrl.current) {
-      hasRestoredFromUrl.current = true;
-    }
-
-    // Set initial state based on URL parameters
-    const setupSearch = async () => {
-      // console.log("Setting up search with URL parameters:", {
-      //   query: initialQuery,
-      //   imageUrls: initialImageUrls.length ? `${initialImageUrls.length} URLs` : "none",
-      //   currentContext: {
-      //     searchTerm,
-      //     imageUrls: imageUrls.length,
-      //     searchPerformed,
-      //   },
-      //   currentView,
-      // });
-
-      // Check if we need to perform a search or we're returning to an existing search
-      const urlHasQuery = !!initialQuery.trim();
-      const urlHasImages = initialImageUrls.length > 0;
-      const contextHasSearch = searchPerformed && (searchTerm || imageUrls.length > 0);
-
-      // console.log("Search state:", {
-      //   urlHasQuery,
-      //   urlHasImages,
-      //   contextHasSearch,
-      //   hasResults,
-      //   apartmentIds: apartmentIds.length,
-      //   propertiesLoaded: properties.length,
-      // });
-
-      // Case 1: URL has new search parameters - always do a fresh search
-      if (
-        (urlHasQuery && initialQuery !== searchTerm) ||
-        (urlHasImages && JSON.stringify(initialImageUrls) !== JSON.stringify(imageUrls))
-      ) {
-        // Determine search type
-        let newSearchType: "text" | "image" | "both" | "none" = "none";
-        if (urlHasQuery && urlHasImages) {
-          newSearchType = "both";
-        } else if (urlHasQuery) {
-          newSearchType = "text";
-        } else if (urlHasImages) {
-          newSearchType = "image";
-        }
-
-        // Apply context updates
-        if (urlHasImages) {
-          setImageUrls(initialImageUrls);
-        }
-
-        if (urlHasQuery) {
-          setSearchTerm(initialQuery);
-        }
-
-        setSearchType(newSearchType);
-
-        // Perform the search
-        console.log("Initiating fresh search from URL parameters");
-        setLoading(true);
-
-        try {
-          await fetchResults(
-            {
-              query: initialQuery,
-            },
-            1
-          );
-
-          console.log("Fresh search completed successfully");
-        } catch (error) {
-          console.error("Error performing fresh search:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
-      // Case 2: URL has same search params and we have results - don't re-fetch
-      else if ((urlHasQuery || urlHasImages) && hasResults) {
-        // console.log("URL matches existing search with results - no need to re-fetch");
-        // Ensure UI reflects the current state
-        if (urlHasQuery) {
-          setSearchTerm(initialQuery);
-        }
-        if (urlHasImages) {
-          setImageUrls(initialImageUrls);
-        }
-
-        // For map view, we need to load property details from IDs
-        if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
-          console.log("Loading property details for map view with existing IDs");
-          loadPropertiesForMapView(apartmentIds);
-        }
-      }
-      // Case 3: No URL params but we have a search with results in context
-      else if (contextHasSearch && hasResults) {
-        console.log("Using existing search results from context");
-        // For map view, we need to load property details from IDs
-        if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
-          console.log("Loading property details for map view with context IDs");
-          loadPropertiesForMapView(apartmentIds);
-        }
-      }
-      // Case 4: We have search criteria but no results - need to fetch
-      else if (contextHasSearch) {
-        console.log("Search criteria exist but no results - fetching data");
-        setLoading(true);
-
-        try {
-          await fetchResults(
-            {
-              query: searchTerm,
-            },
-            1
-          );
-
-          console.log("Search data fetch completed");
-        } catch (error) {
-          console.error("Error fetching search results:", error);
-        } finally {
-          setLoading(false);
-        }
-      }
+    // Prepare search parameters
+    const searchParams = {
+      query: searchFilterValues.query || initialQuery,
+      filters: {
+        min_beds: searchFilterValues.min_beds,
+        max_beds: searchFilterValues.max_beds,
+        min_baths: searchFilterValues.min_baths,
+        max_baths: searchFilterValues.max_baths,
+        min_rent: searchFilterValues.min_rent,
+        max_rent: searchFilterValues.max_rent,
+        studio: searchFilterValues.studio,
+      },
+      limit: ITEMS_PER_PAGE,
+      page: pageNum,
+      imageUrls: urls,
     };
 
-    setupSearch();
-    // Explicitly exclude currentView from the dependency array to prevent refetching when toggling views
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    initialQuery,
-    initialImageUrls,
-    searchTerm,
-    imageUrls,
-    apartmentIds.length,
-    hasResults,
-    searchPerformed,
-  ]);
+    try {
+      // Perform search
+      const results = await searchApartments(searchParams);
 
-  // Function to load property details for map view
-  const loadPropertiesForMapView = async (ids: string[]) => {
+      // Check if we've reached the end of pagination
+      if (results.length < ITEMS_PER_PAGE) {
+        setHasMoreResults(false);
+      }
+
+      // Extract IDs
+      const ids = results.map(property => property.id);
+
+      if (pageNum === 1) {
+        // For first page, replace existing IDs
+        setApartmentIds(ids);
+      } else {
+        // For subsequent pages, merge with existing IDs
+        const currentIdSet = new Set(apartmentIds);
+        const newUniqueIds = ids.filter(id => !currentIdSet.has(id));
+        
+        if (newUniqueIds.length > 0) {
+          setApartmentIds([...apartmentIds, ...newUniqueIds]);
+        }
+      }
+
+      // Mark that a search was performed
+      updateSearchState({ searchPerformed: true });
+
+      // Clear errors
+      setError(undefined);
+
+      return ids;
+    } catch (apiError: any) {
+      // Handle API errors
+      if (apiError.name === "AbortError") {
+        setError("Request timed out. Please try again later.");
+      } else if (
+        apiError.message?.includes("Failed to fetch") ||
+        apiError.message?.includes("NetworkError")
+      ) {
+        setError("Cannot connect to the search server. Please check your connection and try again.");
+      } else {
+        setError(`Error searching properties: ${apiError.message || "Unknown error occurred"}`);
+      }
+
+      // Clear results on first page error
+      if (pageNum === 1) {
+        setApartmentIds([]);
+        setProperties([]);
+      }
+
+      throw apiError;
+    }
+  }, [apartmentIds, imageUrls, initialImageUrls, initialQuery, setApartmentIds, updateSearchState]);
+
+  // Define loadPropertiesForMapView function before the effects
+  const loadPropertiesForMapView = useCallback(async (ids: string[]) => {
     setLoadingDetails(true);
-    setPlaceholderCount(ids.length);
-
-    // Create placeholders for all properties
-    const placeholders: PropertyWithLocation[] = ids.map((id) => ({
-      id,
-      title: "Loading...",
-      address: "",
-      price: 0,
-      bedrooms: 0,
-      bathrooms: 0,
-      squareFeet: 0,
-      images: [],
-      description: "",
-      features: [],
-      isPlaceholder: true,
-      location: {
-        lat: 37.7749 + (Math.random() - 0.5) * 0.05,
-        lng: -122.4194 + (Math.random() - 0.5) * 0.05,
-      },
-    }));
+    
+    // Cache key for storing property data in session storage
+    const cacheKey = `map_properties_${ids.join('_')}`;
+    
+    // Check if we have cached property data first
+    const cachedData = sessionStorage.getItem(cacheKey);
+    if (cachedData) {
+      try {
+        const parsedProperties = JSON.parse(cachedData) as PropertyWithLocation[];
+        setProperties(parsedProperties);
+        setLoadingDetails(false);
+        return;
+      } catch (e) {
+        console.error("Failed to parse cached properties:", e);
+        // Continue with normal loading if parsing fails
+      }
+    }
+    
+    // Create placeholders with more geographically distributed random positions
+    const placeholders: PropertyWithLocation[] = ids.map(id => {
+      // Use truly random coordinates within the continental US instead of SF-based
+      const randomLat = 25 + Math.random() * 24; // Between 25N and 49N (covers continental US)
+      const randomLng = -125 + Math.random() * 65; // Between 125W and 60W
+      
+      return {
+        id,
+        title: "Loading...",
+        address: "",
+        price: 0,
+        bedrooms: 0,
+        bathrooms: 0,
+        squareFeet: 0,
+        images: [],
+        description: "",
+        features: [],
+        isPlaceholder: true,
+        location: {
+          lat: randomLat,
+          lng: randomLng,
+        },
+      };
+    });
 
     setProperties(placeholders);
 
-    // Prefetch all property data using React Query
+    // Prefetch all property data
     await Promise.all(
-      ids.map((id) =>
+      ids.map(id =>
         queryClient.prefetchQuery({
           queryKey: ["property", id, searchTerm],
           queryFn: () => fetchApartmentPreview(id, searchTerm),
@@ -431,7 +383,7 @@ const UnifiedSearchPage = () => {
 
     // Update properties with actual data
     const updatedProperties = await Promise.all(
-      ids.map(async (id) => {
+      ids.map(async id => {
         const data = await queryClient.getQueryData<Property>(["property", id, searchTerm]);
         if (!data) return null;
 
@@ -443,55 +395,264 @@ const UnifiedSearchPage = () => {
                 lng: data.coordinates.longitude,
               }
             : {
-                lat: 37.7749 + (Math.random() - 0.5) * 0.05,
-                lng: -122.4194 + (Math.random() - 0.5) * 0.05,
+                // Generate truly random coordinates within the US if none exists
+                lat: 25 + Math.random() * 24,
+                lng: -125 + Math.random() * 65,
               },
         } as PropertyWithLocation;
       })
     );
 
-    setProperties(updatedProperties.filter((p): p is PropertyWithLocation => p !== null));
+    const filteredProperties = updatedProperties.filter((p): p is PropertyWithLocation => p !== null);
+    
+    // Cache the properties
+    try {
+      sessionStorage.setItem(cacheKey, JSON.stringify(filteredProperties));
+    } catch (e) {
+      console.error("Failed to cache properties:", e);
+    }
+    
+    setProperties(filteredProperties);
     setLoadingDetails(false);
-  };
-
-  // Handler for map view search
-  const handleMapSearch = async (filters: SearchFilterValues) => {
-    console.log("Search initiated with filters:", filters);
-    setLoading(true);
-    setError(undefined);
-    setSearchTerm(filters.query);
-    setFilterValues(filters); // This updates initialValues in SearchFilters
-    setPage(1);
-    setHasMoreResults(true);
-
-    // When performing a new search, clear property details to ensure we get fresh data
-    setProperties([]);
-    setLoadedPropertyDetails({});
-
-    // Determine and set the searchType based on the current search parameters
-    const hasQuery = !!filters.query.trim();
-    const hasImages = imageUrls.length > 0;
-
-    if (hasQuery && hasImages) {
-      setSearchType("both");
-    } else if (hasQuery) {
-      setSearchType("text");
-    } else if (hasImages) {
-      setSearchType("image");
-    } else {
-      setSearchType("none");
+  }, [queryClient, searchTerm]);
+  
+  // Initial Search Setup
+  useEffect(() => {
+    // Only run once per mount or when search parameters actually change
+    if (
+      hasRestoredFromUrl.current &&
+      !searchParams.toString().includes("q=") &&
+      !searchParams.toString().includes("imageUrls=")
+    ) {
+      return;
     }
 
+    // Mark that we've processed URL parameters
+    if (!hasRestoredFromUrl.current) {
+      hasRestoredFromUrl.current = true;
+      
+      // Check if we're returning from a property detail view via browser back button
+      // Using session storage as a more reliable method than referrer
+      const fromDetailView = sessionStorage.getItem('returnedFromPropertyDetail') === 'true';
+      const lastSearchStateStr = sessionStorage.getItem('lastSearchState');
+      
+      sessionStorage.removeItem('returnedFromPropertyDetail');
+      sessionStorage.removeItem('lastSearchState');
+      
+      // If we're coming back from a detail page, just restore the map view if needed but don't re-search
+      if (fromDetailView) {
+        // Parse the last search state if available
+        let lastSearchState = null;
+        try {
+          if (lastSearchStateStr) {
+            lastSearchState = JSON.parse(lastSearchStateStr);
+          }
+        } catch (e) {
+          console.error("Failed to parse last search state:", e);
+        }
+        
+        // Only load map properties if we had results
+        if (hasResults || (lastSearchState && lastSearchState.searchPerformed)) {
+          if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
+            loadPropertiesForMapView(apartmentIds);
+          }
+          return;
+        }
+      }
+    }
+
+    const setupSearch = async () => {
+      const urlHasQuery = !!initialQuery.trim();
+      const urlHasImages = initialImageUrls.length > 0;
+      const contextHasSearch = searchPerformed && (searchTerm || imageUrls.length > 0);
+      
+      // Check if the URL parameters actually changed from context state
+      const queryChanged = urlHasQuery && initialQuery !== searchTerm;
+      const imagesChanged = urlHasImages && JSON.stringify(initialImageUrls) !== JSON.stringify(imageUrls);
+      
+      // Case 1: URL has new search parameters - do a fresh search
+      if (queryChanged || imagesChanged) {
+        // Determine search type
+        let newSearchType: "text" | "image" | "both" | "none" = "none";
+        if (urlHasQuery && urlHasImages) newSearchType = "both";
+        else if (urlHasQuery) newSearchType = "text";
+        else if (urlHasImages) newSearchType = "image";
+
+        // Batch update context state
+        updateSearchState({
+          searchTerm: urlHasQuery ? initialQuery : "",
+          imageUrls: urlHasImages ? initialImageUrls : [],
+          searchType: newSearchType
+        });
+
+        setLoading(true);
+
+        try {
+          await fetchResults({
+            query: initialQuery,
+          }, 1);
+        } catch (error) {
+          console.error("Error performing fresh search:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+      // Case 2: URL matches existing search with results
+      else if ((urlHasQuery || urlHasImages) && hasResults) {
+        // Ensure state reflects URL (without triggering a new search)
+        if (urlHasQuery && initialQuery !== searchTerm) {
+          updateSearchState({
+            searchTerm: initialQuery
+          });
+        }
+        
+        if (urlHasImages && JSON.stringify(initialImageUrls) !== JSON.stringify(imageUrls)) {
+          updateSearchState({
+            imageUrls: initialImageUrls
+          });
+        }
+
+        // Load property details for map view if needed
+        if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
+          loadPropertiesForMapView(apartmentIds);
+        }
+      }
+      // Case 3: Using existing search from context
+      else if (contextHasSearch && hasResults) {
+        // Just load map properties if needed
+        if (currentView === "map" && apartmentIds.length > 0 && properties.length === 0) {
+          loadPropertiesForMapView(apartmentIds);
+        }
+      }
+      // Case 4: Search criteria exist but no results - just show no results
+      else if (contextHasSearch) {
+        // Don't do anything - accept the no results state
+      }
+    };
+
+    setupSearch();
+  }, [
+    initialQuery,
+    initialImageUrls,
+    searchTerm,
+    imageUrls,
+    apartmentIds.length,
+    hasResults,
+    searchPerformed,
+    updateSearchState,
+    currentView,
+    properties.length,
+    loadPropertiesForMapView,
+    fetchResults
+  ]);
+
+  // Event Handlers
+  const showNextImage = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedProperty?.images?.length) {
+      setCurrentImageIndex(prev => 
+        prev === selectedProperty.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  }, [selectedProperty]);
+
+  const showPrevImage = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedProperty?.images?.length) {
+      setCurrentImageIndex(prev => 
+        prev === 0 ? selectedProperty.images.length - 1 : prev - 1
+      );
+    }
+  }, [selectedProperty]);
+
+  // Function to toggle between map and list views
+  const toggleView = useCallback(() => {
+    const newView = currentView === "map" ? "list" : "map";
+    
+    // Set switching state to trigger appropriate handling
+    setIsSwitchingViews(true);
+    setCurrentView(newView);
+
+    // If switching to map view, load properties if needed
+    if (newView === "map" && apartmentIds.length > 0) {
+      if (properties.length === 0) {
+        loadPropertiesForMapView(apartmentIds);
+      } else {
+        // Recalculate bounds when switching back to map view
+        const bounds = calculateMapBounds(properties);
+        if (bounds) setMapBounds(bounds);
+        
+        // Reset switching state after a delay
+        setTimeout(() => {
+          setIsSwitchingViews(false);
+        }, 300);
+      }
+    } else {
+      // Reset switching state after a delay for list view
+      setTimeout(() => {
+        setIsSwitchingViews(false);
+      }, 300);
+    }
+
+    // Reset pagination when switching to list view
+    if (newView === "list") {
+      setPage(1);
+    }
+  }, [currentView, apartmentIds, properties, loadPropertiesForMapView, calculateMapBounds]);
+
+  // Handler for search form submission
+  const handleSearch = useCallback(async (filters: SearchFilterValues) => {
+    setLoading(true);
+    setError(undefined);
+    
+    // Store old results for greying out during loading
+    const oldProperties = [...properties];
+    
+    // Clear cached map properties to ensure fresh results
+    if (apartmentIds.length > 0) {
+      const cacheKey = `map_properties_${apartmentIds.join('_')}`;
+      sessionStorage.removeItem(cacheKey);
+    }
+    
+    // Update search state
+    updateSearchState({
+      searchTerm: filters.query,
+      filterValues: filters
+    });
+    
+    setPage(1);
+    setHasMoreResults(true);
+    
+    // For map view, show loading overlay on existing properties rather than clearing them
+    if (currentView === "map" && oldProperties.length > 0) {
+      // Apply loading state to existing properties
+      setProperties(oldProperties.map(p => ({ ...p, isPlaceholder: true })));
+    } else {
+      // For list view or first search, clear properties
+      setProperties([]);
+    }
+
+    // Determine and set search type
+    const hasQuery = !!filters.query.trim();
+    const hasImages = imageUrls.length > 0;
+    
+    let newSearchType: "text" | "image" | "both" | "none" = "none";
+    if (hasQuery && hasImages) newSearchType = "both";
+    else if (hasQuery) newSearchType = "text";
+    else if (hasImages) newSearchType = "image";
+    
+    updateSearchState({ searchType: newSearchType });
+
     try {
-      // Build search params for URL
+      // Update URL params
       const newSearchParams = new URLSearchParams(searchParams);
+      
       if (filters.query) {
         newSearchParams.set("q", filters.query);
       } else {
         newSearchParams.delete("q");
       }
 
-      // Keep image URLs in the URL if they exist
       if (initialImageUrls.length > 0) {
         newSearchParams.set("imageUrls", JSON.stringify(initialImageUrls));
       } else if (imageUrls.length > 0) {
@@ -500,26 +661,15 @@ const UnifiedSearchPage = () => {
         newSearchParams.delete("imageUrls");
       }
 
-      // Keep view parameter
       newSearchParams.set("view", currentView);
-
-      // Update URL query parameters
       setSearchParams(newSearchParams);
 
-      // Perform search to get IDs
-      console.log("Fetching search results with filters:", filters);
+      // Perform search
       const results = await fetchResults(filters, 1);
 
-      // If in map view, load property details
+      // Load property details for map view if needed
       if (currentView === "map" && results && results.length > 0) {
-        console.log(
-          `Search returned ${results.length} results, loading property details for map view`
-        );
         await loadPropertiesForMapView(results);
-      } else {
-        console.log(
-          `Search returned ${results?.length || 0} results (in list view, not loading details)`
-        );
       }
     } catch (err) {
       console.error("Unexpected error during search:", err);
@@ -529,175 +679,49 @@ const UnifiedSearchPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    currentView, 
+    fetchResults, 
+    imageUrls, 
+    initialImageUrls, 
+    loadPropertiesForMapView, 
+    searchParams, 
+    setApartmentIds, 
+    setSearchParams, 
+    updateSearchState,
+    properties,
+    apartmentIds
+  ]);
 
-  // Function to load more results when scrolling (only for list view)
-  const handleLoadMore = async () => {
-    if (!hasMoreResults || loadingMore || loading || !filterValues || currentView !== "list")
+  // Function to load more results when scrolling
+  const handleLoadMore = useCallback(async () => {
+    if (!hasMoreResults || loadingMore || loading || !filterValues || currentView !== "list") {
       return;
+    }
 
     const nextPage = page + 1;
-    console.log(`Loading more results: page ${nextPage}`);
     setLoadingMore(true);
 
     try {
       await fetchResults(filterValues, nextPage);
       setPage(nextPage);
     } catch (err) {
-      console.error("Error loading more results:", err);
-      // Don't show error UI, just stop pagination
       setHasMoreResults(false);
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [
+    hasMoreResults, 
+    loadingMore, 
+    loading, 
+    filterValues, 
+    currentView, 
+    page, 
+    fetchResults
+  ]);
 
-  // Shared function to fetch results (used by both views)
-  const fetchResults = async (searchFilterValues: SearchFilterValues, pageNum: number) => {
-    // Choose the correct image URLs (from the URL parameters or context)
-    const urls = initialImageUrls.length > 0 ? initialImageUrls : imageUrls;
-
-    console.log("Fetching results with parameters:", {
-      query: searchFilterValues.query,
-      page: pageNum,
-      imageUrls: urls.length > 0 ? `${urls.length} URLs` : "none",
-      searchType,
-    });
-
-    // Prepare filter parameters for API
-    const searchParams = {
-      query: searchFilterValues.query || initialQuery, // Use the query from URL if none in filters
-      filters: {
-        min_beds: searchFilterValues.min_beds,
-        max_beds: searchFilterValues.max_beds,
-        min_baths: searchFilterValues.min_baths,
-        max_baths: searchFilterValues.max_baths,
-        min_rent: searchFilterValues.min_rent,
-        max_rent: searchFilterValues.max_rent,
-        studio: searchFilterValues.studio,
-      },
-      limit: ITEMS_PER_PAGE, // Request smaller chunks
-      page: pageNum, // Add page parameter
-      imageUrls: urls, // Add image URLs from URL parameters or context
-    };
-
-    try {
-      // Perform search
-      const results = await searchApartments(searchParams);
-
-      // If we got fewer results than requested, there are no more pages
-      if (results.length < ITEMS_PER_PAGE) {
-        setHasMoreResults(false);
-      }
-
-      // Extract just the IDs from the search results
-      const ids = results.map((property) => property.id);
-
-      // For the first page, replace results; otherwise append
-      if (pageNum === 1) {
-        console.log(`Page 1: Replacing all apartment IDs with ${ids.length} new IDs`);
-        setApartmentIds(ids);
-      } else {
-        // Get current IDs and append new ones, removing duplicates
-        const currentIds = new Set(apartmentIds);
-
-        // Count how many new (unique) IDs we're adding
-        const newUniqueIds = ids.filter((id) => !currentIds.has(id));
-
-        console.log(
-          `Page ${pageNum}: Adding ${newUniqueIds.length} new unique IDs to existing ${currentIds.size} IDs`
-        );
-
-        // Create a merged array with no duplicates
-        const allIds = [...apartmentIds];
-
-        // Only add IDs that don't already exist
-        ids.forEach((id) => {
-          if (!currentIds.has(id)) {
-            allIds.push(id);
-          }
-        });
-
-        setApartmentIds(allIds);
-      }
-
-      setSearchPerformed(true);
-
-      console.log(`Page ${pageNum}: Loaded ${ids.length} apartment IDs`);
-
-      // Clear any previous errors if successful
-      setError(undefined);
-
-      return ids;
-    } catch (apiError: any) {
-      // Handle API-specific errors
-      console.error("API Error:", apiError);
-
-      if (apiError.name === "AbortError") {
-        setError("Request timed out. Please try again later.");
-      } else if (
-        apiError.message?.includes("Failed to fetch") ||
-        apiError.message?.includes("NetworkError")
-      ) {
-        setError(
-          "Cannot connect to the search server. Please check your connection and try again."
-        );
-      } else {
-        // Show a more detailed error if available
-        const errorMessage = apiError.message || "Unknown error occurred";
-        setError(`Error searching properties: ${errorMessage}`);
-      }
-
-      // If this is the first page, clear results
-      if (pageNum === 1) {
-        setApartmentIds([]);
-        setProperties([]);
-      }
-
-      throw apiError;
-    }
-  };
-
-  // Toggle between map and list views
-  const toggleView = () => {
-    const newView = currentView === "map" ? "list" : "map";
-    setCurrentView(newView);
-
-    console.log(
-      `Toggling view from ${currentView} to ${newView}. Current apartment IDs: ${apartmentIds.length}`
-    );
-
-    // If switching to map view and we have apartment IDs but no property details loaded, load them
-    if (newView === "map" && apartmentIds.length > 0) {
-      // Only load properties if we don't have them already or if there's a mismatch in counts
-      const loadedPropertyCount = properties.filter((p) => !p.isPlaceholder).length;
-      const mismatchInCounts = loadedPropertyCount < apartmentIds.length;
-
-      if (properties.length === 0 || mismatchInCounts) {
-        console.log(
-          `Loading property details for map view: ${properties.length} properties loaded, ${apartmentIds.length} IDs available`
-        );
-        loadPropertiesForMapView(apartmentIds);
-      } else {
-        console.log(
-          `Reusing existing property details for map view: ${properties.length} properties already loaded`
-        );
-      }
-    }
-
-    // When switching to list view, ensure we're not creating duplicates
-    // The PropertyGrid component already handles pagination from the existing apartmentIds
-    if (newView === "list") {
-      console.log("Switched to list view - ensuring no duplicates in apartment IDs");
-
-      // No need to modify the apartment IDs here - just ensure PropertyGrid uses them correctly
-      // Reset pagination to show from the beginning
-      setPage(1);
-    }
-  };
-
-  // Render the map view
-  const renderMapView = () => (
+  // Memoized map view rendering
+  const renderMapView = useMemo(() => (
     <div className="flex w-full h-full">
       {/* Left sidebar for property listings */}
       <div
@@ -765,7 +789,7 @@ const UnifiedSearchPage = () => {
 
         {/* Scrollable content */}
         <div className="overflow-y-auto h-[calc(100%-64px)]">
-          <div className="p-2">
+          <div className={`p-2 relative ${loading ? "opacity-60" : ""}`}>
             {loading && properties.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
@@ -785,8 +809,13 @@ const UnifiedSearchPage = () => {
               <div className="p-4 text-center">
                 <p className="text-muted-foreground">No Properties Found</p>
               </div>
-            ) : (
-              properties.map((property) => (
+            ) : loading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              </div>
+            ) : null}
+            
+            {properties.map((property) => (
                 <div
                   key={property.id}
                   className={`p-2 mb-2 mr-2 rounded-lg transition-all cursor-pointer hover:bg-gray-50 ${
@@ -795,7 +824,7 @@ const UnifiedSearchPage = () => {
                   onClick={() => !property.hasError && setSelectedProperty(property)}
                 >
                   {property.isPlaceholder ? (
-                    <ShimmerPropertyCard index={Number(property.id)} />
+                    <ShimmerPropertyCard />
                   ) : (
                     <div className="flex">
                       <div className="w-40 h-40 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
@@ -873,8 +902,7 @@ const UnifiedSearchPage = () => {
                     </div>
                   )}
                 </div>
-              ))
-            )}
+              ))}
           </div>
         </div>
       </div>
@@ -882,58 +910,85 @@ const UnifiedSearchPage = () => {
       {/* Map container */}
       <div className="flex-1 relative">
         <div className="absolute inset-0">
-          {properties.length > 0 ? (
-            <MapContainer
-              center={mapCenter}
-              zoom={DEFAULT_ZOOM}
-              style={{ height: "100%", width: "100%" }}
-              scrollWheelZoom={true}
-              className="z-0"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-
-              {mapBounds && <MapBoundsUpdater bounds={mapBounds} />}
-
-              {properties
-                .filter((p) => p.location && !p.isPlaceholder)
-                .map(
-                  (property) =>
-                    property.location && (
-                      <Marker
-                        key={property.id}
-                        position={[property.location.lat, property.location.lng]}
-                        icon={customIcon}
-                        eventHandlers={{
-                          click: () => {
-                            setSelectedProperty(property);
-                          },
-                        }}
-                      ></Marker>
-                    )
+          <div className={`relative w-full h-full ${loading ? "opacity-60" : ""}`}>
+            {properties.length > 0 ? (
+              <>
+                <MapContainer
+                  center={mapCenter}
+                  zoom={DEFAULT_ZOOM}
+                  style={{ height: "100%", width: "100%" }}
+                  scrollWheelZoom={true}
+                  zoomControl={true}
+                  minZoom={MIN_ZOOM}
+                  maxZoom={MAX_ZOOM}
+                  className="z-0 map-container"
+                  whenReady={() => {
+                    // Ensure map properly fills container after rendering
+                    setTimeout(() => {
+                      // No direct map reference needed, we handle resize through MapResizeHandler
+                    }, 100);
+                  }}
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  />
+  
+                  {/* Add map resize handler */}
+                  <MapResizeHandler />
+                  
+                  {/* Update bounds handler with switching views state */}
+                  {mapBounds && <MapBoundsUpdater bounds={mapBounds} isSwitchingViews={isSwitchingViews} />}
+  
+                  {properties
+                    .filter((p) => p.location && !p.isPlaceholder)
+                    .map(
+                      (property) =>
+                        property.location && (
+                          <Marker
+                            key={property.id}
+                            position={[property.location.lat, property.location.lng]}
+                            icon={customIcon}
+                            eventHandlers={{
+                              click: () => {
+                                setSelectedProperty(property);
+                              },
+                            }}
+                          ></Marker>
+                        )
+                    )}
+                </MapContainer>
+                
+                {/* Loading overlay for map view */}
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-sm z-10">
+                    <div className="bg-white/80 p-6 rounded-lg shadow-lg">
+                      <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-2" />
+                      <p className="text-vibe-navy font-medium">Updating results...</p>
+                    </div>
+                  </div>
                 )}
-            </MapContainer>
-          ) : (
-            <div className="h-full w-full bg-gray-100 flex items-center justify-center">
-              {loading ? (
-                <div className="text-center">
-                  <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
-                  <p className="text-muted-foreground">Loading map data...</p>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    No Properties to Display
-                    <br />
-                    Try Refining Your Search!
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+              </>
+            ) : (
+              <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                {loading ? (
+                  <div className="text-center">
+                    <Loader2 className="h-16 w-16 text-primary mx-auto mb-4 animate-spin" />
+                    <p className="text-muted-foreground">Loading map data...</p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-muted-foreground">
+                      No Properties to Display
+                      <br />
+                      Try Refining Your Search!
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Property popup */}
@@ -1018,7 +1073,7 @@ const UnifiedSearchPage = () => {
 
                 <div className="mt-4">
                   <a
-                    href={`/property/${selectedProperty.id}`}
+                    href={`/property/${selectedProperty.id}?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`}
                     className="block w-full py-2 bg-primary text-white rounded-lg text-center font-medium"
                   >
                     View Details
@@ -1038,10 +1093,26 @@ const UnifiedSearchPage = () => {
         {showSidebar ? <MapIcon className="h-6 w-6" /> : <List className="h-6 w-6" />}
       </button>
     </div>
-  );
+  ), [
+    currentImageIndex,
+    error,
+    initialQuery,
+    loading,
+    loadingDetails,
+    mapBounds,
+    mapCenter,
+    properties,
+    searchTerm,
+    searchType,
+    selectedProperty,
+    showPrevImage,
+    showNextImage,
+    showSidebar,
+    isSwitchingViews
+  ]);
 
-  // Render the list view
-  const renderListView = () => (
+  // Memoized list view rendering
+  const renderListView = useMemo(() => (
     <div className="flex-1 h-full overflow-y-auto bg-white">
       <div className="container mx-auto px-4 w-full h-full py-2 bg-white">
         <PropertyGrid
@@ -1054,34 +1125,40 @@ const UnifiedSearchPage = () => {
         />
       </div>
     </div>
-  );
+  ), [
+    apartmentIds,
+    error,
+    handleLoadMore,
+    initialQuery,
+    loading,
+    searchTerm,
+    searchType
+  ]);
 
   return (
     <div className="h-screen overflow-hidden">
       {/* Fixed navbar at the top */}
       <Navbar />
 
-      {/* Main content container - starts after navbar height */}
+      {/* Main content container */}
       <div className="flex flex-col h-screen pt-16">
-        {" "}
-        {/* pt-16 accounts for navbar height */}
-        {/* Search filters section with border */}
+        {/* Search filters section */}
         <div className="bg-white border-b border-gray-200 z-20">
           <div className="container mx-auto px-4 py-4">
             <SearchFilters
-              onSearch={handleMapSearch}
+              onSearch={handleSearch}
               initialQuery={searchTerm || initialQuery}
               initialValues={filterValues || undefined}
               isLoading={loading}
               currentView={currentView}
               onViewToggle={toggleView}
-              key="search-filters" // Force re-creation of component on searches to reset filter state
             />
           </div>
         </div>
-        {/* Map/List content area - takes remaining height */}
+
+        {/* Content area - map or list view */}
         <div className="flex-1 overflow-hidden">
-          {currentView === "map" ? renderMapView() : renderListView()}
+          {currentView === "map" ? renderMapView : renderListView}
         </div>
       </div>
     </div>
