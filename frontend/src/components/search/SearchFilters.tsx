@@ -8,31 +8,32 @@ const ViewToggle: React.FC<{ currentView: "map" | "list"; onToggle: () => void }
   onToggle,
 }) => {
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={`relative inline-flex items-center h-10 rounded-full px-1 transition-colors duration-200 ${
-        currentView === "map" ? "bg-vibe-navy" : "bg-gray-200"
-      }`}
-    >
-      <div
-        className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-          currentView === "map" ? "translate-x-8" : "translate-x-0"
+    <div className="inline-flex rounded-lg overflow-hidden">
+      <button
+        type="button"
+        onClick={currentView === "map" ? onToggle : undefined}
+        className={`inline-flex items-center justify-center gap-2 px-4 py-3 min-w-[70px] transition-colors ${
+          currentView === "list" ? "bg-vibe-navy text-white" : "bg-gray-200 text-vibe-charcoal/70 hover:bg-gray-300"
         }`}
-      />
-      <div className="flex items-center space-x-2 px-2">
-        <LayoutGrid
-          className={`h-5 w-5 transition-colors duration-200 ${
-            currentView === "list" ? "text-vibe-navy" : "text-gray-400"
-          }`}
-        />
-        <MapIcon
-          className={`h-5 w-5 transition-colors duration-200 ${
-            currentView === "map" ? "text-white" : "text-gray-400"
-          }`}
-        />
-      </div>
-    </button>
+      >
+        <div className="flex items-center gap-1.5">
+          <LayoutGrid className="h-5 w-5" />
+          <span>Grid</span>
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={currentView === "list" ? onToggle : undefined}
+        className={`inline-flex items-center justify-center px-4 py-3 min-w-[70px] transition-colors ${
+          currentView === "map" ? "bg-vibe-navy text-white" : "bg-gray-200 text-vibe-charcoal/70 hover:bg-gray-300"
+        }`}
+      >
+        <div className="flex items-center gap-1.5">
+          <MapIcon className="h-5 w-5" />
+          <span>Map</span>
+        </div>
+      </button>
+    </div>
   );
 };
 
@@ -461,13 +462,13 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
               >
                 <div className="p-4">
                   <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-semibold text-vibe-charcoal">Filters</h3>
+                    <h3 className="font-sans font-semibold text-vibe-navy">Filters</h3>
                     <button
                       type="button"
-                      className="text-sm text-vibe-charcoal/70 hover:text-vibe-charcoal flex items-center gap-1"
+                      className="text-sm text-vibe-charcoal/70 hover:text-vibe-navy flex items-center gap-1"
                       onClick={clearFilters}
                     >
-                      <span>Clear all</span>
+                      <span>Clear All</span>
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -476,15 +477,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     {/* Bedrooms */}
                     <div>
                       <div className="mb-2 flex justify-between items-center">
-                        <label className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal">
-                          <Bed className="h-4 w-4 text-vibe-navy" />
+                        <label className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal/70">
+                          <Bed className="h-4 w-4 text-vibe-charcoal/70" />
                           <span>Bedrooms: {getBedroomRangeText()}</span>
                         </label>
                         <span className="text-xs text-vibe-charcoal/50">
                           Select 1 or 2 options
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="flex gap-2 mt-2 overflow-x-auto">
                         <button
                           type="button"
                           className={getButtonStyle(0, bedroomSelections, true)}
@@ -508,15 +509,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     {/* Bathrooms */}
                     <div>
                       <div className="mb-2 flex justify-between items-center">
-                        <label className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal">
-                          <Bath className="h-4 w-4 text-vibe-navy" />
+                        <label className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal/70">
+                          <Bath className="h-4 w-4 text-vibe-charcoal/70" />
                           <span>Bathrooms: {getBathroomRangeText()}</span>
                         </label>
                         <span className="text-xs text-vibe-charcoal/50">
                           Select 1 or 2 options
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="flex gap-2 mt-2 overflow-x-auto">
                         <button
                           type="button"
                           className={getButtonStyle(0, bathroomSelections, false)}
@@ -540,8 +541,8 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     {/* Price Range */}
                     <div>
                       <div className="mb-3 flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-vibe-navy" />
-                        <span className="text-sm font-medium text-vibe-charcoal">Price Range</span>
+                        <DollarSign className="h-4 w-4 text-vibe-charcoal/70" />
+                        <span className="text-sm font-medium text-vibe-charcoal/70">Price Range</span>
                       </div>
                       <div className="flex gap-4">
                         <div className="flex-1">
