@@ -1,4 +1,5 @@
 import os
+import openai    
 import json
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
@@ -6,23 +7,13 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
-
-# Get API key from environment variables
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-
-# Check if required API key is set
 if not PINECONE_API_KEY:
     raise ValueError("PINECONE_API_KEY not found in environment variables")
-
-# Initialize sentence-transformer model
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-
-# Initialize Pinecone client
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-# Constants
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 INDEX_NAME = "apartments-search"
-# Path to apartments.json file
 APARTMENTS_FILE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "apartments.json"
 )
@@ -51,41 +42,23 @@ def search_apartments(query, filter_dict=None, top_k=10, image_urls=None):
     Returns:
         list: List of matching apartments with scores
     """
-    import os
-    import openai
-    
-    # Get the index
     index = pc.Index(INDEX_NAME)
-    
-    # Handle different search modes
     search_text = query.strip()
-    
-    # If we have image URLs, we need to analyze them with GPT-4o
     if image_urls and len(image_urls) > 0:
         try:
             print(f"Processing {len(image_urls)} image URLs for analysis")
-            
-            # Get OpenAI API key from environment
             openai_api_key = os.getenv("OPENAI_API_KEY")
-            
             if not openai_api_key:
                 print("ERROR: OPENAI_API_KEY not found in environment")
                 return []
             
             try:
-                # Initialize OpenAI client
                 client = openai.OpenAI(api_key=openai_api_key)
                 print("Successfully initialized OpenAI client")
-                
-                # Construct messages for the API
                 messages = [
                     {"role": "system", "content": "You are a helpful assistant that generates semantic search descriptions for apartment listings. Provide a concise description (less than 20 words) focusing on aesthetics and design elements visible in the images."}
                 ]
-                
-                # Add image URLs to the message
                 content = []
-                
-                # Add the text content
                 if search_text:
                     content.append(
                         {"type": "text", 
@@ -96,41 +69,23 @@ def search_apartments(query, filter_dict=None, top_k=10, image_urls=None):
                         {"type": "text", 
                          "text": "These are images of apartment interiors/exteriors. Generate a 20-word search description focusing on aesthetics and design elements visible in the images."}
                     )
-                    
-                # Add the image URLs (maximum 5 images to avoid token limits)
                 for url in image_urls[:5]:
                     print(f"Adding image URL to content: {url[:60]}...")
                     content.append(
                         {"type": "image_url", "image_url": {"url": url}}
                     )
-                
                 messages.append({"role": "user", "content": content})
-                
-                print("Calling OpenAI API for image analysis")
-                # Call the OpenAI API
                 response = client.chat.completions.create(
                     model="gpt-4o",
                     messages=messages,
                     max_tokens=100
                 )
-                
-                # Get the generated description
-                image_description = response.choices[0].message.content.strip()
-                print(f"Generated image description: {image_description}")
-                
-                # Combine with any existing text query
-                if search_text:
-                    combined_query = f"{search_text} {image_description}"
-                else:
-                    combined_query = image_description
-                    
+                combined_query = response.choices[0].message.content.strip()
                 print(f"Combined query for embedding: {combined_query}")
-                # Use the combined query for embedding
                 query_embedding = create_embedding(combined_query)
                 
             except Exception as api_error:
                 print(f"ERROR during OpenAI API call: {api_error}")
-                # Fall back to text query if available
                 if search_text:
                     print(f"Falling back to text-only query: {search_text}")
                     query_embedding = create_embedding(search_text)
@@ -139,27 +94,22 @@ def search_apartments(query, filter_dict=None, top_k=10, image_urls=None):
                     return []
         except Exception as e:
             print(f"Error analyzing images with OpenAI: {e}")
-            
-            # Fall back to text query if available, otherwise return empty results
             if search_text:
                 query_embedding = create_embedding(search_text)
             else:
                 print("No fallback query available")
                 return []
     else:
-        # Text-only search
         query_embedding = create_embedding(search_text)
 
     if query_embedding is None:
         print("Failed to create embedding for query")
         return []
 
-    # Search the index
     search_results = index.query(
         vector=query_embedding, filter=filter_dict, top_k=top_k, include_metadata=True
     )
 
-    # Format results
     formatted_results = []
     for match in search_results.matches:
         result = {"id": match.id, "score": match.score, "metadata": match.metadata}
@@ -247,23 +197,13 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
         list: Reordered list of URLs (strings), most relevant first
     """
     try:
-        # print(f"Ranking images for apartment {apartment_id} by query: '{query}'")
-        # print(f"Original photos type: {type(original_photos)}")
-        
         # Debug the photos list
         if not isinstance(original_photos, list):
             print(f"Error: original_photos is not a list but {type(original_photos)}")
             return original_photos
-            
-        # Check if the list is empty
         if not original_photos:
             print("Error: original_photos is empty")
             return original_photos
-            
-        # Check the structure of the photos list
-        # print(f"First photo item type: {type(original_photos[0])}")
-        
-        # Convert photo objects to URLs if needed
         photo_urls = []
         for photo in original_photos:
             if isinstance(photo, dict) and "url" in photo:
@@ -279,7 +219,6 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
                 
         try:
             pass
-            # print(f"Original photo order first 3 URLs: {[url[:50] + '...' for url in photo_urls[:3]]}")
         except Exception as e:
             print(f"Error printing original photo URLs: {e}")
             return original_photos
