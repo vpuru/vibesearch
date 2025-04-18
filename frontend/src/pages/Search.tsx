@@ -8,9 +8,22 @@ import { useSearch } from "../contexts/SearchContext";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "leaflet";
-import { Map as MapIcon, List, X, Loader2, LayoutGrid, MapPin, Bed, Bath, Square, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Map as MapIcon,
+  List,
+  X,
+  Loader2,
+  LayoutGrid,
+  MapPin,
+  Bed,
+  Bath,
+  Square,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Property } from "../components/search/PropertyCard";
 import { cn } from "../lib/utils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 // Number of items to fetch per page
 const ITEMS_PER_PAGE = 25;
@@ -80,16 +93,12 @@ const calculateMapBounds = (properties: PropertyWithLocation[]): LatLngBoundsExp
 
 // Custom interface for property with location data
 interface PropertyWithLocation extends Property {
-  location?: {
+  location: {
     lat: number;
     lng: number;
   };
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-  hasError?: boolean;
   isPlaceholder?: boolean;
+  hasError?: boolean;
 }
 
 // Shimmer effect component for loading state
@@ -186,6 +195,8 @@ const UnifiedSearchPage = () => {
     return sqft.toLocaleString();
   };
 
+  const queryClient = useQueryClient();
+
   // Update URL when view changes
   useEffect(() => {
     const newParams = new URLSearchParams(searchParams);
@@ -224,18 +235,14 @@ const UnifiedSearchPage = () => {
   const showNextImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (selectedProperty && selectedProperty.images && selectedProperty.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === selectedProperty.images.length - 1 ? 0 : prev + 1
-      );
+      setCurrentImageIndex((prev) => (prev === selectedProperty.images.length - 1 ? 0 : prev + 1));
     }
   };
 
   const showPrevImage = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (selectedProperty && selectedProperty.images && selectedProperty.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? selectedProperty.images.length - 1 : prev - 1
-      );
+      setCurrentImageIndex((prev) => (prev === 0 ? selectedProperty.images.length - 1 : prev - 1));
     }
   };
 
@@ -386,240 +393,74 @@ const UnifiedSearchPage = () => {
     searchPerformed,
   ]);
 
-  // Improved loadPropertyDetails function with better error handling and state tracking
-  const loadPropertyDetails = async (propertyId: string) => {
-    // Check if property details are already loaded
-    const propertyIsAlreadyLoaded = loadedPropertyDetails[propertyId];
-    const existingProperty = properties.find((p) => p.id === propertyId && !p.isPlaceholder);
+  // Function to load property details for map view
+  const loadPropertiesForMapView = async (ids: string[]) => {
+    setLoadingDetails(true);
+    setPlaceholderCount(ids.length);
 
-    // Skip loading if property is already loaded and search term hasn't changed
-    if (propertyIsAlreadyLoaded && existingProperty && !searchTerm && !initialQuery) {
-      console.log(`Property ${propertyId} already loaded, skipping fetch`);
-      return;
-    }
+    // Create placeholders for all properties
+    const placeholders: PropertyWithLocation[] = ids.map((id) => ({
+      id,
+      title: "Loading...",
+      address: "",
+      price: 0,
+      bedrooms: 0,
+      bathrooms: 0,
+      squareFeet: 0,
+      images: [],
+      description: "",
+      features: [],
+      isPlaceholder: true,
+      location: {
+        lat: 37.7749 + (Math.random() - 0.5) * 0.05,
+        lng: -122.4194 + (Math.random() - 0.5) * 0.05,
+      },
+    }));
 
-    console.log(
-      `Loading property details for ${propertyId} with search term: ${
-        searchTerm || initialQuery || "none"
-      }`
+    setProperties(placeholders);
+
+    // Prefetch all property data using React Query
+    await Promise.all(
+      ids.map((id) =>
+        queryClient.prefetchQuery({
+          queryKey: ["property", id, searchTerm],
+          queryFn: () => fetchApartmentPreview(id, searchTerm),
+        })
+      )
     );
 
-    // Track if this is a retry
-    let retryCount = 0;
-    const maxRetries = 2;
+    // Update properties with actual data
+    const updatedProperties = await Promise.all(
+      ids.map(async (id) => {
+        const data = await queryClient.getQueryData<Property>(["property", id, searchTerm]);
+        if (!data) return null;
 
-    // Mark as loading
-    setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: false }));
-
-    const loadWithRetry = async (): Promise<void> => {
-      try {
-        // Pass the search term to order images by relevance to the query
-        const property = await fetchApartmentPreview(propertyId, searchTerm || initialQuery);
-
-        // Find existing placeholder for this property to maintain position on map
-        const placeholder = properties.find((p) => p.id === propertyId);
-
-        const propertyWithLocation: PropertyWithLocation = {
-          ...property,
-          location: property.coordinates
+        return {
+          ...data,
+          location: data.coordinates
             ? {
-                lat: property.coordinates.latitude,
-                lng: property.coordinates.longitude,
+                lat: data.coordinates.latitude,
+                lng: data.coordinates.longitude,
               }
             : {
-                // Use existing placeholder location if available, or generate random coordinates
-                lat: placeholder?.location?.lat || 37.7749 + (Math.random() - 0.5) * 0.05,
-                lng: placeholder?.location?.lng || -122.4194 + (Math.random() - 0.5) * 0.05,
+                lat: 37.7749 + (Math.random() - 0.5) * 0.05,
+                lng: -122.4194 + (Math.random() - 0.5) * 0.05,
               },
-        };
+        } as PropertyWithLocation;
+      })
+    );
 
-        // Update the properties list by replacing the placeholder with the actual property
-        setProperties((prev) => {
-          // Create a new array to avoid mutation
-          const updated = [...prev];
-
-          // Find index of existing property or placeholder
-          const idx = updated.findIndex((p) => p.id === propertyId);
-
-          if (idx !== -1) {
-            // Replace existing entry
-            updated[idx] = propertyWithLocation;
-          } else {
-            // Add as new property
-            updated.push(propertyWithLocation);
-          }
-
-          return updated;
-        });
-
-        // Mark as successfully loaded
-        setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
-
-        console.log(`Successfully loaded property ${propertyId}`);
-      } catch (err) {
-        // Check if it's an AbortError and we haven't exceeded max retries
-        if (err instanceof Error && err.name === "AbortError" && retryCount < maxRetries) {
-          console.warn(
-            `Retry attempt ${retryCount + 1} for property ${propertyId} after AbortError`
-          );
-          retryCount++;
-
-          // Add a small delay before retrying (increases with each retry)
-          await new Promise((resolve) => setTimeout(resolve, 300 * retryCount));
-          return loadWithRetry();
-        }
-
-        // For other errors or if max retries reached, log and continue
-        console.error(`Error loading property ${propertyId}:`, err);
-
-        // Find existing placeholder to maintain position
-        const placeholder = properties.find((p) => p.id === propertyId);
-
-        // Create a property with error state
-        const errorProperty: PropertyWithLocation = {
-          id: propertyId,
-          title: "Unable to load property",
-          address: "Error retrieving property details",
-          price: 0,
-          bedrooms: 0,
-          bathrooms: 0,
-          squareFeet: 0,
-          images: [],
-          description: "",
-          features: [],
-          hasError: true,
-          location: {
-            // Use existing placeholder location if available, or generate random coordinates
-            lat: placeholder?.location?.lat || 37.7749 + (Math.random() - 0.5) * 0.05,
-            lng: placeholder?.location?.lng || -122.4194 + (Math.random() - 0.5) * 0.05,
-          },
-        };
-
-        // Update the properties list by replacing the placeholder with the error property
-        setProperties((prev) => {
-          const updated = [...prev];
-          const idx = updated.findIndex((p) => p.id === propertyId);
-          if (idx !== -1) {
-            updated[idx] = errorProperty;
-          } else {
-            updated.push(errorProperty);
-          }
-          return updated;
-        });
-
-        // Mark as loaded (with error) to prevent endless retries
-        setLoadedPropertyDetails((prev) => ({ ...prev, [propertyId]: true }));
-      }
-    };
-
-    // Start the loading process with retry capability
-    await loadWithRetry();
-  };
-
-  // Load properties for map view based on IDs
-  const loadPropertiesForMapView = async (ids: string[]) => {
-    if (!ids.length) return;
-
-    // Make sure we're working with unique IDs
-    const uniqueIds = Array.from(new Set(ids));
-
-    if (uniqueIds.length !== ids.length) {
-      console.log(
-        `Removed ${ids.length - uniqueIds.length} duplicate IDs from property loading list`
-      );
-    }
-
-    setLoadingDetails(true);
-    setError(undefined);
-
-    try {
-      // Filter out IDs that already have non-placeholder properties loaded
-      const existingPropertyIds = new Set(
-        properties.filter((p) => !p.isPlaceholder && !p.hasError).map((p) => p.id)
-      );
-
-      const idsToLoad = uniqueIds.filter((id) => !existingPropertyIds.has(id));
-
-      console.log(
-        `Loading properties for map view: ${idsToLoad.length} new properties to load, ${existingPropertyIds.size} already loaded`
-      );
-
-      if (idsToLoad.length === 0 && existingPropertyIds.size > 0) {
-        // All properties already loaded, nothing to do
-        console.log("All properties already loaded for map view");
-        setLoadingDetails(false);
-        return;
-      }
-
-      // Create placeholders for all properties to load
-      const newPlaceholders: PropertyWithLocation[] = idsToLoad.map((id) => ({
-        id,
-        title: "Loading...",
-        address: "Loading...",
-        price: 0,
-        bedrooms: 0,
-        bathrooms: 0,
-        squareFeet: 0,
-        images: [],
-        description: "",
-        features: [],
-        isPlaceholder: true,
-        location: {
-          lat: 37.7749 + (Math.random() - 0.5) * 0.05,
-          lng: -122.4194 + (Math.random() - 0.5) * 0.05,
-        },
-      }));
-
-      // Add all placeholders at once
-      setProperties((prev) => [...prev, ...newPlaceholders]);
-
-      // Process in batches of 10
-      const batchSize = 10;
-      let errorCount = 0;
-
-      for (let i = 0; i < idsToLoad.length; i += batchSize) {
-        const batch = idsToLoad.slice(i, i + batchSize);
-        console.log(`Loading batch ${i / batchSize + 1}: ${batch.length} properties`);
-
-        // Load all properties in the current batch in parallel
-        const batchPromises = batch.map(async (id) => {
-          try {
-            await loadPropertyDetails(id);
-          } catch (err) {
-            errorCount++;
-            console.error(`Error loading property details for ${id}:`, err);
-          }
-        });
-
-        // Wait for the current batch to complete before moving to the next
-        await Promise.all(batchPromises);
-
-        // Add a small delay between batches to prevent overwhelming the API
-        if (i + batchSize < idsToLoad.length) {
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-      }
-
-      console.log(`Completed loading ${idsToLoad.length} properties with ${errorCount} errors`);
-
-      if (errorCount > 0) {
-        console.warn(`Encountered ${errorCount} errors while loading properties`);
-      }
-    } catch (err) {
-      console.error("Error in loadPropertiesForMapView:", err);
-      setError("Failed to load some property details");
-    } finally {
-      setLoadingDetails(false);
-    }
+    setProperties(updatedProperties.filter((p): p is PropertyWithLocation => p !== null));
+    setLoadingDetails(false);
   };
 
   // Handler for map view search
   const handleMapSearch = async (filters: SearchFilterValues) => {
-    console.log('Search initiated with filters:', filters);
+    console.log("Search initiated with filters:", filters);
     setLoading(true);
     setError(undefined);
     setSearchTerm(filters.query);
-    setFilterValues(filters);  // This updates initialValues in SearchFilters
+    setFilterValues(filters); // This updates initialValues in SearchFilters
     setPage(1);
     setHasMoreResults(true);
 
@@ -870,28 +711,47 @@ const UnifiedSearchPage = () => {
             <h2 className="text-md font-semibold font-sans">
               {searchType === "text" && (searchTerm || initialQuery) && (
                 <span>
-                  <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
+                  <span className="whitespace-nowrap text-vibe-navy">
+                    {properties.length} results
+                  </span>
                   <span className="ml-1 font-normal text-vibe-charcoal/70">for "</span>
-                  <span className="font-normal text-vibe-charcoal/70 break-all">{decodeURIComponent(searchTerm || initialQuery)}</span>
+                  <span className="font-normal text-vibe-charcoal/70 break-all">
+                    {decodeURIComponent(searchTerm || initialQuery)}
+                  </span>
                   <span className="font-normal text-vibe-charcoal/70">"</span>
                 </span>
               )}
               {searchType === "image" && (
                 <span>
-                  <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
-                  <span className="ml-1 font-normal text-vibe-charcoal/70">that match your images</span>
+                  <span className="whitespace-nowrap text-vibe-navy">
+                    {properties.length} results
+                  </span>
+                  <span className="ml-1 font-normal text-vibe-charcoal/70">
+                    that match your images
+                  </span>
                 </span>
               )}
               {searchType === "both" && (searchTerm || initialQuery) && (
                 <span>
-                  <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
-                  <span className="ml-1 font-normal text-vibe-charcoal/70"> that match your images and "</span>
-                  <span className="font-normal text-vibe-charcoal/70 break-all">{decodeURIComponent(searchTerm || initialQuery)}</span>
+                  <span className="whitespace-nowrap text-vibe-navy">
+                    {properties.length} results
+                  </span>
+                  <span className="ml-1 font-normal text-vibe-charcoal/70">
+                    {" "}
+                    that match your images and "
+                  </span>
+                  <span className="font-normal text-vibe-charcoal/70 break-all">
+                    {decodeURIComponent(searchTerm || initialQuery)}
+                  </span>
                   <span className="font-normal text-vibe-charcoal/70">"</span>
                 </span>
               )}
-              {(!searchType || searchType === "none" || (searchType !== "image" && !searchTerm && !initialQuery)) && (
-                <span className="whitespace-nowrap text-vibe-navy">{properties.length} results</span>
+              {(!searchType ||
+                searchType === "none" ||
+                (searchType !== "image" && !searchTerm && !initialQuery)) && (
+                <span className="whitespace-nowrap text-vibe-navy">
+                  {properties.length} results
+                </span>
               )}
             </h2>
             <button
@@ -971,7 +831,9 @@ const UnifiedSearchPage = () => {
                         ) : (
                           <>
                             <div className="flex justify-between items-center mb-3">
-                              <h3 className="font-semibold text-vibe-navy font-sans line-clamp-1">{property.title}</h3>
+                              <h3 className="font-semibold text-vibe-navy font-sans line-clamp-1">
+                                {property.title}
+                              </h3>
                               <p className="font-semibold text-vibe-charcoal/70 font-sans">
                                 ${property.price.toLocaleString()}
                               </p>
@@ -985,20 +847,24 @@ const UnifiedSearchPage = () => {
                               <div className="flex items-center text-vibe-charcoal/70">
                                 <Bed className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
                                 <span className="text-sm">
-                                  {typeof property.bedrooms === "number" ? property.bedrooms : 0} bed
+                                  {typeof property.bedrooms === "number" ? property.bedrooms : 0}{" "}
+                                  bed
                                 </span>
                               </div>
 
                               <div className="flex items-center text-vibe-charcoal/70">
                                 <Bath className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
                                 <span className="text-sm">
-                                  {typeof property.bathrooms === "number" ? property.bathrooms : 0} bath
+                                  {typeof property.bathrooms === "number" ? property.bathrooms : 0}{" "}
+                                  bath
                                 </span>
                               </div>
 
                               <div className="flex items-center text-vibe-charcoal/70">
                                 <Square className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
-                                <span className="text-sm">{formatSquareFeet(property.squareFeet)} sq ft</span>
+                                <span className="text-sm">
+                                  {formatSquareFeet(property.squareFeet)} sq ft
+                                </span>
                               </div>
                             </div>
                           </>
@@ -1045,8 +911,7 @@ const UnifiedSearchPage = () => {
                             setSelectedProperty(property);
                           },
                         }}
-                      >
-                      </Marker>
+                      ></Marker>
                     )
                 )}
             </MapContainer>
@@ -1061,7 +926,8 @@ const UnifiedSearchPage = () => {
                 <div className="text-center">
                   <MapIcon className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <p className="text-muted-foreground">
-                    No Properties to Display<br />
+                    No Properties to Display
+                    <br />
                     Try Refining Your Search!
                   </p>
                 </div>
@@ -1122,7 +988,9 @@ const UnifiedSearchPage = () => {
 
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-vibe-navy font-sans font-lg">{selectedProperty.title}</h3>
+                  <h3 className="font-semibold text-vibe-navy font-sans font-lg">
+                    {selectedProperty.title}
+                  </h3>
                   <p className="text-vibe-charcoal/70 font-semibold font-sans">
                     ${selectedProperty.price.toLocaleString()}
                   </p>
@@ -1192,16 +1060,18 @@ const UnifiedSearchPage = () => {
     <div className="h-screen overflow-hidden">
       {/* Fixed navbar at the top */}
       <Navbar />
-      
+
       {/* Main content container - starts after navbar height */}
-      <div className="flex flex-col h-screen pt-16"> {/* pt-16 accounts for navbar height */}
+      <div className="flex flex-col h-screen pt-16">
+        {" "}
+        {/* pt-16 accounts for navbar height */}
         {/* Search filters section with border */}
         <div className="bg-white border-b border-gray-200 z-20">
           <div className="container mx-auto px-4 py-4">
             <SearchFilters
               onSearch={handleMapSearch}
               initialQuery={searchTerm || initialQuery}
-              initialValues={filterValues || undefined} 
+              initialValues={filterValues || undefined}
               isLoading={loading}
               currentView={currentView}
               onViewToggle={toggleView}
@@ -1209,9 +1079,8 @@ const UnifiedSearchPage = () => {
             />
           </div>
         </div>
-
         {/* Map/List content area - takes remaining height */}
-        <div className="flex-1 overflow-hidden"> 
+        <div className="flex-1 overflow-hidden">
           {currentView === "map" ? renderMapView() : renderListView()}
         </div>
       </div>

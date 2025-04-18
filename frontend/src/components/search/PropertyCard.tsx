@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Bed, Bath, Square, Heart, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchApartmentPreview } from "../../services/apartmentService";
 import { useSearch } from "../../contexts/SearchContext";
+import { usePropertyData } from "../../hooks/usePropertyData";
 
 export interface Property {
   id: string;
@@ -22,87 +22,55 @@ export interface Property {
 }
 
 interface PropertyCardProps {
-  property: Property | string; // Can accept either a full Property object or just an ID string
+  property: Property | string;
   featured?: boolean;
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false }) => {
   const navigate = useNavigate();
   const { searchTerm } = useSearch();
-  // Always start with image index 0, which will be the most relevant image after backend sorting
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [propertyData, setPropertyData] = useState<Property | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // If property is just an ID, fetch the data
   // Reset image index when search term changes
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [searchTerm]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // Reset image index when property changes
-      setCurrentImageIndex(0);
+  // If property is just an ID, fetch the data using the hook
+  const propertyId = typeof property === "string" ? property : property.id;
+  const { data: propertyData, isLoading, error } = usePropertyData(propertyId, searchTerm);
 
-      // If property is already a Property object, use it directly
-      if (typeof property !== "string") {
-        setPropertyData(property);
-        return;
-      }
-
-      // Otherwise, property is an ID, so fetch the data
-      try {
-        setLoading(true);
-        setError(null);
-        const apartmentId = property;
-        console.log(`Fetching preview data for apartment ID: ${apartmentId}`);
-
-        // Pass the search term to order images by relevance to the query
-        const data = await fetchApartmentPreview(apartmentId, searchTerm);
-        // Reset the image index when new data is loaded to ensure we show the most relevant image
-        setCurrentImageIndex(0);
-        setPropertyData(data);
-      } catch (err) {
-        console.error("Error fetching property data:", err);
-        setError(err instanceof Error ? err.message : "Failed to load property data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [property, searchTerm]);
+  // Use the property data if it's a string (ID), otherwise use the provided property object
+  const displayProperty = typeof property === "string" ? propertyData : property;
 
   const nextImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!propertyData || !hasValidImages) return;
+    if (!displayProperty || !hasValidImages) return;
 
-    setCurrentImageIndex((prev) => (prev === propertyData.images.length - 1 ? 0 : prev + 1));
+    setCurrentImageIndex((prev) => (prev === displayProperty.images.length - 1 ? 0 : prev + 1));
   };
 
   const previousImage = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!propertyData || !hasValidImages) return;
+    if (!displayProperty || !hasValidImages) return;
 
-    setCurrentImageIndex((prev) => (prev === 0 ? propertyData.images.length - 1 : prev - 1));
+    setCurrentImageIndex((prev) => (prev === 0 ? displayProperty.images.length - 1 : prev - 1));
   };
 
   // Navigate to property detail page
   const handleCardClick = () => {
-    if (propertyData) {
+    if (displayProperty) {
       // Save the current URL as the returnTo parameter
       const currentUrl = window.location.pathname + window.location.search;
       const encodedReturnUrl = encodeURIComponent(currentUrl);
-      navigate(`/property/detail/${propertyData.id}?returnTo=${encodedReturnUrl}`);
+      navigate(`/property/detail/${displayProperty.id}?returnTo=${encodedReturnUrl}`);
     }
   };
 
   // Show loading state while fetching property data
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 h-full flex items-center justify-center p-8">
         <div className="flex flex-col items-center">
@@ -114,20 +82,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
   }
 
   // Show error state if data fetch failed
-  if (error || !propertyData) {
+  if (error || !displayProperty) {
     return (
       <div className="rounded-xl overflow-hidden shadow-sm border border-gray-100 bg-red-50 h-full flex items-center justify-center p-8">
-        <div className="flex flex-col items-center text-center">
-          <div className="text-red-500 mb-2">❌</div>
-          <p className="text-sm text-red-600 font-medium">Error loading property</p>
-          <p className="text-xs text-red-500 mt-1">{error || "Property data unavailable"}</p>
+        <div className="text-center">
+          <p className="text-red-500 text-sm">
+            {error instanceof Error ? error.message : "Failed to load property data"}
+          </p>
         </div>
       </div>
     );
   }
 
   // Ensure the property has valid images
-  const hasValidImages = Array.isArray(propertyData.images) && propertyData.images.length > 0;
+  const hasValidImages = Array.isArray(displayProperty.images) && displayProperty.images.length > 0;
 
   // Default image in case of missing images
   const defaultImage =
@@ -135,14 +103,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
 
   // Calculate a valid image index
   const validImageIndex = hasValidImages
-    ? Math.min(currentImageIndex, propertyData.images.length - 1)
+    ? Math.min(currentImageIndex, displayProperty.images.length - 1)
     : 0;
 
   // Safe image URL
-  const imageUrl = hasValidImages ? propertyData.images[validImageIndex] : defaultImage;
+  const imageUrl = hasValidImages ? displayProperty.images[validImageIndex] : defaultImage;
 
   // Safe feature handling
-  const features = Array.isArray(propertyData.features) ? propertyData.features : [];
+  const features = Array.isArray(displayProperty.features) ? displayProperty.features : [];
 
   // Safe formatters
   const formatPrice = (price: number | undefined): string => {
@@ -166,7 +134,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
             <div className="aspect-[4/3] overflow-hidden">
               <img
                 src={imageUrl}
-                alt={propertyData.title || "Apartment"}
+                alt={displayProperty.title || "Apartment"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                 onError={(e) => {
                   // Fallback if image fails to load
@@ -176,7 +144,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
             </div>
 
             {/* Image navigation arrows - Only show if there are multiple images */}
-            {hasValidImages && propertyData.images.length > 1 && (
+            {hasValidImages && displayProperty.images.length > 1 && (
               <>
                 <button
                   onClick={previousImage}
@@ -196,10 +164,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
             )}
 
             {/* Image counter indicator - Only show if there are multiple images */}
-            {hasValidImages && propertyData.images.length > 1 && (
+            {hasValidImages && displayProperty.images.length > 1 && (
               <div className="absolute bottom-2 right-2">
                 <div className="px-2 py-1 bg-black/50 backdrop-blur-sm text-white text-xs rounded-full">
-                  {validImageIndex + 1}/{propertyData.images.length}
+                  {validImageIndex + 1}/{displayProperty.images.length}
                 </div>
               </div>
             )}
@@ -222,36 +190,36 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, featured = false 
         <div className="p-4">
           <div className="flex justify-between items-start mb-2">
             <h3 className="font-semibold text-lg font-sans text-vibe-navy">
-              {propertyData.title || "Apartment"}
+              {displayProperty.title || "Apartment"}
             </h3>
             <p className="text-lg font-semibold text-vibe-charcoal/70">
-              {formatPrice(propertyData.price)}
+              {formatPrice(displayProperty.price)}
             </p>
           </div>
 
           <div className="flex items-center text-vibe-charcoal/70 text-sm mb-3">
             <MapPin className="h-3 w-3 mr-1" />
-            <span>{propertyData.address || "Address unavailable"}</span>
+            <span>{displayProperty.address || "Address unavailable"}</span>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-100">
             <div className="flex items-center text-vibe-charcoal/70">
               <Bed className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
               <span className="text-sm">
-                {typeof propertyData.bedrooms === "number" ? propertyData.bedrooms : 0} bed
+                {typeof displayProperty.bedrooms === "number" ? displayProperty.bedrooms : 0} bed
               </span>
             </div>
 
             <div className="flex items-center text-vibe-charcoal/70">
               <Bath className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
               <span className="text-sm">
-                {typeof propertyData.bathrooms === "number" ? propertyData.bathrooms : 0} bath
+                {typeof displayProperty.bathrooms === "number" ? displayProperty.bathrooms : 0} bath
               </span>
             </div>
 
             <div className="flex items-center text-vibe-charcoal/70">
               <Square className="h-4 w-4 mr-1 text-vibe-charcoal/70" />
-              <span className="text-sm">{formatSquareFeet(propertyData.squareFeet)} sq ft</span>
+              <span className="text-sm">{formatSquareFeet(displayProperty.squareFeet)} sq ft</span>
             </div>
           </div>
         </div>
