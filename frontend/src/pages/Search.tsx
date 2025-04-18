@@ -8,7 +8,7 @@ import { useSearch } from "../contexts/SearchContext";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon, LatLngExpression, LatLngBoundsExpression, LatLngTuple } from "leaflet";
-import { Map as MapIcon, List, X, Loader2, LayoutGrid, MapPin, Bed, Bath, Square } from "lucide-react";
+import { Map as MapIcon, List, X, Loader2, LayoutGrid, MapPin, Bed, Bath, Square, ChevronLeft, ChevronRight } from "lucide-react";
 import { Property } from "../components/search/PropertyCard";
 import { cn } from "../lib/utils";
 
@@ -179,6 +179,8 @@ const UnifiedSearchPage = () => {
   // Reference to track if we already restored from URL
   const hasRestoredFromUrl = React.useRef(false);
 
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   const formatSquareFeet = (sqft: number | undefined): string => {
     if (typeof sqft !== "number" || isNaN(sqft)) return "0";
     return sqft.toLocaleString();
@@ -212,6 +214,30 @@ const UnifiedSearchPage = () => {
       setMapCenter([selectedProperty.location.lat, selectedProperty.location.lng]);
     }
   }, [selectedProperty]);
+
+  // Reset current image index when selected property changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [selectedProperty]);
+
+  // Navigation functions for property images
+  const showNextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedProperty && selectedProperty.images && selectedProperty.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === selectedProperty.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const showPrevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (selectedProperty && selectedProperty.images && selectedProperty.images.length > 0) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? selectedProperty.images.length - 1 : prev - 1
+      );
+    }
+  };
 
   // Perform search when the component mounts if there's an initial query or image URLs
   useEffect(() => {
@@ -1020,14 +1046,6 @@ const UnifiedSearchPage = () => {
                           },
                         }}
                       >
-                        <Popup>
-                          <div className="text-center">
-                            <h3 className="font-medium">{property.title}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              ${property.price.toLocaleString()}
-                            </p>
-                          </div>
-                        </Popup>
                       </Marker>
                     )
                 )}
@@ -1057,15 +1075,43 @@ const UnifiedSearchPage = () => {
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-[1000]">
             <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-slide-up">
               <div className="relative">
-                <img
-                  src={
-                    selectedProperty.images && selectedProperty.images.length > 0
-                      ? selectedProperty.images[0]
-                      : "https://placehold.co/600x400?text=No+Image"
-                  }
-                  alt={selectedProperty.title}
-                  className="w-full h-48 object-cover"
-                />
+                {selectedProperty.images && selectedProperty.images.length > 0 ? (
+                  <>
+                    <img
+                      src={selectedProperty.images[currentImageIndex]}
+                      alt={`${selectedProperty.title} - image ${currentImageIndex + 1}`}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://placehold.co/600x400?text=Error";
+                      }}
+                    />
+                    {selectedProperty.images.length > 1 && (
+                      <>
+                        <button
+                          className="absolute top-1/2 left-2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-sm hover:bg-white"
+                          onClick={showPrevImage}
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button
+                          className="absolute top-1/2 right-2 transform -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-sm hover:bg-white"
+                          onClick={showNextImage}
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                        <div className="absolute bottom-2 right-2 px-2 py-1 rounded-md bg-black/60 text-white text-xs">
+                          {currentImageIndex + 1} / {selectedProperty.images.length}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <img
+                    src="https://placehold.co/600x400?text=No+Image"
+                    alt={selectedProperty.title}
+                    className="w-full h-48 object-cover"
+                  />
+                )}
                 <button
                   className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm text-gray-700 shadow-sm"
                   onClick={() => setSelectedProperty(null)}
@@ -1076,13 +1122,16 @@ const UnifiedSearchPage = () => {
 
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">{selectedProperty.title}</h3>
-                  <p className="text-lg font-semibold text-primary">
+                  <h3 className="font-semibold text-vibe-navy font-sans font-lg">{selectedProperty.title}</h3>
+                  <p className="text-vibe-charcoal/70 font-semibold font-sans">
                     ${selectedProperty.price.toLocaleString()}
                   </p>
                 </div>
 
-                <p className="text-muted-foreground text-sm mb-3">{selectedProperty.address}</p>
+                <div className="flex items-center text-muted-foreground text-sm mb-3">
+                  <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span>{selectedProperty.address}</span>
+                </div>
 
                 <div className="flex items-center justify-between py-2 border-y border-gray-100">
                   <div className="text-center">
