@@ -95,9 +95,6 @@ def search():
         return jsonify({"results": results})
     except Exception as e:
         error_message = f"Error in search endpoint: {str(e)}"
-        print(error_message)
-        import traceback
-
         print(traceback.format_exc())
         return jsonify({"error": error_message}), 500
 
