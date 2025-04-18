@@ -105,11 +105,9 @@ def search_apartments(query, filter_dict=None, top_k=10, image_urls=None):
     if query_embedding is None:
         print("Failed to create embedding for query")
         return []
-
     search_results = index.query(
         vector=query_embedding, filter=filter_dict, top_k=top_k, include_metadata=True
     )
-
     formatted_results = []
     for match in search_results.matches:
         result = {"id": match.id, "score": match.score, "metadata": match.metadata}
@@ -133,25 +131,17 @@ def get_apartment_preview_by_id(apartment_id, query=None):
     try:
         with open(APARTMENTS_FILE, "r") as f:
             apartments = json.load(f)
-
-        # Find the apartment with the matching ID
         for apartment in apartments:
             if apartment.get("id") == apartment_id:
-                # Get the original photos
                 photos = apartment.get("photos", [])
-                
-                # If we have a query and photos, rank them by relevance
                 if query and photos and len(photos) > 0:
                     ranked_photos = rank_apartment_images_by_query(apartment_id, query, photos)
                     print(query)
                     if ranked_photos:
                         photos = ranked_photos
-                
-                # Extract only the preview data
-                # Ensure photos are a list of string URLs
+
                 final_photos = photos
                 if photos and len(photos) > 0:
-                    # Convert any dict photos to string URLs
                     if isinstance(photos[0], dict) and "url" in photos[0]:
                         final_photos = [p["url"] for p in photos if isinstance(p, dict) and "url" in p]
                         
@@ -176,8 +166,6 @@ def get_apartment_preview_by_id(apartment_id, query=None):
                     "photos": final_photos if final_photos and len(final_photos) > 0 else None,
                 }
                 return preview
-
-        # If no matching apartment is found
         return None
     except Exception as e:
         print(f"Error retrieving apartment preview: {e}")

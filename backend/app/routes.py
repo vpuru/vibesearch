@@ -4,6 +4,7 @@ from app.services import (
     get_apartment_preview_by_id,
     get_apartment_details_by_id,
 )
+import traceback
 
 search_bp = Blueprint("search", __name__)
 
@@ -117,27 +118,13 @@ def apartment_preview(apartment_id):
         JSON: Preview data for the apartment or error message
     """
     try:
-        # Log the request for debugging
-        print(f"DEBUG: Apartment preview request for ID: {apartment_id}")
-        
-        # Get the optional query parameter
         query = request.args.get("query", "")
-        if query:
-            # print(f"DEBUG: Ordering images by relevance to query: '{query}'")
-            pass
-        
-        # Get apartment preview data with query for image ordering
         apartment = get_apartment_preview_by_id(apartment_id, query)
-
         if apartment is None:
             return jsonify({"error": "Apartment not found"}), 404
-
         return jsonify({"apartment": apartment})
     except Exception as e:
         error_message = f"Error in apartment preview endpoint: {str(e)}"
-        print(error_message)
-        import traceback
-
         print(traceback.format_exc())
         return jsonify({"error": error_message}), 500
 
@@ -157,15 +144,6 @@ def apartment_details(apartment_id):
         JSON: All data for the apartment or error message
     """
     try:
-        # Log the request for debugging
-        print(f"DEBUG: Apartment details request for ID: {apartment_id}")
-        
-        # Get the optional query parameter
-        query = request.args.get("query", "")
-        if query:
-            print(f"DEBUG: Ordering images by relevance to query: '{query}'")
-
-        # Get apartment details with query for image ordering
         apartment = get_apartment_details_by_id(apartment_id, query)
 
         if apartment is None:
@@ -174,8 +152,5 @@ def apartment_details(apartment_id):
         return jsonify({"apartment": apartment})
     except Exception as e:
         error_message = f"Error in apartment details endpoint: {str(e)}"
-        print(error_message)
-        import traceback
-
         print(traceback.format_exc())
         return jsonify({"error": error_message}), 500
