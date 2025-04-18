@@ -1,49 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Search, X, Sliders, Loader2, Map as MapIcon, LayoutGrid, DollarSign, Bed, Bath } from "lucide-react";
 import { useSearch } from "../../contexts/SearchContext";
-import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "../../lib/utils";
-
-const RangeSlider = React.forwardRef<
-  React.ElementRef<typeof SliderPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
->(({ className, ...props }, ref) => (
-  <SliderPrimitive.Root
-    ref={ref}
-    className={cn("relative flex w-full touch-none select-none items-center", className)}
-    {...props}
-  >
-    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-gray-200">
-      <SliderPrimitive.Range className="absolute h-full bg-vibe-navy" />
-    </SliderPrimitive.Track>
-    {props.defaultValue?.map((_, i) => (
-      <SliderPrimitive.Thumb
-        key={i}
-        className="block h-5 w-5 rounded-full border-2 border-white bg-vibe-navy ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vibe-navy focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-      />
-    ))}
-  </SliderPrimitive.Root>
-));
-
-export interface SearchFilterValues {
-  query: string;
-  min_beds?: number;
-  max_beds?: number;
-  min_baths?: number;
-  max_baths?: number;
-  min_rent?: number;
-  max_rent?: number;
-  studio?: boolean;
-}
-
-interface SearchFiltersProps {
-  onSearch: (filters: SearchFilterValues) => void;
-  initialQuery?: string;
-  initialValues?: SearchFilterValues;
-  isLoading?: boolean;
-  currentView?: "map" | "list";
-  onViewToggle?: () => void;
-}
 
 const ViewToggle: React.FC<{ currentView: "map" | "list"; onToggle: () => void }> = ({
   currentView,
@@ -78,6 +36,26 @@ const ViewToggle: React.FC<{ currentView: "map" | "list"; onToggle: () => void }
   );
 };
 
+export interface SearchFilterValues {
+  query: string;
+  min_beds?: number;
+  max_beds?: number;
+  min_baths?: number;
+  max_baths?: number;
+  min_rent?: number;
+  max_rent?: number;
+  studio?: boolean;
+}
+
+interface SearchFiltersProps {
+  onSearch: (filters: SearchFilterValues) => void;
+  initialQuery?: string;
+  initialValues?: SearchFilterValues;
+  isLoading?: boolean;
+  currentView?: "map" | "list";
+  onViewToggle?: () => void;
+}
+
 const SearchFilters: React.FC<SearchFiltersProps> = ({
   onSearch,
   initialQuery = "",
@@ -98,6 +76,11 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     }
   }, [showFilters]);
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  
+  // Track first and second selected values for bedrooms and bathrooms
+  const [bedroomSelections, setBedroomSelections] = useState<number[]>([]);
+  const [bathroomSelections, setBathroomSelections] = useState<number[]>([]);
+  
   const [filters, setFilters] = useState({
     bedroomRange: [0, 5], // [min, max]
     bathroomRange: [0, 3], // [min, max]
@@ -110,12 +93,128 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   // Reference to the filter button
   const filterButtonRef = useRef<HTMLButtonElement>(null);
 
+  // Update bedroom range whenever selections change
+  useEffect(() => {
+    if (bedroomSelections.length === 0) {
+      // No selection means any bedroom
+      setFilters(prev => ({
+        ...prev,
+        bedroomRange: [0, 5]
+      }));
+    } else if (bedroomSelections.length === 1) {
+      // Single selection means specific bedroom count
+      setFilters(prev => ({
+        ...prev,
+        bedroomRange: [bedroomSelections[0], bedroomSelections[0]]
+      }));
+    } else {
+      // Two selections means range
+      const sortedSelections = [...bedroomSelections].sort((a, b) => a - b);
+      setFilters(prev => ({
+        ...prev,
+        bedroomRange: [sortedSelections[0], sortedSelections[1]]
+      }));
+    }
+  }, [bedroomSelections]);
+
+  // Update bathroom range whenever selections change
+  useEffect(() => {
+    if (bathroomSelections.length === 0) {
+      // No selection means any bathroom
+      setFilters(prev => ({
+        ...prev,
+        bathroomRange: [0, 3]
+      }));
+    } else if (bathroomSelections.length === 1) {
+      // Single selection means specific bathroom count
+      setFilters(prev => ({
+        ...prev,
+        bathroomRange: [bathroomSelections[0], bathroomSelections[0]]
+      }));
+    } else {
+      // Two selections means range
+      const sortedSelections = [...bathroomSelections].sort((a, b) => a - b);
+      setFilters(prev => ({
+        ...prev,
+        bathroomRange: [sortedSelections[0], sortedSelections[1]]
+      }));
+    }
+  }, [bathroomSelections]);
+
   const clearFilters = () => {
     setFilters({
       bedroomRange: [0, 5],
       bathroomRange: [0, 3],
       priceMin: "",
       priceMax: "",
+    });
+    setBedroomSelections([]);
+    setBathroomSelections([]);
+  };
+
+  // Function to get the button style based on selection state
+  const getButtonStyle = (value: number, selections: number[], isStudio = false) => {
+    // For range selection, highlight all buttons in the range
+    let isSelected = selections.includes(value);
+    
+    // If we have exactly 2 selections (a range), check if this value is in the range
+    if (selections.length === 2) {
+      const [min, max] = [...selections].sort((a, b) => a - b);
+      isSelected = value >= min && value <= max;
+    }
+    
+    return cn(
+      "h-10 rounded-lg transition-colors font-medium text-sm flex items-center justify-center",
+      isStudio ? "w-24" : "w-16",
+      isSelected
+        ? "bg-vibe-navy text-white"
+        : "bg-gray-200 text-vibe-charcoal/70 hover:bg-gray-300"
+    );
+  };
+
+  // Handle bedroom button click
+  const handleBedroomClick = (value: number) => {
+    setBedroomSelections(prev => {
+      // If we have a range selected and click a new value, make it the only selection
+      if (prev.length === 2 && !prev.includes(value)) {
+        return [value];
+      }
+      
+      // If already selected, remove it
+      if (prev.includes(value)) {
+        return prev.filter(v => v !== value);
+      }
+      
+      // If we already have 2 selections, replace the oldest one
+      if (prev.length === 2) {
+        return [prev[1], value];
+      }
+      
+      // Otherwise add to selections
+      return [...prev, value];
+    });
+  };
+
+  // Handle bathroom button click
+  const handleBathroomClick = (value: number) => {
+    setBathroomSelections(prev => {
+      // If we have a range selected and click a new value, make it the only selection
+      if (prev.length === 2 && !prev.includes(value)) {
+        return [value];
+      }
+      
+      // If already selected, remove it
+      if (prev.includes(value)) {
+        return prev.filter(v => v !== value);
+      }
+      
+      // If we already have 2 selections, replace the oldest one
+      if (prev.length === 2) {
+        return [prev[1], value];
+      }
+      
+      // Otherwise add to selections
+      return [...prev, value];
     });
   };
 
@@ -208,6 +307,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         const minBeds = initialValues.min_beds ?? 0;
         const maxBeds = initialValues.max_beds ?? 5;
         newFilters.bedroomRange = [minBeds, maxBeds];
+        
+        // Update bedroom selections based on range
+        if (minBeds === maxBeds) {
+          setBedroomSelections([minBeds]);
+        } else if (minBeds > 0 || maxBeds < 5) {
+          setBedroomSelections([minBeds, maxBeds]);
+        } else {
+          setBedroomSelections([]);
+        }
       }
 
       // Handle bathrooms range
@@ -215,6 +323,15 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         const minBaths = initialValues.min_baths ?? 0;
         const maxBaths = initialValues.max_baths ?? 3;
         newFilters.bathroomRange = [minBaths, maxBaths];
+        
+        // Update bathroom selections based on range
+        if (minBaths === maxBaths) {
+          setBathroomSelections([minBaths]);
+        } else if (minBaths > 0 || maxBaths < 3) {
+          setBathroomSelections([minBaths, maxBaths]);
+        } else {
+          setBathroomSelections([]);
+        }
       }
 
       // Handle price range
@@ -257,6 +374,26 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
       }
     }
   }, [initialQuery]);
+
+  // Helper to display bedroom filter range text
+  const getBedroomRangeText = () => {
+    const [min, max] = filters.bedroomRange;
+    
+    if (min === 0 && max === 5) return "Any";
+    if (min === max) return min === 0 ? "Studio" : `${min} bed`;
+    if (min === 0) return `Studio - ${max} beds`;
+    return `${min} - ${max === 5 ? "5+" : max} beds`;
+  };
+
+  // Helper to display bathroom filter range text
+  const getBathroomRangeText = () => {
+    const [min, max] = filters.bathroomRange;
+    
+    if (min === 0 && max === 3) return "Any";
+    if (min === max) return `${min} bath`;
+    if (min === 0) return `0 - ${max} baths`;
+    return `${min} - ${max === 3 ? "3+" : max} baths`;
+  };
 
   return (
     <div className="w-full bg-white">
@@ -339,80 +476,64 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
                     {/* Bedrooms */}
                     <div>
                       <div className="mb-2 flex justify-between items-center">
-                        <label
-                          htmlFor="bedroom-range"
-                          className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal"
-                        >
+                        <label className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal">
                           <Bed className="h-4 w-4 text-vibe-navy" />
-                          <span>Bedrooms: {filters.bedroomRange[0]} - {filters.bedroomRange[1] === 5 ? "5+" : filters.bedroomRange[1]}</span>
+                          <span>Bedrooms: {getBedroomRangeText()}</span>
                         </label>
                         <span className="text-xs text-vibe-charcoal/50">
-                          {filters.bedroomRange[0] === 0 && filters.bedroomRange[1] === 5 ? "Any" : ""}
+                          Select 1 or 2 options
                         </span>
                       </div>
-                      <div className="px-2 pt-4 pb-1">
-                        <RangeSlider
-                          id="bedroom-range"
-                          min={0}
-                          max={5}
-                          step={1}
-                          value={filters.bedroomRange}
-                          onValueChange={(value) => {
-                            setFilters({
-                              ...filters,
-                              bedroomRange: value as [number, number],
-                            });
-                          }}
-                          defaultValue={[0, 5]}
-                          className="mb-4"
-                        />
-                        <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
-                          <span>0</span>
-                          <span>1</span>
-                          <span>2</span>
-                          <span>3</span>
-                          <span>4</span>
-                          <span>5+</span>
-                        </div>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <button
+                          type="button"
+                          className={getButtonStyle(0, bedroomSelections, true)}
+                          onClick={() => handleBedroomClick(0)}
+                        >
+                          <span>Studio</span>
+                        </button>
+                        {[1, 2, 3, 4, 5].map(num => (
+                          <button
+                            key={`bed-${num}`}
+                            type="button" 
+                            className={getButtonStyle(num, bedroomSelections, false)}
+                            onClick={() => handleBedroomClick(num)}
+                          >
+                            <span>{num}{num === 5 ? "+" : ""}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
 
                     {/* Bathrooms */}
                     <div>
                       <div className="mb-2 flex justify-between items-center">
-                        <label
-                          htmlFor="bathroom-range"
-                          className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal"
-                        >
+                        <label className="flex items-center gap-2 text-sm font-medium text-vibe-charcoal">
                           <Bath className="h-4 w-4 text-vibe-navy" />
-                          <span>Bathrooms: {filters.bathroomRange[0]} - {filters.bathroomRange[1] === 3 ? "3+" : filters.bathroomRange[1]}</span>
+                          <span>Bathrooms: {getBathroomRangeText()}</span>
                         </label>
                         <span className="text-xs text-vibe-charcoal/50">
-                          {filters.bathroomRange[0] === 0 && filters.bathroomRange[1] === 3 ? "Any" : ""}
+                          Select 1 or 2 options
                         </span>
                       </div>
-                      <div className="px-2 pt-4 pb-1">
-                        <RangeSlider
-                          id="bathroom-range"
-                          min={0}
-                          max={3}
-                          step={0.5}
-                          value={filters.bathroomRange}
-                          onValueChange={(value) => {
-                            setFilters({
-                              ...filters,
-                              bathroomRange: value as [number, number],
-                            });
-                          }}
-                          defaultValue={[0, 3]}
-                          className="mb-4"
-                        />
-                        <div className="flex justify-between text-xs text-vibe-charcoal/50 px-1 mt-1">
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <button
+                          type="button"
+                          className={getButtonStyle(0, bathroomSelections, false)}
+                          onClick={() => handleBathroomClick(0)}
+                        >
                           <span>0</span>
-                          <span>1</span>
-                          <span>2</span>
-                          <span>3+</span>
-                        </div>
+                        </button>
+                        {[1, 1.5, 2, 2.5, 3].map(num => (
+                          <button
+                            key={`bath-${num}`}
+                            type="button"
+                            className={getButtonStyle(num, bathroomSelections, false)}
+                            onClick={() => handleBathroomClick(num)}
+                          >
+                            <span>{num}{num === 3 ? "+" : ""}</span>
+                          </button>
+                        ))}
                       </div>
                     </div>
 
