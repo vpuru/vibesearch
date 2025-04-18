@@ -21,9 +21,7 @@ const HeroSection = () => {
   const [isFeedbackSubmitting, setIsFeedbackSubmitting] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const navigate = useNavigate();
-  
-  // Get access to search context
-  const { setImageUrls, setSearchType, setSearchTerm } = useSearch();
+
 
   const placeholders = [
     "Describe your ideal apartment and/or upload images...",
@@ -44,47 +42,28 @@ const HeroSection = () => {
   // Handle form submission
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Check if we have images or query
     const hasImages = uploadedImages.length > 0;
     const hasQuery = searchQuery.trim().length > 0;
-    
     if (!hasImages && !hasQuery) {
-      // Nothing to search for
       return;
     }
     
     setIsLoading(true);
-    
     try {
-      // Create URL parameters
       const searchParams = new URLSearchParams();
-      
-      // Handle different search scenarios
       if (hasImages) {
-        // Upload images to Supabase and get public URLs
-        console.log("Uploading images to Supabase...");
-        const uploadedImageUrls = await uploadImagesToSupabase(uploadedImages);
-        console.log("Images uploaded successfully:", uploadedImageUrls);
-        
+        const uploadedImageUrls = await uploadImagesToSupabase(uploadedImages);        
         if (hasQuery) {
-          // Both text and images
           searchParams.append('q', searchQuery.trim());
         } else {
-          // Images only
-          searchParams.append('q', ''); // Empty query
+          searchParams.append('q', '');
         }
-        
-        // Add image URLs as a parameter - this is all we need to pass in URL
         searchParams.append('imageUrls', JSON.stringify(uploadedImageUrls));
       } else {
-        // Text-only search
         searchParams.append('q', encodeURIComponent(searchQuery.trim()));
       }
       
-      // Navigate to search page with parameters
       const searchUrl = `/search?${searchParams.toString()}`;
-      console.log("Navigating to:", searchUrl);
       navigate(searchUrl);
     } catch (err) {
       console.error("Error during search preparation:", err);

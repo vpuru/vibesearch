@@ -136,7 +136,6 @@ def get_apartment_preview_by_id(apartment_id, query=None):
                 photos = apartment.get("photos", [])
                 if query and photos and len(photos) > 0:
                     ranked_photos = rank_apartment_images_by_query(apartment_id, query, photos)
-                    print(query)
                     if ranked_photos:
                         photos = ranked_photos
 
@@ -155,7 +154,7 @@ def get_apartment_preview_by_id(apartment_id, query=None):
                     "coordinates": apartment.get(
                         "coordinates",
                         {
-                            "latitude": 34.0522,  # Default to Los Angeles if not available
+                            "latitude": 34.0522,
                             "longitude": -118.2437,
                         },
                     ),
@@ -185,7 +184,6 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
         list: Reordered list of URLs (strings), most relevant first
     """
     try:
-        # Debug the photos list
         if not isinstance(original_photos, list):
             print(f"Error: original_photos is not a list but {type(original_photos)}")
             return original_photos
@@ -211,16 +209,11 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
             print(f"Error printing original photo URLs: {e}")
             return original_photos
             
-        # Create embedding for the query
         query_embedding = create_embedding(query)
         if not query_embedding:
             print("Failed to create embedding for query")
             return original_photos
-            
-        # Connect to the apartment images index
         image_index = pc.Index("apartment-images-search")
-        
-        # Query the image index with filtering by apartment_id
         search_results = image_index.query(
             vector=query_embedding,
             filter={"apartment_id": apartment_id},
@@ -231,42 +224,20 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
         if not search_results.matches:
             print(f"No matching images found for apartment {apartment_id}")
             return photo_urls  # Return the extracted URLs
-            
-        # print(f"Found {len(search_results.matches)} matching images")
-        
-        # Create a map of URL to relevance score
         url_score_map = {}
         for match in search_results.matches:
             original_url = match.metadata.get("original_url")
             if original_url:
                 url_score_map[original_url] = match.score
-                # print(f"Match score: {match.score:.4f} for URL: {original_url[:50]}...")
                 
         if not url_score_map:
             print("No URL mappings created from search results")
-            return photo_urls  # Return the extracted URLs
-            
-        # Create a copy of the URLs to sort
+            return photo_urls 
         urls_to_sort = photo_urls.copy()
-        
-        # Sort URLs based on relevance scores
-        # For URLs not in search results (no score), put them at the end
         def get_url_score(url):
-            score = url_score_map.get(url, -1)
-            if score >= 0:
-                score_display = f"{score:.4f}"
-            else:
-                score_display = str(score)
-            # print(f"Score for {url[:50]}...: {score_display}")
-            return score
+            return url_score_map.get(url, -1)
             
-        # Sort URLs by score (highest first)
         urls_to_sort.sort(key=get_url_score, reverse=True)
-        
-        # print(f"Successfully ranked {len(urls_to_sort)} images for apartment {apartment_id}")
-        # print(f"New photo order first 3 URLs: {[url[:50] + '...' for url in urls_to_sort[:3]]}")
-        
-        # Return the sorted URLs as strings (not objects)
         return urls_to_sort
         
     except Exception as e:
