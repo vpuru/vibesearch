@@ -327,8 +327,8 @@ const UnifiedSearchPage = () => {
   const loadPropertiesForMapView = useCallback(async (ids: string[]) => {
     setLoadingDetails(true);
     
-    // Cache key for storing property data in session storage
-    const cacheKey = `map_properties_${ids.join('_')}`;
+    // Shared cache key for both views - only depends on IDs, not view type
+    const cacheKey = `properties_shared_cache_${ids.join('_')}`;
     
     // Check if we have cached property data first
     const cachedData = sessionStorage.getItem(cacheKey);
@@ -344,11 +344,52 @@ const UnifiedSearchPage = () => {
       }
     }
     
+    // First check if all properties are already available in React Query cache
+    let allCached = true;
+    const cachedProperties: PropertyWithLocation[] = [];
+    
+    for (const id of ids) {
+      const data = queryClient.getQueryData<Property>(["property", id, searchTerm]);
+      if (!data) {
+        allCached = false;
+        break;
+      }
+      
+      cachedProperties.push({
+        ...data,
+        location: data.coordinates
+          ? {
+              lat: data.coordinates.latitude,
+              lng: data.coordinates.longitude,
+            }
+          : {
+              // Generate consistent coordinates (use ID hash for determinism)
+              lat: 25 + (parseInt(id.substring(0, 8), 16) % 1000) / 1000 * 24,
+              lng: -125 + (parseInt(id.substring(8, 16) || '0', 16) % 1000) / 1000 * 65,
+            },
+      });
+    }
+    
+    if (allCached && cachedProperties.length > 0) {
+      // If we have all data already cached in React Query, use it directly
+      setProperties(cachedProperties);
+      
+      // Still cache the formatted map properties for future use
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify(cachedProperties));
+      } catch (e) {
+        console.error("Failed to cache properties:", e);
+      }
+      
+      setLoadingDetails(false);
+      return;
+    }
+    
     // Create placeholders with more geographically distributed random positions
     const placeholders: PropertyWithLocation[] = ids.map(id => {
-      // Use truly random coordinates within the continental US instead of SF-based
-      const randomLat = 25 + Math.random() * 24; // Between 25N and 49N (covers continental US)
-      const randomLng = -125 + Math.random() * 65; // Between 125W and 60W
+      // Use deterministic pseudorandom coordinates based on ID
+      const randomLat = 25 + (parseInt(id.substring(0, 8), 16) % 1000) / 1000 * 24;
+      const randomLng = -125 + (parseInt(id.substring(8, 16) || '0', 16) % 1000) / 1000 * 65;
       
       return {
         id,
@@ -371,7 +412,7 @@ const UnifiedSearchPage = () => {
 
     setProperties(placeholders);
 
-    // Prefetch all property data
+    // Prefetch all property data using the same query keys as PropertyCard
     await Promise.all(
       ids.map(id =>
         queryClient.prefetchQuery({
@@ -395,9 +436,9 @@ const UnifiedSearchPage = () => {
                 lng: data.coordinates.longitude,
               }
             : {
-                // Generate truly random coordinates within the US if none exists
-                lat: 25 + Math.random() * 24,
-                lng: -125 + Math.random() * 65,
+                // Generate deterministic coordinates
+                lat: 25 + (parseInt(id.substring(0, 8), 16) % 1000) / 1000 * 24,
+                lng: -125 + (parseInt(id.substring(8, 16) || '0', 16) % 1000) / 1000 * 65,
               },
         } as PropertyWithLocation;
       })
@@ -405,7 +446,7 @@ const UnifiedSearchPage = () => {
 
     const filteredProperties = updatedProperties.filter((p): p is PropertyWithLocation => p !== null);
     
-    // Cache the properties
+    // Cache the properties with the shared key
     try {
       sessionStorage.setItem(cacheKey, JSON.stringify(filteredProperties));
     } catch (e) {
@@ -608,9 +649,9 @@ const UnifiedSearchPage = () => {
     // Store old results for greying out during loading
     const oldProperties = [...properties];
     
-    // Clear cached map properties to ensure fresh results
+    // Clear cached properties to ensure fresh results
     if (apartmentIds.length > 0) {
-      const cacheKey = `map_properties_${apartmentIds.join('_')}`;
+      const cacheKey = `properties_shared_cache_${apartmentIds.join('_')}`;
       sessionStorage.removeItem(cacheKey);
     }
     
