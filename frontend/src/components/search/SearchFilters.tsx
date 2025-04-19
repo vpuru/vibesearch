@@ -176,19 +176,31 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   // Handle bedroom button click
   const handleBedroomClick = (value: number) => {
     setBedroomSelections(prev => {
-      // If we have a range selected and click a new value, make it the only selection
-      if (prev.length === 2 && !prev.includes(value)) {
+      // If we have a range (exactly 2 selections)
+      if (prev.length === 2) {
+        // If clicking a value in the range but not at the boundaries, make it the only selection
+        const [min, max] = [...prev].sort((a, b) => a - b);
+        if (value > min && value < max) {
+          return [value];
+        }
+        
+        // If clicking on a boundary that's already selected, make it the only selection
+        if (prev.includes(value)) {
+          return [value];
+        }
+        
+        // If clicking outside the current range, make it the only selection
         return [value];
       }
       
-      // If already selected, remove it
-      if (prev.includes(value)) {
-        return prev.filter(v => v !== value);
+      // If already selected and it's the only selection, remove it
+      if (prev.length === 1 && prev.includes(value)) {
+        return [];
       }
       
-      // If we already have 2 selections, replace the oldest one
-      if (prev.length === 2) {
-        return [prev[1], value];
+      // If not selected yet, add to selection
+      if (!prev.includes(value)) {
+        return [...prev, value];
       }
       
       // Otherwise add to selections
@@ -199,19 +211,31 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   // Handle bathroom button click
   const handleBathroomClick = (value: number) => {
     setBathroomSelections(prev => {
-      // If we have a range selected and click a new value, make it the only selection
-      if (prev.length === 2 && !prev.includes(value)) {
+      // If we have a range (exactly 2 selections)
+      if (prev.length === 2) {
+        // If clicking a value in the range but not at the boundaries, make it the only selection
+        const [min, max] = [...prev].sort((a, b) => a - b);
+        if (value > min && value < max) {
+          return [value];
+        }
+        
+        // If clicking on a boundary that's already selected, make it the only selection
+        if (prev.includes(value)) {
+          return [value];
+        }
+        
+        // If clicking outside the current range, make it the only selection
         return [value];
       }
       
-      // If already selected, remove it
-      if (prev.includes(value)) {
-        return prev.filter(v => v !== value);
+      // If already selected and it's the only selection, remove it
+      if (prev.length === 1 && prev.includes(value)) {
+        return [];
       }
       
-      // If we already have 2 selections, replace the oldest one
-      if (prev.length === 2) {
-        return [prev[1], value];
+      // If not selected yet, add to selection
+      if (!prev.includes(value)) {
+        return [...prev, value];
       }
       
       // Otherwise add to selections
@@ -232,25 +256,31 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
     // Add min/max bedrooms from range slider
     const [minBeds, maxBeds] = filters.bedroomRange;
     
-    // Always include minBeds when it's 0 (studio) to properly filter for studio apartments
-    if (minBeds === 0) {
-      searchFilters.min_beds = 0;
-    } else if (minBeds > 0) {
-      searchFilters.min_beds = minBeds;
-    }
+    // Only add bedroom filters if user has explicitly selected them
+    // For default range [0,5], don't add any filters
+    if (bedroomSelections.length > 0) {
+      if (minBeds === 0) {
+        searchFilters.min_beds = 0;
+      } else if (minBeds > 0) {
+        searchFilters.min_beds = minBeds;
+      }
 
-    if (maxBeds < 5) {
-      searchFilters.max_beds = maxBeds;
+      if (maxBeds < 5) {
+        searchFilters.max_beds = maxBeds;
+      }
     }
 
     // Add min/max bathrooms from range slider
     const [minBaths, maxBaths] = filters.bathroomRange;
-    if (minBaths > 0) {
-      searchFilters.min_baths = minBaths;
-    }
+    // Only add bathroom filters if user has explicitly selected them
+    if (bathroomSelections.length > 0) {
+      if (minBaths > 0) {
+        searchFilters.min_baths = minBaths;
+      }
 
-    if (maxBaths < 3) {
-      searchFilters.max_baths = maxBaths;
+      if (maxBaths < 3) {
+        searchFilters.max_baths = maxBaths;
+      }
     }
 
     // Add price range if specified
