@@ -1,6 +1,8 @@
 import os
 import openai    
 import json
+import time
+from functools import lru_cache
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
 from dotenv import load_dotenv
@@ -11,13 +13,13 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 if not PINECONE_API_KEY:
     raise ValueError("PINECONE_API_KEY not found in environment variables")
 pc = Pinecone(api_key=PINECONE_API_KEY)
+image_index = pc.Index("apartment-images-search")
 
 model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 INDEX_NAME = "apartments-search"
 APARTMENTS_FILE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "apartments.json"
 )
-
 
 def create_embedding(text):
     """Create an embedding for the given text using sentence-transformers"""
@@ -27,6 +29,11 @@ def create_embedding(text):
     except Exception as e:
         print(f"Error creating embedding: {e}")
         return None
+
+
+@lru_cache(maxsize=128)
+def _get_query_embedding(query: str):
+    return create_embedding(query)
 
 
 def search_apartments(query, filter_dict=None, top_k=10, image_urls=None):
@@ -184,62 +191,43 @@ def rank_apartment_images_by_query(apartment_id, query, original_photos):
         list: Reordered list of URLs (strings), most relevant first
     """
     try:
-        if not isinstance(original_photos, list):
-            print(f"Error: original_photos is not a list but {type(original_photos)}")
-            return original_photos
-        if not original_photos:
-            print("Error: original_photos is empty")
-            return original_photos
-        photo_urls = []
-        for photo in original_photos:
-            if isinstance(photo, dict) and "url" in photo:
-                photo_urls.append(photo["url"])
-            elif isinstance(photo, str):
-                photo_urls.append(photo)
-            else:
-                print(f"Unknown photo format: {type(photo)}")
-                
+        # 1. Extract URLs quickly
+        photo_urls = [
+            photo["url"] if isinstance(photo, dict) and "url" in photo
+            else photo if isinstance(photo, str)
+            else None
+            for photo in original_photos
+        ]
+        photo_urls = [u for u in photo_urls if u]
         if not photo_urls:
-            print("Error: Could not extract any URLs from original_photos")
             return original_photos
-                
-        try:
-            pass
-        except Exception as e:
-            print(f"Error printing original photo URLs: {e}")
-            return original_photos
-            
-        query_embedding = create_embedding(query)
-        if not query_embedding:
-            print("Failed to create embedding for query")
-            return original_photos
-        image_index = pc.Index("apartment-images-search")
-        search_results = image_index.query(
-            vector=query_embedding,
+
+        # 2. Embed the query (cached)
+        query_emb = _get_query_embedding(query)
+        if not query_emb:
+            return photo_urls
+
+        # 3. Only request exactly as many neighbors as you have photos
+        results = image_index.query(
+            vector=query_emb,
             filter={"apartment_id": apartment_id},
-            top_k=50,  # Get enough results to cover all apartment images
+            top_k=len(photo_urls),
             include_metadata=True
         )
-        
-        if not search_results.matches:
-            print(f"No matching images found for apartment {apartment_id}")
-            return photo_urls  # Return the extracted URLs
-        url_score_map = {}
-        for match in search_results.matches:
-            original_url = match.metadata.get("original_url")
-            if original_url:
-                url_score_map[original_url] = match.score
-                
-        if not url_score_map:
-            print("No URL mappings created from search results")
-            return photo_urls 
-        urls_to_sort = photo_urls.copy()
-        def get_url_score(url):
-            return url_score_map.get(url, -1)
-            
-        urls_to_sort.sort(key=get_url_score, reverse=True)
-        return urls_to_sort
-        
+
+        # 4. Build URL→score map in one go
+        url_score_map = {
+            m.metadata["original_url"]: m.score
+            for m in (results.matches or [])
+            if m.metadata.get("original_url")
+        }
+
+        # 5. Sort using Python’s built‑in
+        return sorted(
+            photo_urls,
+            key=lambda u: url_score_map.get(u, -1),
+            reverse=True
+        )
     except Exception as e:
         print(f"Error ranking apartment images: {e}")
         import traceback
