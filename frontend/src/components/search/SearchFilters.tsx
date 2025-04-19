@@ -629,7 +629,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
         {/* Display uploaded images if available */}
         {imageUrls.length > 0 && (
           <div className="mt-3">
-            <div className="flex gap-2 overflow-x-auto mt-4">
+            <div className="flex gap-2 overflow-x-auto -mb-3 mt-4">
               {imageUrls.map((url, index) => (
                 <div key={index} className="relative flex-shrink-0">
                   <img
