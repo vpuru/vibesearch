@@ -26,10 +26,11 @@ const HeroSection = () => {
   const placeholders = [
     "Describe your ideal apartment and/or upload images...",
     "Modern loft ten minutes away from the pier",
-    "Cozy studio with abundant natural light near downtown",
-    "Luxury two bedroom with a pool, gym, and a balcony",
-    "Artsy space with exposed brick, near the Topanga trail",
-    "Minimalist design with floor-to-ceiling windows"
+    "Cozy space with abundant natural light near downtown",
+    "Luxury appliances, pool, gym, and a balcony",
+    "Artsy space with exposed brick, near a hiking trail",
+    "Minimalist design with floor-to-ceiling windows",
+    "Rooftop deck, near bars and restaurants"
   ];
 
   useEffect(() => {
