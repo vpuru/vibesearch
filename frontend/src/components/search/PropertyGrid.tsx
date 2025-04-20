@@ -71,7 +71,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   // Initialize visible items on first render and when items change
   useEffect(() => {
     if (allItems.length > 0) {
-      console.log(`PropertyGrid: Initializing with ${allItems.length} items`);
+      // console.log(`PropertyGrid: Initializing with ${allItems.length} items`);
       // Get unique items to prevent duplicates using ID or the item itself
       const uniqueItems: Array<string | Property> = [];
       const seenIds = new Set<string>();
@@ -89,7 +89,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
       setHasMoreItems(uniqueItems.length > ITEMS_PER_PAGE);
       setPage(1);
     } else {
-      console.log("PropertyGrid: No items to display");
+      // console.log("PropertyGrid: No items to display");
       setVisibleItems([]);
       setHasMoreItems(false);
     }
@@ -121,9 +121,9 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
 
       const newItems = uniqueItems.slice(0, endIndex);
 
-      console.log(
-        `PropertyGrid: Loading more items. Page ${nextPage}, showing ${newItems.length} of ${uniqueItems.length} items`
-      );
+      // console.log(
+      //   `PropertyGrid: Loading more items. Page ${nextPage}, showing ${newItems.length} of ${uniqueItems.length} items`
+      // );
 
       setVisibleItems(newItems);
       setPage(nextPage);
@@ -132,7 +132,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
 
       // If we're reaching the end of our loaded items, request more from backend
       if (endIndex >= uniqueItems.length - ITEMS_PER_PAGE && onLoadMore) {
-        console.log("PropertyGrid: Requesting more items from backend");
+        // console.log("PropertyGrid: Requesting more items from backend");
         onLoadMore();
       }
     }, 500);
@@ -148,7 +148,7 @@ const PropertyGrid: React.FC<PropertyGridProps> = ({
   //   hasMoreItems,
   //   loading,
   //   error,
-  //   searchTerm,
+  //   seaconsole.logrchTerm,
   // });
 
   // Render skeleton loading state

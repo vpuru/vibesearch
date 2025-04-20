@@ -163,12 +163,9 @@ const PropertyDetails: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        console.log(`Fetching details for apartment ID: ${id}`);
         // Pass the search term to order images by relevance to the query
         const data = await fetchApartmentDetails(id, searchTerm);
         setApartment(data);
-
-        console.log("Apartment details loaded:", data);
       } catch (err) {
         console.error("Error fetching apartment details:", err);
         setError(err instanceof Error ? err.message : "Failed to load apartment details");
@@ -558,9 +555,9 @@ const PropertyDetails: React.FC = () => {
                       <table className="w-full">
                         <tbody>
                           {apartment.requiredFees.flatMap(
-                            (section) =>
-                              section.fees?.map((fee, idx) => (
-                                <tr key={idx} className="border-b last:border-b-0">
+                            (section, sectionIndex) =>
+                              section.fees?.map((fee, feeIndex) => (
+                                <tr key={`required-${sectionIndex}-${feeIndex}-${fee.key}`} className="border-b last:border-b-0">
                                   <td className="p-3 font-medium font-sans">{fee.key}</td>
                                   <td className="p-3 text-right">{fee.value}</td>
                                 </tr>
@@ -579,9 +576,9 @@ const PropertyDetails: React.FC = () => {
                       <table className="w-full">
                         <tbody>
                           {apartment.petFees.flatMap(
-                            (section) =>
-                              section.fees?.map((fee, idx) => (
-                                <tr key={idx} className="border-b last:border-b-0">
+                            (section, sectionIndex) =>
+                              section.fees?.map((fee, feeIndex) => (
+                                <tr key={`pet-${sectionIndex}-${feeIndex}-${fee.key}`} className="border-b last:border-b-0">
                                   <td className="p-3 font-medium font-sans">{fee.key}</td>
                                   <td className="p-3 text-right">{fee.value}</td>
                                 </tr>
