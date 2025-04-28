@@ -15,7 +15,7 @@ if not PINECONE_API_KEY:
 pc = Pinecone(api_key=PINECONE_API_KEY)
 image_index = pc.Index("apartment-images-search")
 
-model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2", device="cpu")
 INDEX_NAME = "apartments-search"
 APARTMENTS_FILE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), "apartments.json"
