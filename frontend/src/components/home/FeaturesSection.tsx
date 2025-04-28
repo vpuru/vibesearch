@@ -50,7 +50,15 @@ const FeaturesSection = () => {
         </div>
         
         <div className="w-full h-[250px] sm:h-[280px] md:h-[320px] bg-black/5 rounded-xl flex items-center justify-center mb-10 md:mb-12 max-w-3xl mx-auto -mt-5">
-          <div className="text-vibe-charcoal/50">Demo Video Placeholder</div>
+          <video
+            className="w-full h-full object-cover rounded-xl"
+            controls
+            muted
+            loop
+          >
+            <source src="/IrisDemo.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
