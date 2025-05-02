@@ -1,7 +1,7 @@
 // Frontend configuration
 
 // API base URL - can be overridden with environment variables
-export const API_BASE_URL = "https://vibesearch-backend-6gqa3.ondigitalocean.app/";
+export const API_BASE_URL = "https://vibesearch-backend-6gqa3.ondigitalocean.app";
 
 console.log("API_BASE_URL", API_BASE_URL);
 
