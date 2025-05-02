@@ -1,7 +1,9 @@
 // Frontend configuration
 
 // API base URL - can be overridden with environment variables
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:5001";
+export const API_BASE_URL = "https://vibesearch-backend-6gqa3.ondigitalocean.app/";
+
+console.log("API_BASE_URL", API_BASE_URL);
 
 // API endpoints
 export const API_ENDPOINTS = {
