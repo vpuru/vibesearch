@@ -23,17 +23,17 @@ A semantic apartment search application using natural language queries to find p
 
    ```bash
    cd backend
-   
+
    # Create and activate a virtual environment
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
-   
+
    # Install dependencies
    pip install -r requirements.txt
-   
+
    # Create .env file (copy from example)
    cp .env.example .env
-   
+
    # Edit .env file with your Pinecone API keys
    ```
 
@@ -41,7 +41,7 @@ A semantic apartment search application using natural language queries to find p
 
    ```bash
    cd frontend
-   
+
    # Install dependencies
    npm install
    ```
@@ -57,6 +57,7 @@ You can start both the frontend and backend in development mode with:
 Or start them individually:
 
 **Backend:**
+
 ```bash
 cd backend
 source venv/bin/activate
@@ -64,12 +65,13 @@ python run.py
 ```
 
 **Frontend:**
+
 ```bash
 cd frontend
 npm run dev
 ```
 
-The frontend will be accessible at http://localhost:8080 and the backend API at http://127.0.0.1:5001.
+The frontend will be accessible at http://localhost:8080 and the backend API at http://127.0.0.1:8080.
 
 ## Features
 
@@ -81,6 +83,7 @@ The frontend will be accessible at http://localhost:8080 and the backend API at 
 ## API Endpoints
 
 - `GET /api/search`: Search for apartments
+
   - Query parameters:
     - `query`: Natural language search query (required)
     - `limit`: Maximum number of results (optional, default 50)
@@ -104,6 +107,7 @@ If you don't have a Pinecone API key, the backend will use mock data for develop
 ### CORS Issues
 
 If you encounter CORS errors:
+
 - Ensure the backend CORS configuration includes your frontend URL
 - Check that frontend requests include the proper headers
 - Make sure the API requests use the correct protocol (http/https)
