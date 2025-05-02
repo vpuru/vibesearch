@@ -9,6 +9,10 @@ import traceback
 search_bp = Blueprint("search", __name__)
 
 
+@search_bp.route("/api/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
+
 @search_bp.route("/api/search", methods=["GET"])
 def search():
     """
