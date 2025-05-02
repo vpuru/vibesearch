@@ -5,8 +5,8 @@ from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
     
-    # Configure CORS to allow requests from the frontend
-    CORS(app, origins=["https://vibesearch-ui.vercel.app"])
+    # Configure CORS to allow requests from any origin
+    CORS(app, origins=["*"])
 
     @app.route("/api/health", methods=["GET"])
     def health_check():
