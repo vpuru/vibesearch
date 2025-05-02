@@ -6,16 +6,7 @@ def create_app():
     app = Flask(__name__)
     
     # Configure CORS to allow requests from the frontend
-    CORS(app, 
-         origins=["https://vibesearch-ui.vercel.app"],
-         supports_credentials=True,
-         resources={
-             r"/api/*": {
-                 "methods": ["GET", "POST", "OPTIONS"],
-                 "allow_headers": ["Content-Type", "Authorization"],
-                 "max_age": 3600
-             }
-         })
+    CORS(app, origins=["https://vibesearch-ui.vercel.app"])
 
     @app.route("/api/health", methods=["GET"])
     def health_check():
