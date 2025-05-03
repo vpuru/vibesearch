@@ -1,6 +1,7 @@
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 import os
+from app.routes import search_bp
 
 def create_app():
     app = Flask(__name__, static_folder="../dist", static_url_path="/")
@@ -20,5 +21,7 @@ def create_app():
         if path != "" and os.path.exists(file_path):
             return send_from_directory(static_folder, path)
         return send_from_directory(static_folder, "index.html")
+
+    app.register_blueprint(search_bp)
 
     return app
