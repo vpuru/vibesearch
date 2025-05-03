@@ -21,10 +21,10 @@ co = cohere.ClientV2("UPIh3acjKBRqwu6kn30Ypim4VfqqeO4sXTfnTIvC")
 model = "c4ai-aya-vision-32b"
 
 # Configuration
-MAX_BROWSER_INSTANCES = 4  # Number of browser instances to run in parallel
+MAX_BROWSER_INSTANCES = 5  # Number of browser instances to run in parallel
 MAX_API_CONCURRENCY = 30  # Number of concurrent API calls to Cohere
 API_RATE_LIMIT_DELAY = 1  # Delay in seconds to respect API rate limits
-MAX_IMAGES_PER_APARTMENT = 50  # Maximum number of images to process per apartment (increased from 30 to 50)
+MAX_IMAGES_PER_APARTMENT = 70  # Maximum number of images to process per apartment (increased from 30 to 50)
 
 
 def compress_image(image_bytes: bytes, max_size: int = 800) -> bytes:
@@ -375,7 +375,7 @@ def main():
     
     # Read the JSON file
     try:
-        with open("scripts/apartments.json", "r") as file:
+        with open("scripts/data/apartments.json", "r") as file:
             apartment_data = json.load(file)
     except Exception as e:
         print(f"Error reading apartments JSON file: {str(e)}")
@@ -393,7 +393,14 @@ def main():
     
     # Process each apartment one at a time
     all_results = []
-    caption_prompt = "Describe this apartment image in detail, including the room type, furniture, lighting, colors, and overall ambiance."
+    caption_prompt = (
+        """Describe this apartment image in under 15 words, highlighting distinctive features that help renters search and compare apartments.  
+For interiors: focus on standout design elements, layout, materials, lighting, and/or vibe.  
+For exteriors: highlight facade style, materials, outdoor spaces, and/or architecture.  
+For floorplans: summarize the apartment layout and key zones.  
+Avoid generic phrases like “this is a photo” or “apartment image.”
+"""
+    )
     
     json_output_file = os.path.join(json_output_dir, "apartment_image_descriptions.json")
     
