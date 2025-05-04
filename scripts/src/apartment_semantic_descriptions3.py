@@ -17,7 +17,7 @@ import cohere
 import random
 
 # Initialize Cohere client
-co = cohere.ClientV2("UPIh3acjKBRqwu6kn30Ypim4VfqqeO4sXTfnTIvC")
+co = cohere.ClientV2()
 model = "c4ai-aya-vision-32b"
 
 # Configuration
