@@ -30,6 +30,10 @@ def create_app():
         """Health check endpoint to verify the API is running"""
         return {"status": "ok", "message": "API is running"}
     
+    @app.route("/", methods=["GET"])
+    def root_health():
+        return {"status": "ok", "message": "API root is running"}, 200
+    
     # Import and register blueprints
     from app.routes import search_bp
     app.register_blueprint(search_bp)

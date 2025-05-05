@@ -8,6 +8,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     restart: unless-stopped
+    image: varunpuru2/vibesearch-backend:latest
 
   frontend:
     build: ./frontend
@@ -17,3 +18,4 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    image: varunpuru2/vibesearch-frontend:latest

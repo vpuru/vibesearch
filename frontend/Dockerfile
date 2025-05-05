@@ -1,5 +1,5 @@
 # Use Node.js image to build the frontend
-FROM node:20 AS builder
+FROM node:22 AS builder
 WORKDIR /app
 COPY package*.json ./
 COPY bun.lockb ./

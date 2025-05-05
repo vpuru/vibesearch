@@ -180,19 +180,22 @@ const PropertyDetails: React.FC = () => {
   // Set a flag when the component mounts to indicate we're on a property details page
   useEffect(() => {
     // Set a flag for the search page to know we're coming from a property detail
-    sessionStorage.setItem('returnedFromPropertyDetail', 'true');
-    sessionStorage.setItem('lastSearchState', JSON.stringify({
-      searchTerm,
-      searchPerformed
-    }));
-    
-    // Cleanup function will only run when component unmounts, 
+    sessionStorage.setItem("returnedFromPropertyDetail", "true");
+    sessionStorage.setItem(
+      "lastSearchState",
+      JSON.stringify({
+        searchTerm,
+        searchPerformed,
+      })
+    );
+
+    // Cleanup function will only run when component unmounts,
     // right before the navigation to the Search page occurs
     return () => {
       // Keep the flag, Search page will handle its removal after reading it
     };
   }, [searchTerm, searchPerformed]);
-  
+
   // Handle back navigation
   const handleBackClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -200,7 +203,7 @@ const PropertyDetails: React.FC = () => {
     // Get the current search parameters from URL to preserve state
     const searchParams = new URLSearchParams(window.location.search);
     const returnTo = searchParams.get("returnTo");
-    
+
     if (returnTo) {
       // If returnTo is specified, navigate to that URL with the preserved query
       navigate(decodeURIComponent(returnTo));
@@ -252,23 +255,26 @@ const PropertyDetails: React.FC = () => {
   const flattenedAmenities = apartment.amenities.flatMap((section) => section.value);
 
   // Format price to locale string
-  const formatPrice = (price: number): string => {
+  const formatPrice = (price?: number | null): string => {
+    if (typeof price !== "number" || isNaN(price)) return "N/A";
     return `$${price.toLocaleString()}`;
   };
 
   return (
-    <div className="min-h-screen pb-16 bg-white">      
+    <div className="min-h-screen pb-16 bg-white">
       {/* Top Navigation - removed sticky positioning */}
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <a href="/search" className="flex items-center text-vibe-charcoal hover:text-vibe-navy" onClick={handleBackClick}>
+          <a
+            href="/search"
+            className="flex items-center text-vibe-charcoal hover:text-vibe-navy"
+            onClick={handleBackClick}
+          >
             <ArrowLeft className="h-5 w-5 mr-2" />
             <span>Back</span>
           </a>
 
-          <div className="flex items-center gap-4">
-            {/* Favorites and share buttons removed */}
-          </div>
+          <div className="flex items-center gap-4">{/* Favorites and share buttons removed */}</div>
         </div>
       </div>
 
@@ -317,7 +323,9 @@ const PropertyDetails: React.FC = () => {
           <div className="lg:col-span-2">
             <div className="mb-6">
               <div className="flex items-start justify-between mb-2">
-                <h1 className="text-3xl font-semibold text-vibe-navy font-sans">{apartment.propertyName}</h1>
+                <h1 className="text-3xl font-semibold text-vibe-navy font-sans">
+                  {apartment.propertyName}
+                </h1>
                 <p className="text-2xl font-semibold text-vibe-charcoal/70">
                   {formatPrice(apartment.rent.min)}
                   {apartment.rent.max ? ` - ${formatPrice(apartment.rent.max)}` : ""}/mo
@@ -557,7 +565,10 @@ const PropertyDetails: React.FC = () => {
                           {apartment.requiredFees.flatMap(
                             (section, sectionIndex) =>
                               section.fees?.map((fee, feeIndex) => (
-                                <tr key={`required-${sectionIndex}-${feeIndex}-${fee.key}`} className="border-b last:border-b-0">
+                                <tr
+                                  key={`required-${sectionIndex}-${feeIndex}-${fee.key}`}
+                                  className="border-b last:border-b-0"
+                                >
                                   <td className="p-3 font-medium font-sans">{fee.key}</td>
                                   <td className="p-3 text-right">{fee.value}</td>
                                 </tr>
@@ -578,7 +589,10 @@ const PropertyDetails: React.FC = () => {
                           {apartment.petFees.flatMap(
                             (section, sectionIndex) =>
                               section.fees?.map((fee, feeIndex) => (
-                                <tr key={`pet-${sectionIndex}-${feeIndex}-${fee.key}`} className="border-b last:border-b-0">
+                                <tr
+                                  key={`pet-${sectionIndex}-${feeIndex}-${fee.key}`}
+                                  className="border-b last:border-b-0"
+                                >
                                   <td className="p-3 font-medium font-sans">{fee.key}</td>
                                   <td className="p-3 text-right">{fee.value}</td>
                                 </tr>
@@ -648,7 +662,10 @@ const PropertyDetails: React.FC = () => {
                   </button>
 
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans"
+                    >
                       Your Name
                     </label>
                     <input
@@ -660,7 +677,10 @@ const PropertyDetails: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans"
+                    >
                       Email
                     </label>
                     <input
@@ -672,7 +692,10 @@ const PropertyDetails: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-vibe-charcoal mb-1 font-sans"
+                    >
                       Phone
                     </label>
                     <input
@@ -760,7 +783,9 @@ const PropertyDetails: React.FC = () => {
                           {apartment.scores.walkScore && (
                             <div className="flex justify-between">
                               <span className="text-vibe-charcoal/70 font-sans">Walk Score</span>
-                              <span className="font-medium font-sans">{apartment.scores.walkScore}/100</span>
+                              <span className="font-medium font-sans">
+                                {apartment.scores.walkScore}/100
+                              </span>
                             </div>
                           )}
                           {apartment.scores.transitScore && (
