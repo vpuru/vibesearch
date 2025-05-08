@@ -13,12 +13,12 @@ def create_app():
         methods=["GET", "POST", "OPTIONS"]
     )
 
-    # Register the search blueprint
-    app.register_blueprint(search_bp)
-
     @app.route("/api/health", methods=["GET"])
     def health_check():
         """Health check endpoint to verify the API is running"""
         return jsonify({"status": "ok", "message": "API is running"})
+
+    # Register the search blueprint
+    app.register_blueprint(search_bp)
 
     return app
