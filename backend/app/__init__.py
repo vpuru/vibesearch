@@ -5,25 +5,8 @@ from flask_cors import CORS
 def create_app():
     app = Flask(__name__)
     
-    # Define allowed origins
-    allowed_origins = [
-        "http://localhost:8080",
-        "http://127.0.0.1:8080", 
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://vibesearch-ui.vercel.app",
-    ]
-    
-    # Configure CORS properly with a single declaration
-    CORS(
-        app,
-        origins=allowed_origins,
-        supports_credentials=True,
-        resources={r"/api/*": {"origins": allowed_origins}},
-        allow_headers=["Content-Type", "Authorization", "Accept"],
-        methods=["GET", "POST", "OPTIONS"],
-        max_age=3600
-    )
+    # Allow all origins and headers (disable CORS restrictions)
+    CORS(app, supports_credentials=True)
 
     @app.route("/api/health", methods=["GET"])
     def health_check():
