@@ -1,7 +1,7 @@
 // Frontend configuration
 
 // API base URL - use relative path for Docker/Nginx setup
-export const API_BASE_URL = "/";
+export const API_BASE_URL = "https://vibesearch-backend-oey7i.ondigitalocean.app/";
 
 console.log("API_BASE_URL", API_BASE_URL);
 
