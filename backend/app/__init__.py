@@ -3,11 +3,10 @@ from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
-
-    # Configure CORS to allow requests from your frontend with credentials support
+    # Enable CORS for all origins
     CORS(
         app,
-        origins=["https://vibesearch-ui.vercel.app"],
+        origins="*",
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization", "Accept"],
         methods=["GET", "POST", "OPTIONS"]
