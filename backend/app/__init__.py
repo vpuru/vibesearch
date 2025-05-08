@@ -1,5 +1,6 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from app.routes import search_bp
 
 def create_app():
     app = Flask(__name__)
@@ -11,6 +12,9 @@ def create_app():
         allow_headers=["Content-Type", "Authorization", "Accept"],
         methods=["GET", "POST", "OPTIONS"]
     )
+
+    # Register the search blueprint
+    app.register_blueprint(search_bp)
 
     @app.route("/api/health", methods=["GET"])
     def health_check():
